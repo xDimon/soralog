@@ -13,7 +13,7 @@
 #include <fmt/chrono.h>
 #include <fmt/color.h>
 
-namespace xlog {
+namespace soralog {
 
   namespace {
     using namespace std::chrono_literals;
@@ -285,4 +285,4 @@ namespace xlog {
       }
     }
   }
-}  // namespace xlog
+}  // namespace soralog

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_EXAMPLE_LOGGINGOBJECT
-#define XLOG_EXAMPLE_LOGGINGOBJECT
+#ifndef SORALOG_EXAMPLE_LOGGINGOBJECT
+#define SORALOG_EXAMPLE_LOGGINGOBJECT
 
 #include <log_levels.hpp>
 #include <logger.hpp>
@@ -21,12 +21,12 @@ class LoggingObject final {
   LoggingObject &operator=(LoggingObject &&) noexcept = delete;
   LoggingObject &operator=(LoggingObject const &) = delete;
 
-  LoggingObject(xlog::LoggerFactory &logger_factory);
+  LoggingObject(soralog::LoggerFactory &logger_factory);
 
   void method() const;
 
  private:
-  xlog::Log log_;
+  soralog::Log log_;
 };
 
-#endif  // XLOG_EXAMPLE_LOGGINGOBJECT
+#endif  // SORALOG_EXAMPLE_LOGGINGOBJECT

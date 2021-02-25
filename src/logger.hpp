@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_LOG
-#define XLOG_LOG
+#ifndef SORALOG_LOG
+#define SORALOG_LOG
 
 #include <memory>
 #include <string>
@@ -15,7 +15,7 @@
 #include <event.hpp>
 #include <sink.hpp>
 
-namespace xlog {
+namespace soralog {
 
   class Logger final {
    public:
@@ -130,6 +130,6 @@ namespace xlog {
 
   using Log = std::shared_ptr<Logger>;
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_LOG
+#endif  // SORALOG_LOG

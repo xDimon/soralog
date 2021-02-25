@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_executable(xlog_example_simple
+add_executable(example_simple
     main.cpp
     logging_object.cpp
     )
-target_link_libraries(xlog_example_simple
+target_link_libraries(example_simple
     Boost::Boost.DI
     logger_factory
-
     )
 

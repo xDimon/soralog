@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_SINKTOCONSOLE
-#define XLOG_SINKTOCONSOLE
+#ifndef SORALOG_SINKTOCONSOLE
+#define SORALOG_SINKTOCONSOLE
 
 #include <sink.hpp>
 
@@ -14,7 +14,7 @@
 #include <mutex>
 #include <thread>
 
-namespace xlog {
+namespace soralog {
 
   class SinkToConsole final : public Sink {
    public:
@@ -52,6 +52,6 @@ namespace xlog {
     std::atomic_bool need_to_flush_ = false;
   };
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_SINKTOCONSOLE
+#endif  // SORALOG_SINKTOCONSOLE

@@ -5,13 +5,13 @@
 
 #include "logging_object.hpp"
 
-#include <injector/xlog_injector.hpp>
+#include <injector/injector.hpp>
 
 int main() {
-  auto injector = xlog::injector::makeInjector();
+  auto injector = soralog::injector::makeInjector();
 
-  auto main_log = injector.create<xlog::LoggerFactory &>().get(
-      "main", "console", xlog::Level::DEBUG);
+  auto main_log = injector.create<soralog::LoggerFactory &>().get(
+      "main", "console", soralog::Level::DEBUG);
 
   main_log->info("Start");
 

@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_INJECTOR
-#define XLOG_INJECTOR
+#ifndef SORALOG_INJECTOR
+#define SORALOG_INJECTOR
 
 #include <boost/di.hpp>
 
-namespace xlog::injector {
+namespace soralog::injector {
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
   auto makeInjector(Ts &&... args) {
@@ -24,6 +24,6 @@ namespace xlog::injector {
         std::forward<decltype(args)>(args)...);
   }
 
-}  // namespace xlog::injector
+}  // namespace soralog::injector
 
-#endif  // XLOG_INJECTOR
+#endif  // SORALOG_INJECTOR

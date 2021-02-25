@@ -11,7 +11,7 @@
 
 #include <fmt/chrono.h>
 
-namespace xlog {
+namespace soralog {
 
   using namespace std::chrono_literals;
 
@@ -132,5 +132,5 @@ namespace xlog {
         }
       }
     }
-  }  // namespace xlog
-}  // namespace xlog
+  }
+}  // namespace soralog

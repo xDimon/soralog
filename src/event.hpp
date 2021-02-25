@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_EVENT
-#define XLOG_EVENT
+#ifndef SORALOG_EVENT
+#define SORALOG_EVENT
 
 #include <chrono>
 #include <string_view>
@@ -13,7 +13,7 @@
 
 #include <log_levels.hpp>
 
-namespace xlog {
+namespace soralog {
   class Event final {
    public:
     Event() = default;
@@ -38,6 +38,6 @@ namespace xlog {
     std::array<char, 4096> message;
     size_t size;
   };
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // LIBXLOG_SRC_EVENT_HPP_
+#endif  // SORALOG_EVENT

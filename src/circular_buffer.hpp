@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_CIRCULARBUFFER
-#define XLOG_CIRCULARBUFFER
+#ifndef SORALOG_CIRCULARBUFFER
+#define SORALOG_CIRCULARBUFFER
 
 #include <array>
 #include <atomic>
@@ -12,14 +12,13 @@
 #include <cstddef>
 #include <optional>
 
-#ifdef	NDEBUG
+#ifdef NDEBUG
 #define IF_RELEASE true
 #else
 #define IF_RELEASE false
 #endif
 
-namespace xlog {
-
+namespace soralog {
 
   template <typename T, size_t N>
   class CircularBuffer final {
@@ -68,12 +67,12 @@ namespace xlog {
         node_opt.reset();
       }
 
-      const T &operator*() const noexcept(IF_RELEASE){
+      const T &operator*() const noexcept(IF_RELEASE) {
         assert(node_opt.has_value());
         return node_opt->get().item;
       }
 
-      const T *operator->() const noexcept(IF_RELEASE){
+      const T *operator->() const noexcept(IF_RELEASE) {
         assert(node_opt.has_value());
         return &node_opt->get().item;
       }
@@ -169,6 +168,6 @@ namespace xlog {
     std::atomic_size_t pop_index_ = 0;
   };
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_CIRCULARBUFFER
+#endif  // SORALOG_CIRCULARBUFFER

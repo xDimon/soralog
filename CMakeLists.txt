@@ -14,7 +14,7 @@ set(CMAKE_TOOLCHAIN_FILE
 include("cmake/Hunter/init.cmake")
 
 cmake_policy(SET CMP0048 NEW)
-project(libxlog VERSION 0.0.1 LANGUAGES CXX)
+project(soralog VERSION 0.0.1 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -28,7 +28,7 @@ include(cmake/dependencies.cmake)
 include_directories(
     SYSTEM
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:xlog>
+    $<INSTALL_INTERFACE:soralog>
 )
 
 add_subdirectory(src)

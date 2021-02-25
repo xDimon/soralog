@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_SINKTYPES
-#define XLOG_SINKTYPES
+#ifndef SORALOG_SINKTYPES
+#define SORALOG_SINKTYPES
 
-namespace xlog {
+namespace soralog {
 
   /**
    * Types of sink
@@ -15,9 +15,8 @@ namespace xlog {
     BLACKHOLE = 0,  /// It's dummy sink which eating all message without save
     COUT,           /// Writing messages to standard output
     FILE,           /// Wtiting messages to file
-    UDP             /// Transmitting messages into network by UDP protocol
   };
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_SINKTYPES
+#endif  // SORALOG_SINKTYPES

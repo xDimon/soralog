@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_LEVEL
-#define XLOG_LEVEL
+#ifndef SORALOG_LEVEL
+#define SORALOG_LEVEL
 
 #include <array>
 #include <cstddef>
 #include <cstdint>
 
-namespace xlog {
+namespace soralog {
 
   /**
    * Level detalisation of logging
@@ -50,6 +50,6 @@ namespace xlog {
     return detail::level_to_str_map[static_cast<uint8_t>(level)];
   }
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_LEVEL
+#endif  // SORALOG_LEVEL

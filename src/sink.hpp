@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_SINK
-#define XLOG_SINK
+#ifndef SORALOG_SINK
+#define SORALOG_SINK
 
 #include <memory>
 #include <queue>
@@ -20,7 +20,7 @@
 #define IF_RELEASE false
 #endif
 
-namespace xlog {
+namespace soralog {
 
   class Sink {
    public:
@@ -66,6 +66,6 @@ namespace xlog {
     size_t size_ = 0;
   };
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_SINK
+#endif  // SORALOG_SINK

@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef XLOG_SINKTOFILE
-#define XLOG_SINKTOFILE
+#ifndef SORALOG_SINKTOFILE
+#define SORALOG_SINKTOFILE
 
 #include <sink.hpp>
 
@@ -16,7 +16,7 @@
 #include <mutex>
 #include <thread>
 
-namespace xlog {
+namespace soralog {
   using namespace std::chrono_literals;
 
   class SinkToFile final : public Sink {
@@ -58,6 +58,6 @@ namespace xlog {
     std::atomic_bool need_to_rotate_ = false;
   };
 
-}  // namespace xlog
+}  // namespace soralog
 
-#endif  // XLOG_SINKTOFILE
+#endif  // SORALOG_SINKTOFILE
