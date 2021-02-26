@@ -8,13 +8,13 @@
 
 #include <map>
 
-#include <boost/assert.hpp>
-
 #include <sink.hpp>
 #include <sink/sink_to_console.hpp>
 #include <sink/sink_to_file.hpp>
 
 namespace soralog {
+
+  class Group;
 
   class LoggerSystem final {
    public:
@@ -26,10 +26,15 @@ namespace soralog {
 
     LoggerSystem();
 
-    [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &sink_name);
+    [[nodiscard]] std::shared_ptr<Sink> getLogger(const std::string &name);
+
+    [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
+
+    [[nodiscard]] std::shared_ptr<Group> getGroup(const std::string &name);
 
    private:
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
+    std::map<std::string, std::shared_ptr<Group>> groups_;
   };
 
 }  // namespace soralog

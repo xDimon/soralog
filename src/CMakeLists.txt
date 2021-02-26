@@ -17,12 +17,20 @@ add_library(logger_system
 target_link_libraries(logger_system
     sink_to_console
     sink_to_file
+    group
     )
 
 add_library(logger
     logger.cpp
     )
 target_link_libraries(logger
+    sink_base
+    )
+
+add_library(group
+    group.cpp
+    )
+target_link_libraries(group
     sink_base
     )
 

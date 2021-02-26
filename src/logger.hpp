@@ -7,12 +7,15 @@
 #define SORALOG_LOG
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
 #include <boost/assert.hpp>
 
 #include <event.hpp>
+#include <group.hpp>
+#include <logger_system.hpp>
 #include <sink.hpp>
 
 namespace soralog {
@@ -26,10 +29,8 @@ namespace soralog {
     Logger &operator=(Logger &&) noexcept = delete;
     Logger &operator=(Logger const &) = delete;
 
-    Logger(std::string name, std::shared_ptr<Sink> sink, Level level)
-        : name_(std::move(name)), sink_(std::move(sink)), level_(level) {
-      BOOST_ASSERT(sink_);
-    }
+    Logger(LoggerSystem &system, std::string name,
+           const std::string &group_name);
 
    private:
     template <typename... Args>
@@ -40,12 +41,8 @@ namespace soralog {
     }
 
    public:
-    [[nodiscard]] const std::string &name() const {
+    [[nodiscard]] const std::string &name() const noexcept {
       return name_;
-    }
-
-    [[nodiscard]] Level level() const {
-      return level_;
     }
 
     template <typename... Args>
@@ -122,10 +119,40 @@ namespace soralog {
       sink_->flush();
     }
 
+    // Level
+
+    [[nodiscard]] Level level() const noexcept {
+      return level_;
+    }
+
+    void resetLevel();
+    void setLevel(Level level);
+    void setLevelFromGroup(const std::shared_ptr<Group> &group);
+    void setLevelFromGroup(const std::string &group_name);
+
+    // Sink
+
+    void resetSink();
+    void setSink(const std::string &sink_name);
+    void setSinkFromGroup(const std::shared_ptr<Group> &group);
+    void setSinkFromGroup(const std::string &group_name);
+
+    // Parent group
+
+    void setGroup(std::shared_ptr<Group> group);
+    void setGroup(const std::string &group_name);
+
    private:
-    std::string name_;
+    LoggerSystem &system_;
+
+    const std::string name_;
+    std::shared_ptr<Group> group_;
+
     std::shared_ptr<Sink> sink_;
-    Level level_;
+    bool sink_is_overriden_{};
+
+    Level level_{};
+    bool level_is_overriden_{};
   };
 
   using Log = std::shared_ptr<Logger>;

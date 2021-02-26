@@ -19,30 +19,32 @@ void LoggingObject::method() const {
   log_->error("This is message with level '{}' and number {}", "error", 777);
   log_->critical("This is example of critical situations");
 
-  return;
+  const bool benchmark = false;
 
-  static size_t count = 7;
-  size_t all = 100'000'000;
-  while (count < all) {
-    ++count;
-    log_->trace("Trace message #{}", count);
+  if constexpr (benchmark) {
+    static size_t count = 7;
+    size_t all = 100'000'000;
+    while (count < all) {
+      ++count;
+      log_->trace("Trace message #{}", count);
+    }
+
+    auto end_time = std::chrono::system_clock::now();
+
+    auto time_spent = end_time - start_time;
+    auto st =
+        static_cast<double>(
+            std::chrono::duration_cast<std::chrono::microseconds>(time_spent)
+                .count())
+        / 1'000'000;
+
+    log_->info("Spent {} sec", st);
+    log_->info("Speed {} Mmps", (std::round(all / st / 1'000) / 1'000));
+
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
+    std::cout << "Spent " << st << " sec" << std::endl;
+    std::cout << "Speed " << (std::round(all / st / 1'000) / 1'000) << " Mmps"
+              << std::endl;
   }
-
-  auto end_time = std::chrono::system_clock::now();
-
-  auto time_spent = end_time - start_time;
-  auto st =
-      static_cast<double>(
-          std::chrono::duration_cast<std::chrono::microseconds>(time_spent)
-              .count())
-      / 1'000'000;
-
-  log_->info("Spent {} sec", st);
-  log_->info("Speed {} Mmps", (std::round(all / st / 1'000) / 1'000));
-
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-
-  std::cout << "Spent " << st << " sec" << std::endl;
-  std::cout << "Speed " << (std::round(all / st / 1'000) / 1'000) << " Mmps"
-            << std::endl;
 }

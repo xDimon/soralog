@@ -30,7 +30,7 @@ namespace soralog {
     constexpr std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1>
         level_to_str_map = [] {
           std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1> r{};
-          r[static_cast<uint8_t>(Level::OFF)] = "?Unknown";
+          r[static_cast<uint8_t>(Level::OFF)] = "?Off";
           r[static_cast<uint8_t>(Level::CRITICAL)] = "Critical";
           r[static_cast<uint8_t>(Level::ERROR)] = "Error";
           r[static_cast<uint8_t>(Level::WARN)] = "Warning";

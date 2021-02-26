@@ -36,7 +36,7 @@ namespace soralog {
     std::string_view name;
     Level level = Level::OFF;
     std::array<char, 4096> message;
-    size_t size;
+    size_t size = 0;
   };
 }  // namespace soralog
 

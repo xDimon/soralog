@@ -24,8 +24,26 @@ namespace soralog {
 
     LoggerFactory(LoggerSystem &logger_system);
 
-    [[nodiscard]] Log get(std::string logger_name, std::string_view sink_name,
-                          Level level);
+    [[nodiscard]] Log get(std::string logger_name, std::string group_name,
+                          std::optional<std::string> sink_name,
+                          std::optional<Level> level);
+
+    [[nodiscard]] inline Log get(std::string logger_name,
+                                 std::string group_name,
+                                 std::string sink_name) {
+      return get(std::move(logger_name), std::move(group_name),
+                 std::move(sink_name), {});
+    }
+
+    [[nodiscard]] inline Log get(std::string logger_name,
+                                 std::string group_name, Level level) {
+      return get(std::move(logger_name), std::move(group_name), {}, level);
+    }
+
+    [[nodiscard]] inline Log get(std::string logger_name,
+                                 std::string group_name) {
+      return get(std::move(logger_name), std::move(group_name), {}, {});
+    }
 
    private:
     LoggerSystem &logger_system_;
