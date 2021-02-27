@@ -22,27 +22,28 @@ namespace soralog {
     LoggerFactory &operator=(LoggerFactory &&) noexcept = delete;
     LoggerFactory &operator=(LoggerFactory const &) = delete;
 
-    LoggerFactory(LoggerSystem &logger_system);
+    explicit LoggerFactory(LoggerSystem &logger_system);
 
-    [[nodiscard]] Log get(std::string logger_name, std::string group_name,
-                          std::optional<std::string> sink_name,
-                          std::optional<Level> level);
+    [[nodiscard]] Log get(std::string logger_name,
+                          const std::string &group_name,
+                          const std::optional<std::string> &sink_name,
+                          const std::optional<Level> &level);
 
     [[nodiscard]] inline Log get(std::string logger_name,
-                                 std::string group_name,
+                                 const std::string &group_name,
                                  std::string sink_name) {
-      return get(std::move(logger_name), std::move(group_name),
-                 std::move(sink_name), {});
+      return get(std::move(logger_name), group_name, {std::move(sink_name)},
+                 {});
     }
 
     [[nodiscard]] inline Log get(std::string logger_name,
-                                 std::string group_name, Level level) {
-      return get(std::move(logger_name), std::move(group_name), {}, level);
+                                 const std::string &group_name, Level level) {
+      return get(std::move(logger_name), group_name, {}, {level});
     }
 
     [[nodiscard]] inline Log get(std::string logger_name,
-                                 std::string group_name) {
-      return get(std::move(logger_name), std::move(group_name), {}, {});
+                                 const std::string &group_name) {
+      return get(std::move(logger_name), group_name, {}, {});
     }
 
    private:

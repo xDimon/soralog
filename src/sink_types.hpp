@@ -12,8 +12,8 @@ namespace soralog {
    * Types of sink
    */
   enum class SinkType {
-    COUT,           /// Writing messages to standard output
-    FILE,           /// Wtiting messages to file
+    COUT,  /// Writing messages to standard output
+    FILE,  /// Wtiting messages to file
   };
 
 }  // namespace soralog

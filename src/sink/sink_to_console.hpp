@@ -24,7 +24,7 @@ namespace soralog {
     SinkToConsole &operator=(SinkToConsole &&) noexcept = delete;
     SinkToConsole &operator=(SinkToConsole const &) = delete;
 
-    SinkToConsole(std::string name);
+    SinkToConsole(std::string name, bool with_color);
     ~SinkToConsole() override;
 
     [[nodiscard]] SinkType type() const noexcept override {
@@ -43,6 +43,8 @@ namespace soralog {
     void run();
 
     std::string name_;
+    bool with_color_;
+
     std::unique_ptr<std::thread> sink_worker_;
 
     std::unique_ptr<std::array<char, 50u << 20>> buff_;

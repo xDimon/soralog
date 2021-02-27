@@ -18,6 +18,7 @@ target_link_libraries(logger_system
     sink_to_console
     sink_to_file
     group
+    configurator
     )
 
 add_library(logger
@@ -57,3 +58,9 @@ target_link_libraries(sink_to_file
     pthread
     )
 
+add_library(configurator
+    configurator.cpp
+    )
+target_link_libraries(configurator
+    yaml-cpp::yaml-cpp
+    )

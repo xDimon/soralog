@@ -27,7 +27,8 @@ namespace soralog {
     SinkToFile &operator=(SinkToFile &&) noexcept = delete;
     SinkToFile &operator=(SinkToFile const &) = delete;
 
-    SinkToFile(std::string name, std::filesystem::path path);
+    SinkToFile(std::string name, std::filesystem::path path,
+               std::string filename);
     ~SinkToFile() override;
 
     [[nodiscard]] SinkType type() const noexcept override {

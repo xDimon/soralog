@@ -6,11 +6,11 @@
 #ifndef SORALOG_EXAMPLE_LOGGINGOBJECT
 #define SORALOG_EXAMPLE_LOGGINGOBJECT
 
+#include <iostream>
 #include <log_levels.hpp>
 #include <logger.hpp>
 #include <logger_factory.hpp>
 #include <thread>
-#include <iostream>
 
 class LoggingObject final {
  public:
@@ -21,7 +21,7 @@ class LoggingObject final {
   LoggingObject &operator=(LoggingObject &&) noexcept = delete;
   LoggingObject &operator=(LoggingObject const &) = delete;
 
-  LoggingObject(soralog::LoggerFactory &logger_factory);
+  explicit LoggingObject(soralog::LoggerFactory &logger_factory);
 
   void method() const;
 

@@ -24,11 +24,9 @@ namespace soralog {
     Group &operator=(Group const &) = delete;
 
     Group(LoggerSystem &logger_system, std::string group_name,
-          const std::string &parent_group, const std::string &sink_name,
-          Level level);
-
-    Group(LoggerSystem &logger_system, std::string group_name,
-          const std::string &sink_name, Level level);
+          const std::optional<std::string> &parent_name,
+          const std::optional<std::string> &sink_name,
+          std::optional<Level> level);
 
     [[nodiscard]] const std::string &name() const noexcept {
       return name_;

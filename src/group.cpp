@@ -8,23 +8,23 @@
 namespace soralog {
 
   Group::Group(LoggerSystem &logger_system, std::string group_name,
-               const std::string &parent_group, const std::string &sink_name,
-               Level level)
+               const std::optional<std::string> &parent_name,
+               const std::optional<std::string> &sink_name,
+               std::optional<Level> level)
       : system_(logger_system), name_(std::move(group_name)) {
-    parent_group_ = system_.getGroup(parent_group);
-    if (parent_group_) {
-      assert(parent_group_);
-      setParentGroup(parent_group_);
+    if (parent_name) {
+      parent_group_ = system_.getGroup(*parent_name);
+      if (parent_group_) {
+        assert(parent_group_);
+        setParentGroup(parent_group_);
+      }
     }
-    setSink(sink_name);
-    setLevel(level);
-  }
-
-  Group::Group(LoggerSystem &logger_system, std::string group_name,
-               const std::string &sink_name, Level level)
-      : system_(logger_system), name_(std::move(group_name)) {
-    setSink(sink_name);
-    setLevel(level);
+    if (sink_name) {
+      setSink(*sink_name);
+    }
+    if (level) {
+      setLevel(*level);
+    }
   }
 
   void Group::resetLevel() {

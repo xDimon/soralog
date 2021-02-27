@@ -1,0 +1,29 @@
+sinks:
+  - name: console
+    type: console
+    color: false
+  - name: file
+    type: file
+    directory: .
+    filename: example.log
+groups:
+  - name: main
+    sink: console
+    level: info
+    children:
+      - name: blockchain
+      - name: consensus
+        level: debug
+        children:
+          - name: grandpa
+            level: info
+          - name: babe
+            children:
+              - name: block_executor
+                level: trace
+      - name: runtime
+        level: 'off'
+        children:
+          - name: transaction
+            sink: file
+            level: debug

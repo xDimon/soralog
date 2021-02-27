@@ -9,26 +9,20 @@
 
 namespace soralog {
 
-  LoggerSystem::LoggerSystem() {
-    auto default_sink = std::make_shared<SinkToConsole>("console");
-    sinks_["default"] = default_sink;
-    sinks_[default_sink->name()] = default_sink;
-
-    auto default_group =
-        std::make_shared<Group>(*this, "default", "console", Level::INFO);
-    groups_["default"] = default_group;
-    groups_[default_sink->name()] = default_group;
-
-    // Custom
-
-    auto file_sink = std::make_shared<SinkToFile>("file", "soralog.log");
-    sinks_[file_sink->name()] = file_sink;
-  };
+  void LoggerSystem::makeGroup(std::string name,
+                               const std::optional<std::string> &parent,
+                               const std::optional<std::string> &sink,
+                               const std::optional<Level> &level) {
+    auto group =
+        std::make_shared<Group>(*this, std::move(name), parent, sink, level);
+    groups_[group->name()] = std::move(group);
+  }
 
   [[nodiscard]] std::shared_ptr<Sink> LoggerSystem::getSink(
       const std::string &sink_name) {
     auto it = sinks_.find(sink_name);
     if (it == sinks_.end()) {
+      return {};
       it = sinks_.find("default");
       assert(it != sinks_.end());
     }
@@ -39,6 +33,7 @@ namespace soralog {
       const std::string &group_name) {
     auto it = groups_.find(group_name);
     if (it == groups_.end()) {
+      return {};
       it = groups_.find("default");
       assert(it != groups_.end());
     }

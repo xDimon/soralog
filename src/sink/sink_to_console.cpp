@@ -131,7 +131,8 @@ namespace soralog {
 
   }  // namespace
 
-  SinkToConsole::SinkToConsole(std::string name) : name_(std::move(name)) {
+  SinkToConsole::SinkToConsole(std::string name, bool with_color)
+      : name_(std::move(name)), with_color_(with_color) {
     buff_ = std::make_unique<decltype(buff_)::element_type>();
     sink_worker_ = std::make_unique<std::thread>([this] { run(); });
   }

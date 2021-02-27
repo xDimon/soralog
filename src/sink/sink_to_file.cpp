@@ -15,8 +15,10 @@ namespace soralog {
 
   using namespace std::chrono_literals;
 
-  SinkToFile::SinkToFile(std::string name, std::filesystem::path path)
-      : name_(std::move(name)), path_(std::move(path)) {
+  SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
+                         std::string filename)
+      : name_(std::move(name)),
+        path_(std::move(path).string() + "/" + std::move(filename)) {
     buff_ = std::make_unique<decltype(buff_)::element_type>();
     sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     out_.open(path_, std::ios::app);
