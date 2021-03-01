@@ -3,21 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(logger_factory
-    logger_factory.cpp
-    )
-target_link_libraries(logger_factory
-    logger
-    logger_system
-    )
-
 add_library(logger_system
     logger_system.cpp
     )
 target_link_libraries(logger_system
+    group
     sink_to_console
     sink_to_file
-    group
+    logger
     configurator
     )
 

@@ -6,49 +6,42 @@
 #ifndef SORALOG_LOGGERFACTORY
 #define SORALOG_LOGGERFACTORY
 
-#include <logger.hpp>
-#include <logger_system.hpp>
+#include <memory>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 
+#include <log_levels.hpp>
+
 namespace soralog {
 
-  class LoggerFactory final {
+  class Logger;
+
+  class LoggerFactory {
    public:
-    LoggerFactory() = delete;
-    LoggerFactory(LoggerFactory &&) noexcept = delete;
-    LoggerFactory(const LoggerFactory &) = delete;
     virtual ~LoggerFactory() = default;
-    LoggerFactory &operator=(LoggerFactory &&) noexcept = delete;
-    LoggerFactory &operator=(LoggerFactory const &) = delete;
 
-    explicit LoggerFactory(LoggerSystem &logger_system);
+    [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        const std::optional<std::string> &sink_name,
+        const std::optional<Level> &level) = 0;
 
-    [[nodiscard]] Log get(std::string logger_name,
-                          const std::string &group_name,
-                          const std::optional<std::string> &sink_name,
-                          const std::optional<Level> &level);
-
-    [[nodiscard]] inline Log get(std::string logger_name,
-                                 const std::string &group_name,
-                                 std::string sink_name) {
-      return get(std::move(logger_name), group_name, {std::move(sink_name)},
-                 {});
+    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        std::string sink_name) {
+      return getLogger(std::move(logger_name), group_name,
+                       {std::move(sink_name)}, {});
     }
 
-    [[nodiscard]] inline Log get(std::string logger_name,
-                                 const std::string &group_name, Level level) {
-      return get(std::move(logger_name), group_name, {}, {level});
+    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name, Level level) {
+      return getLogger(std::move(logger_name), group_name, {}, {level});
     }
 
-    [[nodiscard]] inline Log get(std::string logger_name,
-                                 const std::string &group_name) {
-      return get(std::move(logger_name), group_name, {}, {});
+    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name) {
+      return getLogger(std::move(logger_name), group_name, {}, {});
     }
-
-   private:
-    LoggerSystem &logger_system_;
-    std::unordered_map<std::string, std::weak_ptr<Logger>> loggers_;
   };
 
 }  // namespace soralog

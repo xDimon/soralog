@@ -21,6 +21,36 @@ namespace soralog {
     groups_[group->name()] = std::move(group);
   }
 
+  std::shared_ptr<Logger> LoggerSystem::getLogger(
+      std::string logger_name, const std::string &group_name,
+      const std::optional<std::string> &sink_name,
+      const std::optional<Level> &level) {
+    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
+      if (auto logger = it->second.lock()) {
+        return std::move(logger);
+      }
+    }
+
+    auto group = getGroup(group_name);
+    if (group != nullptr) {
+      assert(group);  // TODO(xDimon): Use default group if it isn't found
+    }
+
+    auto logger = std::make_shared<Logger>(*this, std::move(logger_name),
+                                           std::move(group));
+
+    if (sink_name.has_value()) {
+      logger->setSink(sink_name.value());
+    }
+
+    if (level.has_value()) {
+      logger->setLevel(level.value());
+    }
+
+    loggers_[logger->name()] = logger;
+    return logger;
+  }
+
   [[nodiscard]] std::shared_ptr<Sink> LoggerSystem::getSink(
       const std::string &sink_name) {
     auto it = sinks_.find(sink_name);
@@ -84,12 +114,17 @@ namespace soralog {
       }
     }
 
-    for (const auto &[name, logger] : loggers_) {
-      if (auto it = passed_groups.find(logger->group());
-          it != passed_groups.end()) {
-        if (it->second != -1) {
-          logger->setGroup(logger->group());
+    for (auto it = loggers_.begin(); it != loggers_.end();) {
+      auto cit = *++it;
+      if (auto logger = cit.second.lock()) {
+        if (auto it2 = passed_groups.find(logger->group());
+            it2 != passed_groups.end()) {
+          if (it2->second != -1) {
+            logger->setGroup(logger->group());
+          }
         }
+      } else {
+        loggers_.erase(cit.first);
       }
     }
   }
@@ -139,12 +174,17 @@ namespace soralog {
       }
     }
 
-    for (const auto &[name, logger] : loggers_) {
-      if (auto it = passed_groups.find(logger->group());
-          it != passed_groups.end()) {
-        if (it->second != -1) {
-          logger->setSinkFromGroup(logger->group());
+    for (auto it = loggers_.begin(); it != loggers_.end();) {
+      auto cit = *++it;
+      if (auto logger = cit.second.lock()) {
+        if (auto it2 = passed_groups.find(logger->group());
+            it2 != passed_groups.end()) {
+          if (it2->second != -1) {
+            logger->setSinkFromGroup(logger->group());
+          }
         }
+      } else {
+        loggers_.erase(cit.first);
       }
     }
   }
@@ -194,12 +234,17 @@ namespace soralog {
       }
     }
 
-    for (const auto &[name, logger] : loggers_) {
-      if (auto it = passed_groups.find(logger->group());
-          it != passed_groups.end()) {
-        if (it->second != -1) {
-          logger->setLevelFromGroup(logger->group());
+    for (auto it = loggers_.begin(); it != loggers_.end();) {
+      auto cit = *++it;
+      if (auto logger = cit.second.lock()) {
+        if (auto it2 = passed_groups.find(logger->group());
+            it2 != passed_groups.end()) {
+          if (it2->second != -1) {
+            logger->setLevelFromGroup(logger->group());
+          }
         }
+      } else {
+        loggers_.erase(cit.first);
       }
     }
   }
@@ -289,24 +334,12 @@ namespace soralog {
                                        const std::string &group_name) {
     if (auto group = getGroup(group_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
-        auto &logger = it->second;
-        logger->setGroup(std::move(group));
+        if (auto logger = it->second.lock()) {
+          logger->setGroup(std::move(group));
+        } else {
+          loggers_.erase(it);
+        }
       }
-    }
-  }
-
-  void LoggerSystem::setLevelForLogger(const std::string &logger_name,
-                                       Level level) {
-    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
-      auto &logger = it->second;
-      logger->setLevel(level);
-    }
-  }
-
-  void LoggerSystem::resetLevelForLogger(const std::string &logger_name) {
-    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
-      auto &logger = it->second;
-      logger->setLevelFromGroup(logger->group());
     }
   }
 
@@ -314,16 +347,43 @@ namespace soralog {
                                       const std::string &sink_name) {
     if (auto sink = getSink(sink_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
-        auto &logger = it->second;
-        logger->setSink(std::move(sink));
+        if (auto logger = it->second.lock()) {
+          logger->setSink(std::move(sink));
+        } else {
+          loggers_.erase(it);
+        }
       }
     }
   }
 
   void LoggerSystem::resetSinkForLogger(const std::string &logger_name) {
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
-      auto &logger = it->second;
-      logger->setSinkFromGroup(logger->group());
+      if (auto logger = it->second.lock()) {
+        logger->setSinkFromGroup(logger->group());
+      } else {
+        loggers_.erase(it);
+      }
+    }
+  }
+
+  void LoggerSystem::setLevelForLogger(const std::string &logger_name,
+                                       Level level) {
+    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
+      if (auto logger = it->second.lock()) {
+        logger->setLevel(level);
+      } else {
+        loggers_.erase(it);
+      }
+    }
+  }
+
+  void LoggerSystem::resetLevelForLogger(const std::string &logger_name) {
+    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
+      if (auto logger = it->second.lock()) {
+        logger->setLevelFromGroup(logger->group());
+      } else {
+        loggers_.erase(it);
+      }
     }
   }
 }  // namespace soralog

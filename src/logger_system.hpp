@@ -8,6 +8,7 @@
 
 #include <map>
 
+#include <logger_factory.hpp>
 #include <sink.hpp>
 #include <sink/sink_to_console.hpp>
 #include <sink/sink_to_file.hpp>
@@ -17,16 +18,19 @@ namespace soralog {
   class Group;
   class Logger;
 
-  class LoggerSystem final {
+  class LoggerSystem final : public LoggerFactory {
    public:
     LoggerSystem() = default;
     LoggerSystem(const LoggerSystem &) = delete;
     LoggerSystem &operator=(LoggerSystem const &) = delete;
-    ~LoggerSystem() = default;
+    ~LoggerSystem() override = default;
     LoggerSystem(LoggerSystem &&tmp) noexcept = delete;
     LoggerSystem &operator=(LoggerSystem &&tmp) noexcept = delete;
 
-    [[nodiscard]] std::shared_ptr<Sink> getLogger(const std::string &name);
+    [[nodiscard]] std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        const std::optional<std::string> &sink_name,
+        const std::optional<Level> &level);
 
     [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
 
@@ -71,7 +75,7 @@ namespace soralog {
     void setLevelForLogger(std::shared_ptr<Logger> logger,
                            std::optional<Level> level);
 
-    std::map<std::string, std::shared_ptr<Logger>> loggers_;
+    std::map<std::string, std::weak_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
     std::map<std::string, std::shared_ptr<Group>> groups_;
   };

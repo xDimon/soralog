@@ -16,7 +16,7 @@ int main() {
   configurator.loadFromFile(
       "/home/di/Projects/xLog/example/01-simple/logger.yml");
 
-  auto main_log = injector.create<soralog::LoggerFactory &>().get(
+  auto main_log = injector.create<soralog::LoggerFactory &>().getLogger(
       "main", "main", soralog::Level::DEBUG);
 
   main_log->info("Start");

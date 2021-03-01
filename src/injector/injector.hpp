@@ -8,6 +8,9 @@
 
 #include <boost/di.hpp>
 
+#include <logger_system.hpp>
+#include <logger_factory.hpp>
+
 namespace soralog::injector {
 
   template <typename InjectorConfig = BOOST_DI_CFG, typename... Ts>
@@ -17,7 +20,7 @@ namespace soralog::injector {
     return di::make_injector<InjectorConfig>(
 
         // clang-format off
-// . . . .
+        di::bind<LoggerFactory>.template to<LoggerSystem>().in(di::singleton),
         // clang-format on
 
         // user-defined overrides...

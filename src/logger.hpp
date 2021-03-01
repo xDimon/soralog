@@ -15,10 +15,11 @@
 
 #include <event.hpp>
 #include <group.hpp>
-#include <logger_system.hpp>
 #include <sink.hpp>
 
 namespace soralog {
+
+  class LoggerSystem;
 
   class Logger final {
    public:
