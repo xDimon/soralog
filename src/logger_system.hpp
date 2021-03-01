@@ -44,17 +44,33 @@ namespace soralog {
 
     void setParentForGroup(const std::string &group_name,
                            const std::string &parent);
-    void setLevelForGroup(const std::string &group_name, Level level);
     void setSinkForGroup(const std::string &group_name,
                          const std::string &sink_name);
+    void resetSinkForGroup(const std::string &group_name);
+    void setLevelForGroup(const std::string &group_name, Level level);
+    void resetLevelForGroup(const std::string &group_name);
 
     void setGroupForLogger(const std::string &logger_name,
                            const std::string &group_name);
-    void setLevelForLogger(const std::string &logger_name, Level level);
     void setSinkForLogger(const std::string &logger_name,
                           const std::string &sink_name);
+    void resetSinkForLogger(const std::string &logger_name);
+    void setLevelForLogger(const std::string &logger_name, Level level);
+    void resetLevelForLogger(const std::string &logger_name);
 
    private:
+    void setParentForGroup(std::shared_ptr<Group> group,
+                           std::shared_ptr<Group> parent);
+    void setSinkForGroup(std::shared_ptr<Group> group,
+                         std::optional<std::shared_ptr<Sink>> sink);
+    void setLevelForGroup(std::shared_ptr<Group> group,
+                          std::optional<Level> level);
+
+    void setSinkForLogger(std::shared_ptr<Logger> logger,
+                          std::optional<std::shared_ptr<Sink>> sink);
+    void setLevelForLogger(std::shared_ptr<Logger> logger,
+                           std::optional<Level> level);
+
     std::map<std::string, std::shared_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
     std::map<std::string, std::shared_ptr<Group>> groups_;

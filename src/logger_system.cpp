@@ -43,30 +43,8 @@ namespace soralog {
     return it->second;
   }
 
-  void LoggerSystem::setParentForGroup(const std::string &group_name,
-                                       const std::string &parent_name) {
-    std::shared_ptr<Group> group;
-    if (auto it = groups_.find(group_name); it != groups_.end()) {
-      group = it->second;
-    } else {
-      return;
-    }
-    std::shared_ptr<Group> parent;
-    if (auto it = groups_.find(parent_name); it != groups_.end()) {
-      parent = it->second;
-    } else {
-      return;
-    }
-
-    // Check for recursion
-    for (auto current = parent->parent(); current != nullptr;
-         current = current->parent()) {
-      if (current == group) {
-        // Cyclic parentness is detected
-        return;
-      }
-    }
-
+  void LoggerSystem::setParentForGroup(std::shared_ptr<Group> group,
+                                       std::shared_ptr<Group> parent) {
     group->setParentGroup(parent);
 
     std::map<std::shared_ptr<const Group>, int> passed_groups;
@@ -116,15 +94,68 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setLevelForGroup(const std::string &group_name,
-                                      Level level) {
-    std::shared_ptr<Group> group;
-    if (auto it = groups_.find(group_name); it != groups_.end()) {
-      group = it->second;
+  void LoggerSystem::setSinkForGroup(
+      std::shared_ptr<Group> group, std::optional<std::shared_ptr<Sink>> sink) {
+    if (sink) {
+      group->setSink(*sink);
     } else {
-      return;
+      group->resetSink();
     }
-    group->setLevel(level);
+
+    std::map<std::shared_ptr<const Group>, int> passed_groups;
+
+    std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
+
+    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+      if (auto it = passed_groups.find(current); it != passed_groups.end()) {
+        return it->second;
+      }
+      if (current->isSinkOverriden()) {
+        return -1;
+      }
+      if (current == group) {
+        return 0;
+      }
+      if (not current->parent()) {
+        return -1;
+      }
+      auto n = fn(current->parent());
+      if (n == -1) {
+        return -1;
+      }
+      affecting_groups[n].emplace(std::const_pointer_cast<Group>(current));
+      return ++n;
+    };
+
+    for (const auto &it : groups_) {
+      auto n = fn(it.second);
+      passed_groups[it.second] = n;
+    }
+
+    for (const auto &stage : std::move(affecting_groups)) {
+      for (const auto &changing_group : stage) {
+        changing_group->setSinkFromGroup(changing_group->parent());
+      }
+    }
+
+    for (const auto &[name, logger] : loggers_) {
+      if (auto it = passed_groups.find(logger->group());
+          it != passed_groups.end()) {
+        if (it->second != -1) {
+          logger->setSinkFromGroup(logger->group());
+        }
+      }
+    }
+  }
+
+  void LoggerSystem::setLevelForGroup(std::shared_ptr<Group> group,
+                                      std::optional<Level> level) {
+    if (level) {
+      group->setLevel(*level);
+    } else {
+      group->resetLevel();
+    }
 
     std::map<std::shared_ptr<const Group>, int> passed_groups;
 
@@ -173,65 +204,84 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setSinkForGroup(const std::string &group_name,
-                                     const std::string &sink_name) {
-    auto sink = getSink(sink_name);
-    if (not sink) {
-      return;
+  void LoggerSystem::setSinkForLogger(
+      std::shared_ptr<Logger> logger,
+      std::optional<std::shared_ptr<Sink>> sink) {
+    if (sink) {
+      logger->setSink(std::move(*sink));
+    } else {
+      logger->resetSink();
     }
+  }
 
+  void LoggerSystem::setLevelForLogger(std::shared_ptr<Logger> logger,
+                                       std::optional<Level> level) {
+    if (level) {
+      logger->setLevel(*level);
+    } else {
+      logger->resetLevel();
+    }
+  }
+
+  void LoggerSystem::setParentForGroup(const std::string &group_name,
+                                       const std::string &parent_name) {
     std::shared_ptr<Group> group;
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       group = it->second;
     } else {
       return;
     }
-    group->setSink(sink);
 
-    std::map<std::shared_ptr<const Group>, int> passed_groups;
+    std::shared_ptr<Group> parent;
+    if (auto it = groups_.find(parent_name); it != groups_.end()) {
+      parent = it->second;
+    } else {
+      return;
+    }
 
-    std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
-
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
-      if (auto it = passed_groups.find(current); it != passed_groups.end()) {
-        return it->second;
-      }
-      if (current->isSinkOverriden()) {
-        return -1;
-      }
+    // Check for recursion
+    for (auto current = parent->parent(); current != nullptr;
+         current = current->parent()) {
       if (current == group) {
-        return 0;
-      }
-      if (not current->parent()) {
-        return -1;
-      }
-      auto n = fn(current->parent());
-      if (n == -1) {
-        return -1;
-      }
-      affecting_groups[n].emplace(std::const_pointer_cast<Group>(current));
-      return ++n;
-    };
-
-    for (const auto &it : groups_) {
-      auto n = fn(it.second);
-      passed_groups[it.second] = n;
-    }
-
-    for (const auto &stage : std::move(affecting_groups)) {
-      for (const auto &changing_group : stage) {
-        changing_group->setSinkFromGroup(changing_group->parent());
+        // Cyclic parentness is detected
+        return;
       }
     }
 
-    for (const auto &[name, logger] : loggers_) {
-      if (auto it = passed_groups.find(logger->group());
-          it != passed_groups.end()) {
-        if (it->second != -1) {
-          logger->setLevelFromGroup(logger->group());
-        }
-      }
+    setParentForGroup(group, parent);
+  }
+
+  void LoggerSystem::setSinkForGroup(const std::string &group_name,
+                                     const std::string &sink_name) {
+    auto sink = getSink(sink_name);
+    if (not sink) {
+      return;
+    }
+    if (auto it = groups_.find(group_name); it != groups_.end()) {
+      auto group = it->second;
+      setSinkForGroup(std::move(group), std::move(sink));
+    }
+  }
+
+  void LoggerSystem::resetSinkForGroup(const std::string &group_name) {
+    if (auto it = groups_.find(group_name); it != groups_.end()) {
+      auto group = it->second;
+      setSinkForGroup(std::move(group), {});
+    }
+  }
+
+  void LoggerSystem::setLevelForGroup(const std::string &group_name,
+                                      Level level) {
+    if (auto it = groups_.find(group_name); it != groups_.end()) {
+      auto group = it->second;
+      setLevelForGroup(std::move(group), level);
+    }
+  }
+
+  void LoggerSystem::resetLevelForGroup(const std::string &group_name) {
+    if (auto it = groups_.find(group_name); it != groups_.end()) {
+      auto group = it->second;
+      setLevelForGroup(std::move(group), {});
     }
   }
 
@@ -253,6 +303,13 @@ namespace soralog {
     }
   }
 
+  void LoggerSystem::resetLevelForLogger(const std::string &logger_name) {
+    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
+      auto &logger = it->second;
+      logger->setLevelFromGroup(logger->group());
+    }
+  }
+
   void LoggerSystem::setSinkForLogger(const std::string &logger_name,
                                       const std::string &sink_name) {
     if (auto sink = getSink(sink_name)) {
@@ -263,4 +320,10 @@ namespace soralog {
     }
   }
 
+  void LoggerSystem::resetSinkForLogger(const std::string &logger_name) {
+    if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
+      auto &logger = it->second;
+      logger->setSinkFromGroup(logger->group());
+    }
+  }
 }  // namespace soralog
