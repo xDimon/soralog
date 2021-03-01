@@ -20,7 +20,8 @@ namespace soralog {
       }
     }
     if (sink_name) {
-      setSink(*sink_name);
+      auto sink = system_.getSink(*sink_name);
+      setSink(std::move(sink));
     }
     if (level) {
       setLevel(*level);
@@ -39,7 +40,7 @@ namespace soralog {
     level_ = level;
   }
 
-  void Group::setLevelFromGroup(const std::shared_ptr<Group> &group) {
+  void Group::setLevelFromGroup(const std::shared_ptr<const Group> &group) {
     level_is_overriden_ = group != parent_group_;
     level_ = group->level();
   }
@@ -54,12 +55,12 @@ namespace soralog {
     sink_is_overriden_ = false;
   }
 
-  void Group::setSink(std::string sink) {
+  void Group::setSink(std::shared_ptr<const Sink> sink) {
     sink_is_overriden_ = true;
     sink_ = std::move(sink);
   }
 
-  void Group::setSinkFromGroup(const std::shared_ptr<Group> &group) {
+  void Group::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     sink_is_overriden_ = group != parent_group_;
     sink_ = group->sink();
   }
@@ -69,7 +70,7 @@ namespace soralog {
     setSinkFromGroup(group);
   }
 
-  void Group::setParentGroup(std::shared_ptr<Group> group) {
+  void Group::setParentGroup(std::shared_ptr<const Group> group) {
     parent_group_ = std::move(group);
     if (parent_group_) {
       setSinkFromGroup(parent_group_);

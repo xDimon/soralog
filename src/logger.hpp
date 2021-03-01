@@ -29,8 +29,8 @@ namespace soralog {
     Logger &operator=(Logger &&) noexcept = delete;
     Logger &operator=(Logger const &) = delete;
 
-    Logger(LoggerSystem &system, std::string name,
-           const std::string &group_name);
+    Logger(LoggerSystem &system, std::string logger_name,
+           std::shared_ptr<const Group> group);
 
    private:
     template <typename... Args>
@@ -127,26 +127,35 @@ namespace soralog {
 
     void resetLevel();
     void setLevel(Level level);
-    void setLevelFromGroup(const std::shared_ptr<Group> &group);
+    void setLevelFromGroup(const std::shared_ptr<const Group> &group);
     void setLevelFromGroup(const std::string &group_name);
 
     // Sink
 
+    [[nodiscard]] std::shared_ptr<const Sink> sink() const noexcept {
+      return sink_;
+    }
+
     void resetSink();
     void setSink(const std::string &sink_name);
-    void setSinkFromGroup(const std::shared_ptr<Group> &group);
+    void setSink(std::shared_ptr<Sink> sink);
+    void setSinkFromGroup(const std::shared_ptr<const Group> &group);
     void setSinkFromGroup(const std::string &group_name);
 
     // Parent group
 
-    void setGroup(std::shared_ptr<Group> group);
+    [[nodiscard]] std::shared_ptr<const Group> group() const noexcept {
+      return group_;
+    }
+
     void setGroup(const std::string &group_name);
+    void setGroup(std::shared_ptr<const Group> group);
 
    private:
     LoggerSystem &system_;
 
     const std::string name_;
-    std::shared_ptr<Group> group_;
+    std::shared_ptr<const Group> group_;
 
     std::shared_ptr<Sink> sink_;
     bool sink_is_overriden_{};

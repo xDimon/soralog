@@ -4,13 +4,15 @@
  */
 
 #include "logger.hpp"
+
 namespace soralog {
 
-  Logger::Logger(soralog::LoggerSystem &system, std::string name,
-                 const std::string &group_name)
+  Logger::Logger(soralog::LoggerSystem &system, std::string logger_name,
+                 std::shared_ptr<const Group> group)
       : system_(system),
-        name_(std::move(name)),
-        group_(system_.getGroup(group_name)) {
+        name_(std::move(logger_name)),
+        group_(std::move(group)) {
+    assert(group_);
     setSinkFromGroup(group_);
     setLevelFromGroup(group_);
   }
@@ -26,45 +28,51 @@ namespace soralog {
     level_ = level;
   }
 
-  void Logger::setLevelFromGroup(const std::shared_ptr<Group> &group) {
+  void Logger::setLevelFromGroup(const std::shared_ptr<const Group> &group) {
     level_is_overriden_ = group != group_;
     level_ = group->level();
   }
 
   void Logger::setLevelFromGroup(const std::string &group_name) {
-    auto group = system_.getGroup(group_name);
-    setLevelFromGroup(group);
+    if (auto group = system_.getGroup(group_name)) {
+      setLevelFromGroup(group);
+    }
   }
 
   // Sink
 
   void Logger::resetSink() {
-    sink_ = system_.getSink(group_->sink());
+    sink_ = std::const_pointer_cast<Sink>(group_->sink());
     sink_is_overriden_ = false;
   }
 
   void Logger::setSink(const std::string &sink_name) {
     if (auto sink = system_.getSink(sink_name)) {
-      sink_is_overriden_ = true;
-      sink_ = std::move(sink);
+      setSink(std::move(sink));
     }
   }
 
-  void Logger::setSinkFromGroup(const std::shared_ptr<Group> &group) {
-    if (auto sink = system_.getSink(group->sink())) {
+  void Logger::setSink(std::shared_ptr<Sink> sink) {
+    sink_is_overriden_ = true;
+    sink_ = std::move(sink);
+  }
+
+  void Logger::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
+    if (auto sink = std::const_pointer_cast<Sink>(group->sink())) {
       sink_is_overriden_ = group != group_;
       sink_ = std::move(sink);
     }
   }
 
   void Logger::setSinkFromGroup(const std::string &group_name) {
-    auto group = system_.getGroup(group_name);
-    setSinkFromGroup(group);
+    if (auto group = system_.getGroup(group_name)) {
+      setSinkFromGroup(group);
+    }
   }
 
   // Parent group
 
-  void Logger::setGroup(std::shared_ptr<Group> group) {
+  void Logger::setGroup(std::shared_ptr<const Group> group) {
     group_ = std::move(group);
     if (group_) {
       setSinkFromGroup(group_);
@@ -76,8 +84,9 @@ namespace soralog {
   }
 
   void Logger::setGroup(const std::string &group_name) {
-    auto group = system_.getGroup(group_name);
-    setGroup(group);
+    if (auto group = system_.getGroup(group_name)) {
+      setGroup(group);
+    }
   }
 
 }  // namespace soralog

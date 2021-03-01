@@ -19,8 +19,13 @@ namespace soralog {
       }
     }
 
-    auto logger = std::make_shared<Logger>(logger_system_,
-                                           std::move(logger_name), group_name);
+    auto group = logger_system_.getGroup(group_name);
+    if (group != nullptr) {
+      assert(group);  // TODO(xDimon): Use default group if it isn't found
+    }
+
+    auto logger = std::make_shared<Logger>(
+        logger_system_, std::move(logger_name), std::move(group));
 
     if (sink_name.has_value()) {
       logger->setSink(sink_name.value());

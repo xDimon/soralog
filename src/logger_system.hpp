@@ -15,6 +15,7 @@
 namespace soralog {
 
   class Group;
+  class Logger;
 
   class LoggerSystem final {
    public:
@@ -41,7 +42,20 @@ namespace soralog {
                    const std::optional<std::string> &sink,
                    const std::optional<Level> &level);
 
+    void setParentForGroup(const std::string &group_name,
+                           const std::string &parent);
+    void setLevelForGroup(const std::string &group_name, Level level);
+    void setSinkForGroup(const std::string &group_name,
+                         const std::string &sink_name);
+
+    void setGroupForLogger(const std::string &logger_name,
+                           const std::string &group_name);
+    void setLevelForLogger(const std::string &logger_name, Level level);
+    void setSinkForLogger(const std::string &logger_name,
+                          const std::string &sink_name);
+
    private:
+    std::map<std::string, std::shared_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
     std::map<std::string, std::shared_ptr<Group>> groups_;
   };
