@@ -10,4 +10,5 @@ add_executable(example_simple
 target_link_libraries(example_simple
     Boost::Boost.DI
     logger_system
+    configurator
     )

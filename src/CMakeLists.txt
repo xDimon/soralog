@@ -3,31 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(logger_system
-    logger_system.cpp
-    )
-target_link_libraries(logger_system
-    group
-    sink_to_console
-    sink_to_file
-    logger
-    configurator
-    )
-
-add_library(logger
-    logger.cpp
-    )
-target_link_libraries(logger
-    sink_base
-    )
-
-add_library(group
-    group.cpp
-    )
-target_link_libraries(group
-    sink_base
-    )
-
 add_library(sink_base
     sink.hpp
     )
@@ -51,9 +26,33 @@ target_link_libraries(sink_to_file
     pthread
     )
 
+add_library(group
+    group.cpp
+    )
+target_link_libraries(group
+    sink_base
+    )
+
+add_library(logger
+    logger.cpp
+    )
+target_link_libraries(logger
+    sink_base
+    )
+
 add_library(configurator
-    configurator.cpp
+    impl/configurator_from_yaml.cpp
     )
 target_link_libraries(configurator
     yaml-cpp::yaml-cpp
+    sink_to_console
+    sink_to_file
+    )
+
+add_library(logger_system
+    logger_system.cpp
+    )
+target_link_libraries(logger_system
+    group
+    logger
     )

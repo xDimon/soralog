@@ -7,7 +7,9 @@
 #define SORALOG_LOGGERMANAGER
 
 #include <map>
+#include <memory>
 
+#include <configurator.hpp>
 #include <logger_factory.hpp>
 #include <sink.hpp>
 #include <sink/sink_to_console.hpp>
@@ -20,12 +22,23 @@ namespace soralog {
 
   class LoggerSystem final : public LoggerFactory {
    public:
-    LoggerSystem() = default;
+    LoggerSystem() = delete;
     LoggerSystem(const LoggerSystem &) = delete;
     LoggerSystem &operator=(LoggerSystem const &) = delete;
     ~LoggerSystem() override = default;
     LoggerSystem(LoggerSystem &&tmp) noexcept = delete;
     LoggerSystem &operator=(LoggerSystem &&tmp) noexcept = delete;
+
+    explicit LoggerSystem(std::unique_ptr<Configurator> configurator)
+        : configurator_(std::move(configurator)) {};
+
+    Configurator::Result configure() {
+      if (not is_configured_) {
+        is_configured_ = true;
+        return configurator_->applyOn(*this);
+      }
+      return {};
+    }
 
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
@@ -75,6 +88,8 @@ namespace soralog {
     void setLevelForLogger(std::shared_ptr<Logger> logger,
                            std::optional<Level> level);
 
+    std::unique_ptr<Configurator> configurator_;
+    bool is_configured_ = false;
     std::map<std::string, std::weak_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
     std::map<std::string, std::shared_ptr<Group>> groups_;
