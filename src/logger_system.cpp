@@ -18,6 +18,9 @@ namespace soralog {
                                const std::optional<Level> &level) {
     auto group =
         std::make_shared<Group>(*this, std::move(name), parent, sink, level);
+    if (not fallback_group_) {
+      fallback_group_ = group;
+    }
     groups_[group->name()] = std::move(group);
   }
 
@@ -25,6 +28,11 @@ namespace soralog {
       std::string logger_name, const std::string &group_name,
       const std::optional<std::string> &sink_name,
       const std::optional<Level> &level) {
+
+    if (not is_configured_) {
+      throw std::logic_error("LoggerSystem is not yet configured");
+    }
+
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         return std::move(logger);
@@ -32,8 +40,14 @@ namespace soralog {
     }
 
     auto group = getGroup(group_name);
-    if (group != nullptr) {
-      assert(group);  // TODO(xDimon): Use default group if it isn't found
+    if (group == nullptr) {
+      group = fallback_group_;
+      assert(group != nullptr);  // At least fallback group must be existing
+      auto logger = std::make_shared<Logger>(*this, "Soralog", group);
+      logger->warn(
+          "Group '{}' for logger '{}' is not found. "
+          "Fallback group will be used",
+          group_name, logger_name);
     }
 
     auto logger = std::make_shared<Logger>(*this, std::move(logger_name),

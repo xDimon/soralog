@@ -13,7 +13,6 @@
 #include <yaml-cpp/yaml.h>
 
 #include <soralog/logger_system.hpp>
-#include <soralog/sink.hpp>
 
 namespace soralog {
 

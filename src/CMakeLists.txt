@@ -66,6 +66,13 @@ target_link_libraries(configurator_yaml
     configurator
     )
 
+add_library(fallback_configurator
+    impl/fallback_configurator.cpp
+    )
+target_link_libraries(fallback_configurator
+    configurator
+    )
+
 add_library(logger_system
     logger_system.cpp
     )
@@ -84,6 +91,7 @@ target_link_libraries(soralog
 
 add_library(soralog::soralog ALIAS soralog)
 add_library(soralog::yaml ALIAS configurator_yaml)
+add_library(soralog::fallback ALIAS fallback_configurator)
 
 set(INSTALL_TARGETS
     soralog
@@ -97,11 +105,9 @@ set(INSTALL_TARGETS
     sink_to_file
 
     configurator
+    fallback_configurator
     configurator_yaml
     )
-
-
-
 
 include(GNUInstallDirs)
 

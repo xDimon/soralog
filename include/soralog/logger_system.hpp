@@ -34,11 +34,11 @@ namespace soralog {
         : configurator_(std::move(configurator)){};
 
     Configurator::Result configure() {
-      if (not is_configured_) {
-        is_configured_ = true;
-        return configurator_->applyOn(*this);
+      if (is_configured_) {
+        throw std::logic_error("LoggerSystem is already configured");
       }
-      return {};
+      is_configured_ = true;
+      return configurator_->applyOn(*this);
     }
 
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
@@ -94,6 +94,7 @@ namespace soralog {
     std::map<std::string, std::weak_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;
     std::map<std::string, std::shared_ptr<Group>> groups_;
+    std::shared_ptr<Group> fallback_group_;
   };
 
 }  // namespace soralog
