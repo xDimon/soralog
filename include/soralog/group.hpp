@@ -9,8 +9,8 @@
 #include <memory>
 #include <string>
 
-#include <log_levels.hpp>
-#include <logger_system.hpp>
+#include <soralog/level.hpp>
+#include <soralog/logger_system.hpp>
 
 namespace soralog {
 

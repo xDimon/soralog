@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <impl/configurator_from_yaml.hpp>
-#include <injector/injector.hpp>
+#include <soralog/impl/configurator_from_yaml.hpp>
+#include <soralog/injector.hpp>
 
 #include "logging_object.hpp"
 

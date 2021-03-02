@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <sink/sink_to_console.hpp>
+#include "sink_to_console.hpp"
 
 #include <chrono>
 #include <iomanip>
@@ -254,13 +254,13 @@ namespace soralog {
           put_style(ptr,
                     event.level == Level::TRACE
                         ? fmt::internal::make_foreground_color<char>(
-                            fmt::color::light_gray)
+                            fmt::color::dark_gray)
                         : event.level == Level::DEBUG
                             ? fmt::internal::make_foreground_color<char>(
-                                fmt::color::dark_gray)
+                                fmt::color::gray)
                             : event.level == Level::VERBOSE
                                 ? fmt::internal::make_foreground_color<char>(
-                                    fmt::color::gray)
+                                    fmt::color::dim_gray)
                                 : fmt::internal::make_foreground_color<char>(
                                     fmt::color::black));
           if (event.level <= Level::ERROR)

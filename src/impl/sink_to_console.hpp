@@ -6,7 +6,7 @@
 #ifndef SORALOG_SINKTOCONSOLE
 #define SORALOG_SINKTOCONSOLE
 
-#include <sink.hpp>
+#include <soralog/sink.hpp>
 
 #include <array>
 #include <condition_variable>
@@ -26,10 +26,6 @@ namespace soralog {
 
     SinkToConsole(std::string name, bool with_color);
     ~SinkToConsole() override;
-
-    [[nodiscard]] SinkType type() const noexcept override {
-      return SinkType::COUT;
-    }
 
     [[nodiscard]] const std::string &name() const noexcept override {
       return name_;

@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <impl/configurator_from_yaml.hpp>
+#include <soralog/impl/configurator_from_yaml.hpp>
 
 #include <iostream>
 #include <memory>
 #include <string>
 
-#include <log_levels.hpp>
+#include <soralog/level.hpp>
+
+#include "sink_to_console.hpp"
+#include "sink_to_file.hpp"
 
 namespace soralog {
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "group.hpp"
+#include <soralog/group.hpp>
 
 namespace soralog {
 

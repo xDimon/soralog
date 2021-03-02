@@ -11,7 +11,7 @@
 
 #include <fmt/format.h>
 
-#include <log_levels.hpp>
+#include <soralog/level.hpp>
 
 namespace soralog {
   class Event final {

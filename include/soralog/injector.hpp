@@ -8,8 +8,8 @@
 
 #include <boost/di.hpp>
 
-#include <logger_system.hpp>
-#include <logger_factory.hpp>
+#include <soralog/logger_factory.hpp>
+#include <soralog/logger_system.hpp>
 
 namespace soralog::injector {
 

@@ -6,14 +6,14 @@
 #ifndef SORALOG_CONFIGURATORFROMYAML
 #define SORALOG_CONFIGURATORFROMYAML
 
-#include <configurator.hpp>
+#include <soralog/configurator.hpp>
 
 #include <filesystem>
 
 #include <yaml-cpp/yaml.h>
 
-#include <logger_system.hpp>
-#include <sink.hpp>
+#include <soralog/logger_system.hpp>
+#include <soralog/sink.hpp>
 
 namespace soralog {
 

@@ -7,19 +7,15 @@
 #define SORALOG_LOG
 
 #include <memory>
-#include <optional>
 #include <string>
-#include <string_view>
 
-#include <boost/assert.hpp>
-
-#include <event.hpp>
-#include <group.hpp>
-#include <sink.hpp>
+#include <soralog/sink.hpp>
+#include <soralog/level.hpp>
 
 namespace soralog {
 
   class LoggerSystem;
+  class Group;
 
   class Logger final {
    public:

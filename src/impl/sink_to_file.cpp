@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <sink/sink_to_file.hpp>
+#include "sink_to_file.hpp"
 
 #include <chrono>
 #include <iomanip>

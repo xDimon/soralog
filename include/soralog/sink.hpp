@@ -1,4 +1,3 @@
-
 /**
  * Copyright Soramitsu Co., Ltd. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
@@ -8,11 +7,11 @@
 #define SORALOG_SINK
 
 #include <memory>
-#include <queue>
+#include <string>
+#include <string_view>
 
-#include <circular_buffer.hpp>
-#include <event.hpp>
-#include <sink_types.hpp>
+#include <soralog/circular_buffer.hpp>
+#include <soralog/event.hpp>
 
 #ifdef NDEBUG
 #define IF_RELEASE true
@@ -30,8 +29,6 @@ namespace soralog {
     virtual ~Sink() = default;
     Sink &operator=(Sink const &) = delete;
     Sink &operator=(Sink &&) noexcept = delete;
-
-    virtual SinkType type() const noexcept = 0;
 
     virtual const std::string &name() const noexcept = 0;
 

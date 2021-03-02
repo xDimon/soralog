@@ -6,7 +6,7 @@
 #ifndef SORALOG_SINKTOFILE
 #define SORALOG_SINKTOFILE
 
-#include <sink.hpp>
+#include <soralog/sink.hpp>
 
 #include <array>
 #include <condition_variable>
@@ -30,10 +30,6 @@ namespace soralog {
     SinkToFile(std::string name, std::filesystem::path path,
                std::string filename);
     ~SinkToFile() override;
-
-    [[nodiscard]] SinkType type() const noexcept override {
-      return SinkType::FILE;
-    }
 
     [[nodiscard]] const std::string &name() const noexcept override {
       return name_;

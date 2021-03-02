@@ -7,10 +7,11 @@
 #define SORALOG_EXAMPLE_LOGGINGOBJECT
 
 #include <iostream>
-#include <log_levels.hpp>
-#include <logger.hpp>
-#include <logger_factory.hpp>
 #include <thread>
+
+#include <soralog/level.hpp>
+#include <soralog/logger.hpp>
+#include <soralog/logger_factory.hpp>
 
 class LoggingObject final {
  public:

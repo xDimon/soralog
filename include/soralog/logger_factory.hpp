@@ -11,7 +11,7 @@
 #include <string_view>
 #include <unordered_map>
 
-#include <log_levels.hpp>
+#include <soralog/level.hpp>
 
 namespace soralog {
 

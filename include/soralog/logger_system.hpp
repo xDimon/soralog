@@ -6,14 +6,15 @@
 #ifndef SORALOG_LOGGERMANAGER
 #define SORALOG_LOGGERMANAGER
 
+#include <soralog/logger_factory.hpp>
+
 #include <map>
 #include <memory>
+#include <optional>
+#include <string>
 
-#include <configurator.hpp>
-#include <logger_factory.hpp>
-#include <sink.hpp>
-#include <sink/sink_to_console.hpp>
-#include <sink/sink_to_file.hpp>
+#include <soralog/configurator.hpp>
+#include <soralog/sink.hpp>
 
 namespace soralog {
 
@@ -30,7 +31,7 @@ namespace soralog {
     LoggerSystem &operator=(LoggerSystem &&tmp) noexcept = delete;
 
     explicit LoggerSystem(std::unique_ptr<Configurator> configurator)
-        : configurator_(std::move(configurator)) {};
+        : configurator_(std::move(configurator)){};
 
     Configurator::Result configure() {
       if (not is_configured_) {
@@ -43,7 +44,7 @@ namespace soralog {
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
         const std::optional<std::string> &sink_name,
-        const std::optional<Level> &level);
+        const std::optional<Level> &level) override;
 
     [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
 

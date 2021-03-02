@@ -16,20 +16,10 @@ include("cmake/Hunter/init.cmake")
 cmake_policy(SET CMP0048 NEW)
 project(soralog VERSION 0.0.1 LANGUAGES CXX)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 option(TESTING "Build tests" ON)
 option(EXAMPLES "Build examples" ON)
 
-
 include(cmake/dependencies.cmake)
-
-
-include_directories(
-    SYSTEM
-    $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:soralog>
-)
 
 add_subdirectory(src)
 
