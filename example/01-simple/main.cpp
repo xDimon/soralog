@@ -9,16 +9,22 @@
 #include "logging_object.hpp"
 
 template <typename Injector>
-std::unique_ptr<soralog::Configurator> get_configurator(
+std::shared_ptr<soralog::ConfiguratorFromYAML> get_configurator(
     const Injector &injector) {
-  return std::make_unique<soralog::ConfiguratorFromYAML>(
+  static auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(
       "../../../example/01-simple/logger.yml");
+  return cfg;
 }
 
 int main() {
-  auto injector =
-      soralog::injector::makeInjector(boost::di::bind<soralog::Configurator>.to(
-          [](const auto &i) { return get_configurator(i); }));
+  auto injector = soralog::injector::makeInjector(
+
+      // Replace fallback configurator by ConfiguratorFromYAML
+      boost::di::bind<soralog::Configurator>.to([](const auto &i) {
+        return get_configurator(i);
+      })[boost::di::override]
+
+  );
 
   auto &log_system = injector.create<soralog::LoggerSystem &>();
 

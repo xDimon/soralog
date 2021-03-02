@@ -30,7 +30,7 @@ namespace soralog {
     LoggerSystem(LoggerSystem &&tmp) noexcept = delete;
     LoggerSystem &operator=(LoggerSystem &&tmp) noexcept = delete;
 
-    explicit LoggerSystem(std::unique_ptr<Configurator> configurator)
+    explicit LoggerSystem(std::shared_ptr<Configurator> configurator)
         : configurator_(std::move(configurator)){};
 
     Configurator::Result configure() {
@@ -89,7 +89,7 @@ namespace soralog {
     void setLevelForLogger(std::shared_ptr<Logger> logger,
                            std::optional<Level> level);
 
-    std::unique_ptr<Configurator> configurator_;
+    std::shared_ptr<Configurator> configurator_;
     bool is_configured_ = false;
     std::map<std::string, std::weak_ptr<Logger>> loggers_;
     std::map<std::string, std::shared_ptr<Sink>> sinks_;

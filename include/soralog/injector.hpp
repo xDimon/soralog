@@ -8,8 +8,8 @@
 
 #include <boost/di.hpp>
 
-#include <soralog/logger_factory.hpp>
 #include <soralog/logger_system.hpp>
+#include <soralog/impl/fallback_configurator.hpp>
 
 namespace soralog::injector {
 
@@ -20,6 +20,7 @@ namespace soralog::injector {
     return di::make_injector<InjectorConfig>(
 
         // clang-format off
+        di::bind<Configurator>.template to<FallbackConfigurator>().in(di::unique),
         di::bind<LoggerFactory>.template to<LoggerSystem>().in(di::singleton),
         // clang-format on
 
