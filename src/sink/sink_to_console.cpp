@@ -22,45 +22,53 @@ namespace soralog {
 
     constexpr auto level_to_bg(Level level) {
       using cl = fmt::color;
+      auto mbc = [](cl cl) {
+        return fmt::internal::make_background_color<char>(cl);
+      };
       switch (level) {
         case Level::OFF:
-          return fmt::internal::make_foreground_color<char>(cl::black);
+        default:
+          return mbc(cl::black);
         case Level::CRITICAL:
-          return fmt::internal::make_foreground_color<char>(cl::red);
+          return mbc(cl::red);
         case Level::ERROR:
-          return fmt::internal::make_foreground_color<char>(cl::orange);
+          return mbc(cl::orange);
         case Level::WARN:
-          return fmt::internal::make_foreground_color<char>(cl::yellow);
+          return mbc(cl::yellow);
         case Level::INFO:
-          return fmt::internal::make_foreground_color<char>(cl::green);
+          return mbc(cl::green);
         case Level::VERBOSE:
-          return fmt::internal::make_foreground_color<char>(cl::dark_green);
+          return mbc(cl::dark_green);
         case Level::DEBUG:
-          return fmt::internal::make_foreground_color<char>(cl::blue);
+          return mbc(cl::blue);
         case Level::TRACE:
-          return fmt::internal::make_foreground_color<char>(cl::gray);
+          return mbc(cl::gray);
       }
     }
 
     constexpr auto level_to_fg(Level level) {
       using cl = fmt::color;
+      auto mfc = [](cl cl) {
+        return fmt::internal::make_foreground_color<char>(cl);
+      };
       switch (level) {
         case Level::OFF:
-          return fmt::internal::make_foreground_color<char>(cl::black);
+        default:
+          return mfc(cl::black);
         case Level::CRITICAL:
-          return fmt::internal::make_foreground_color<char>(cl::red);
+          return mfc(cl::red);
         case Level::ERROR:
-          return fmt::internal::make_foreground_color<char>(cl::orange_red);
+          return mfc(cl::orange_red);
         case Level::WARN:
-          return fmt::internal::make_foreground_color<char>(cl::orange);
+          return mfc(cl::orange);
         case Level::INFO:
-          return fmt::internal::make_foreground_color<char>(cl::dark_green);
+          return mfc(cl::dark_green);
         case Level::VERBOSE:
-          return fmt::internal::make_foreground_color<char>(cl::green);
+          return mfc(cl::green);
         case Level::DEBUG:
-          return fmt::internal::make_foreground_color<char>(cl::blue);
+          return mfc(cl::blue);
         case Level::TRACE:
-          return fmt::internal::make_foreground_color<char>(cl::gray);
+          return mfc(cl::gray);
       }
     }
 
@@ -207,8 +215,8 @@ namespace soralog {
           ptr = ptr + datetime.size();  // NOLINT
 
           {
-            const auto &style = fmt::internal::make_foreground_color<char>(
-                fmt::color::gray);
+            const auto &style =
+                fmt::internal::make_foreground_color<char>(fmt::color::gray);
 
             auto size = std::end(style) - std::begin(style);
             std::memcpy(ptr, std::begin(style),
