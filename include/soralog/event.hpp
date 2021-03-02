@@ -26,14 +26,14 @@ namespace soralog {
     template <typename... Args>
     Event(std::string_view name, Level level, std::string_view format,
           Args &&... args)
-        : time(std::chrono::system_clock::now()), name(name), level(level) {
+        : time(std::chrono::system_clock::now()), name(name.data(), std::min(name.size(), 15ul)), level(level) {
       auto result = fmt::format_to_n(message.begin(), message.size(), format,
                                      std::forward<Args>(args)...);
       size = result.size;
     }
 
     std::chrono::system_clock::time_point time;
-    std::string_view name;
+    const std::string name;
     Level level = Level::OFF;
     std::array<char, 4096> message;
     size_t size = 0;
