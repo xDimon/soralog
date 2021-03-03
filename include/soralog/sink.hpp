@@ -34,10 +34,10 @@ namespace soralog {
 
     template <typename... Args>
     void push(std::string_view name, Level level, std::string_view format,
-              Args... args) noexcept(IF_RELEASE) {
+              const Args&... args) noexcept(IF_RELEASE) {
       while (true) {
         auto node =
-            events_->put(name, level, format, std::forward<Args>(args)...);
+            events_->put(name, level, format, args...);
 
         // Event is queued successfully
         if (node) {

@@ -9,8 +9,8 @@
 #include <memory>
 #include <string>
 
-#include <soralog/sink.hpp>
 #include <soralog/level.hpp>
+#include <soralog/sink.hpp>
 
 namespace soralog {
 
@@ -31,9 +31,9 @@ namespace soralog {
 
    private:
     template <typename... Args>
-    void push(Level level, std::string_view format, Args... args) {
+    void push(Level level, std::string_view format, const Args &... args) {
       if (level_ >= level) {
-        sink_->push(name_, level, format, std::forward<Args>(args)...);
+        sink_->push(name_, level, format, args...);
       }
     }
 
@@ -48,8 +48,8 @@ namespace soralog {
     }
 
     template <class Arg>
-    void trace(Arg &&msg) {
-      push(Level::TRACE, "{}", std::forward<Arg>(msg));
+    void trace(Arg &&arg) {
+      push(Level::TRACE, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -57,9 +57,9 @@ namespace soralog {
       push(Level::DEBUG, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void debug(Arg &&msg) {
-      push(Level::DEBUG, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void debug(Arg &&arg) {
+      push(Level::DEBUG, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -67,9 +67,9 @@ namespace soralog {
       push(Level::VERBOSE, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void verbose(Arg &&msg) {
-      push(Level::VERBOSE, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void verbose(Arg &&arg) {
+      push(Level::VERBOSE, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -77,9 +77,9 @@ namespace soralog {
       push(Level::INFO, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void info(Arg &&msg) {
-      push(Level::INFO, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void info(Arg &&arg) {
+      push(Level::INFO, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -87,9 +87,9 @@ namespace soralog {
       push(Level::WARN, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void warn(Arg &&msg) {
-      push(Level::WARN, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void warn(Arg &&arg) {
+      push(Level::WARN, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -97,9 +97,9 @@ namespace soralog {
       push(Level::ERROR, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void error(Arg &&msg) {
-      push(Level::ERROR, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void error(Arg &&arg) {
+      push(Level::ERROR, "{}", std::forward<Arg>(arg));
     }
 
     template <typename... Args>
@@ -107,9 +107,9 @@ namespace soralog {
       push(Level::CRITICAL, format, std::forward<Args>(args)...);
     }
 
-    template <class Arg>
-    void critical(Arg &&msg) {
-      push(Level::CRITICAL, "{}", std::forward<Arg>(msg));
+    template <typename Arg>
+    void critical(Arg &&arg) {
+      push(Level::CRITICAL, "{}", std::forward<Arg>(arg));
     }
 
     void flush() const {

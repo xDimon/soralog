@@ -33,8 +33,8 @@ namespace soralog {
       std::atomic_bool ready{false};
 
       template <typename... Args>
-      explicit Node(Args... args) noexcept(IF_RELEASE) {
-        new (data_.data()) T(std::forward<Args>(args)...);
+      explicit Node(const Args &... args) noexcept(IF_RELEASE) {
+        new (data_.data()) T(args...);
       }
     };
 
@@ -102,7 +102,7 @@ namespace soralog {
     }
 
     template <typename... Args>
-    [[nodiscard]] NodeRef put(Args... args) noexcept(IF_RELEASE) {
+    [[nodiscard]] NodeRef put(const Args &... args) noexcept(IF_RELEASE) {
       while (true) {
         auto push_index = push_index_.load();
         auto next_index = (push_index + 1) % N;
@@ -128,7 +128,7 @@ namespace soralog {
         size_ = ((push_index_ < pop_index_) ? N : 0) + push_index_ - pop_index_;
 
         // Emplace item
-        new (&node) Node(std::forward<Args>(args)...);
+        new (&node) Node(args...);
         return NodeRef{node, true};
       }
     }
