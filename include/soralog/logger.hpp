@@ -43,73 +43,73 @@ namespace soralog {
     }
 
     template <typename... Args>
-    void trace(std::string_view format, Args &&... args) {
-      push(Level::TRACE, format, std::forward<Args>(args)...);
+    void trace(std::string_view format, const Args &... args) {
+      push(Level::TRACE, format, args...);
     }
 
     template <class Arg>
-    void trace(Arg &&arg) {
-      push(Level::TRACE, "{}", std::forward<Arg>(arg));
+    void trace(const Arg &arg) {
+      push(Level::TRACE, "{}", arg);
     }
 
     template <typename... Args>
-    void debug(std::string_view format, Args &&... args) {
-      push(Level::DEBUG, format, std::forward<Args>(args)...);
+    void debug(std::string_view format, const Args &... args) {
+      push(Level::DEBUG, format, args...);
     }
 
     template <typename Arg>
-    void debug(Arg &&arg) {
-      push(Level::DEBUG, "{}", std::forward<Arg>(arg));
+    void debug(const Arg &arg) {
+      push(Level::DEBUG, "{}", arg);
     }
 
     template <typename... Args>
-    void verbose(std::string_view format, Args &&... args) {
-      push(Level::VERBOSE, format, std::forward<Args>(args)...);
+    void verbose(std::string_view format, const Args &... args) {
+      push(Level::VERBOSE, format, args...);
     }
 
     template <typename Arg>
-    void verbose(Arg &&arg) {
-      push(Level::VERBOSE, "{}", std::forward<Arg>(arg));
+    void verbose(const Arg &arg) {
+      push(Level::VERBOSE, "{}", arg);
     }
 
     template <typename... Args>
-    void info(std::string_view format, Args &&... args) {
-      push(Level::INFO, format, std::forward<Args>(args)...);
+    void info(std::string_view format, const Args &... args) {
+      push(Level::INFO, format, args...);
     }
 
     template <typename Arg>
-    void info(Arg &&arg) {
-      push(Level::INFO, "{}", std::forward<Arg>(arg));
+    void info(const Arg &arg) {
+      push(Level::INFO, "{}", arg);
     }
 
     template <typename... Args>
-    void warn(std::string_view format, Args &&... args) {
-      push(Level::WARN, format, std::forward<Args>(args)...);
+    void warn(std::string_view format, const Args &... args) {
+      push(Level::WARN, format, args...);
     }
 
     template <typename Arg>
-    void warn(Arg &&arg) {
-      push(Level::WARN, "{}", std::forward<Arg>(arg));
+    void warn(const Arg &arg) {
+      push(Level::WARN, "{}", arg);
     }
 
     template <typename... Args>
-    void error(std::string_view format, Args &&... args) {
-      push(Level::ERROR, format, std::forward<Args>(args)...);
+    void error(std::string_view format, const Args &... args) {
+      push(Level::ERROR, format, args...);
     }
 
     template <typename Arg>
-    void error(Arg &&arg) {
-      push(Level::ERROR, "{}", std::forward<Arg>(arg));
+    void error(const Arg &arg) {
+      push(Level::ERROR, "{}", arg);
     }
 
     template <typename... Args>
-    void critical(std::string_view format, Args &&... args) {
-      push(Level::CRITICAL, format, std::forward<Args>(args)...);
+    void critical(std::string_view format, const Args &... args) {
+      push(Level::CRITICAL, format, args...);
     }
 
     template <typename Arg>
-    void critical(Arg &&arg) {
-      push(Level::CRITICAL, "{}", std::forward<Arg>(arg));
+    void critical(const Arg &arg) {
+      push(Level::CRITICAL, "{}", arg);
     }
 
     void flush() const {
