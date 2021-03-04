@@ -36,8 +36,7 @@ namespace soralog {
     void push(std::string_view name, Level level, std::string_view format,
               const Args&... args) noexcept(IF_RELEASE) {
       while (true) {
-        auto node =
-            events_->put(name, level, format, args...);
+        auto node = events_->put(name, level, format, args...);
 
         // Event is queued successfully
         if (node) {

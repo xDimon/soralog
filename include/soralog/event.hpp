@@ -14,6 +14,7 @@
 #include <soralog/level.hpp>
 
 namespace soralog {
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
   class Event final {
    public:
     Event() = default;
@@ -24,6 +25,7 @@ namespace soralog {
     Event &operator=(Event const &) = delete;
 
     template <typename... Args>
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event(std::string_view name, Level level, std::string_view format,
           const Args &... args)
         : time(std::chrono::system_clock::now()),

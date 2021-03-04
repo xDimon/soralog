@@ -33,13 +33,7 @@ namespace soralog {
     explicit LoggerSystem(std::shared_ptr<Configurator> configurator)
         : configurator_(std::move(configurator)){};
 
-    Configurator::Result configure() {
-      if (is_configured_) {
-        throw std::logic_error("LoggerSystem is already configured");
-      }
-      is_configured_ = true;
-      return configurator_->applyOn(*this);
-    }
+    Configurator::Result configure();
 
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
@@ -77,16 +71,16 @@ namespace soralog {
     void resetLevelForLogger(const std::string &logger_name);
 
    private:
-    void setParentForGroup(std::shared_ptr<Group> group,
-                           std::shared_ptr<Group> parent);
-    void setSinkForGroup(std::shared_ptr<Group> group,
+    void setParentForGroup(const std::shared_ptr<Group> &group,
+                           const std::shared_ptr<Group> &parent);
+    void setSinkForGroup(const std::shared_ptr<Group> &group,
                          std::optional<std::shared_ptr<Sink>> sink);
-    void setLevelForGroup(std::shared_ptr<Group> group,
+    void setLevelForGroup(const std::shared_ptr<Group> &group,
                           std::optional<Level> level);
 
-    void setSinkForLogger(std::shared_ptr<Logger> logger,
+    static void setSinkForLogger(const std::shared_ptr<Logger> &logger,
                           std::optional<std::shared_ptr<Sink>> sink);
-    void setLevelForLogger(std::shared_ptr<Logger> logger,
+    static void setLevelForLogger(const std::shared_ptr<Logger>& logger,
                            std::optional<Level> level);
 
     std::shared_ptr<Configurator> configurator_;

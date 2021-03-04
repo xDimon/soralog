@@ -6,7 +6,7 @@
 #include "logging_object.hpp"
 
 LoggingObject::LoggingObject(soralog::LoggerFactory &logger_factory)
-    : log_(logger_factory.getLogger("ObjectTag", "main")) {}
+    : log_(logger_factory.getLogger("ObjectTag", "*")) {}
 
 void LoggingObject::method() const {
   auto start_time = std::chrono::system_clock::now();

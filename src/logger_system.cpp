@@ -20,15 +20,23 @@ namespace soralog {
         std::make_shared<Group>(*this, std::move(name), parent, sink, level);
     if (not fallback_group_) {
       fallback_group_ = group;
+      groups_["*"] = group;
     }
     groups_[group->name()] = std::move(group);
+  }
+
+  Configurator::Result LoggerSystem::configure() {
+    if (is_configured_) {
+      throw std::logic_error("LoggerSystem is already configured");
+    }
+    is_configured_ = true;
+    return configurator_->applyOn(*this);
   }
 
   std::shared_ptr<Logger> LoggerSystem::getLogger(
       std::string logger_name, const std::string &group_name,
       const std::optional<std::string> &sink_name,
       const std::optional<Level> &level) {
-
     if (not is_configured_) {
       throw std::logic_error("LoggerSystem is not yet configured");
     }
@@ -46,7 +54,7 @@ namespace soralog {
       auto logger = std::make_shared<Logger>(*this, "Soralog", group);
       logger->warn(
           "Group '{}' for logger '{}' is not found. "
-          "Fallback group will be used",
+          "Fallback group will be used. Use '*' group for using default one",
           group_name, logger_name);
     }
 
@@ -87,8 +95,8 @@ namespace soralog {
     return it->second;
   }
 
-  void LoggerSystem::setParentForGroup(std::shared_ptr<Group> group,
-                                       std::shared_ptr<Group> parent) {
+  void LoggerSystem::setParentForGroup(const std::shared_ptr<Group> &group,
+                                       const std::shared_ptr<Group> &parent) {
     group->setParentGroup(parent);
 
     std::map<std::shared_ptr<const Group>, int> passed_groups;
@@ -144,7 +152,8 @@ namespace soralog {
   }
 
   void LoggerSystem::setSinkForGroup(
-      std::shared_ptr<Group> group, std::optional<std::shared_ptr<Sink>> sink) {
+      const std::shared_ptr<Group> &group,
+      std::optional<std::shared_ptr<Sink>> sink) {
     if (sink) {
       group->setSink(*sink);
     } else {
@@ -203,7 +212,7 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setLevelForGroup(std::shared_ptr<Group> group,
+  void LoggerSystem::setLevelForGroup(const std::shared_ptr<Group> &group,
                                       std::optional<Level> level) {
     if (level) {
       group->setLevel(*level);
@@ -264,7 +273,7 @@ namespace soralog {
   }
 
   void LoggerSystem::setSinkForLogger(
-      std::shared_ptr<Logger> logger,
+      const std::shared_ptr<Logger> &logger,
       std::optional<std::shared_ptr<Sink>> sink) {
     if (sink) {
       logger->setSink(std::move(*sink));
@@ -273,7 +282,7 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setLevelForLogger(std::shared_ptr<Logger> logger,
+  void LoggerSystem::setLevelForLogger(const std::shared_ptr<Logger> &logger,
                                        std::optional<Level> level) {
     if (level) {
       logger->setLevel(*level);
@@ -284,19 +293,17 @@ namespace soralog {
 
   void LoggerSystem::setParentForGroup(const std::string &group_name,
                                        const std::string &parent_name) {
-    std::shared_ptr<Group> group;
-    if (auto it = groups_.find(group_name); it != groups_.end()) {
-      group = it->second;
-    } else {
+    auto it1 = groups_.find(group_name);
+    if ( it1 == groups_.end()) {
       return;
     }
+    auto& group = it1->second;
 
-    std::shared_ptr<Group> parent;
-    if (auto it = groups_.find(parent_name); it != groups_.end()) {
-      parent = it->second;
-    } else {
+    auto it2 = groups_.find(parent_name);
+    if ( it2 == groups_.end()) {
       return;
     }
+    auto& parent = it2->second;
 
     // Check for recursion
     for (auto current = parent->parent(); current != nullptr;
@@ -317,30 +324,30 @@ namespace soralog {
       return;
     }
     if (auto it = groups_.find(group_name); it != groups_.end()) {
-      auto group = it->second;
-      setSinkForGroup(std::move(group), std::move(sink));
+      auto& group = it->second;
+      setSinkForGroup(group, std::move(sink));
     }
   }
 
   void LoggerSystem::resetSinkForGroup(const std::string &group_name) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
-      auto group = it->second;
-      setSinkForGroup(std::move(group), {});
+      auto& group = it->second;
+      setSinkForGroup(group, {});
     }
   }
 
   void LoggerSystem::setLevelForGroup(const std::string &group_name,
                                       Level level) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
-      auto group = it->second;
-      setLevelForGroup(std::move(group), level);
+      auto& group = it->second;
+      setLevelForGroup(group, level);
     }
   }
 
   void LoggerSystem::resetLevelForGroup(const std::string &group_name) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
-      auto group = it->second;
-      setLevelForGroup(std::move(group), {});
+      auto& group = it->second;
+      setLevelForGroup(group, {});
     }
   }
 

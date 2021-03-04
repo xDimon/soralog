@@ -43,11 +43,21 @@ namespace soralog {
     }
 
     template <typename... Args>
+    void log(Level level, std::string_view format, const Args &... args) {
+      push(level, format, args...);
+    }
+
+    template <typename Arg>
+    void trace(Level level, const Arg &arg) {
+      push(level, "{}", arg);
+    }
+
+    template <typename... Args>
     void trace(std::string_view format, const Args &... args) {
       push(Level::TRACE, format, args...);
     }
 
-    template <class Arg>
+    template <typename Arg>
     void trace(const Arg &arg) {
       push(Level::TRACE, "{}", arg);
     }
@@ -145,8 +155,8 @@ namespace soralog {
       return group_;
     }
 
-    void setGroup(const std::string &group_name);
     void setGroup(std::shared_ptr<const Group> group);
+    void setGroup(const std::string &group_name);
 
    private:
     LoggerSystem &system_;

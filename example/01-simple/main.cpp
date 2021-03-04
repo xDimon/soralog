@@ -30,14 +30,14 @@ int main() {
 
   auto r = log_system.configure();
   if (not r.message.empty()) {
-    std::cerr << r.message << std::endl;
+    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
   }
   if (r.has_error) {
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
 
   auto main_log =
-      injector.create<soralog::LoggerFactory &>().getLogger("main", "main");
+      injector.create<soralog::LoggerFactory &>().getLogger("main", "*");
 
   main_log->info("Start");
 
