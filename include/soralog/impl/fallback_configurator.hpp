@@ -17,6 +17,13 @@ namespace soralog {
     ~FallbackConfigurator() override = default;
 
     Result applyOn(LoggerSystem &system) const override;
+
+    void setLevel(Level level);
+    void withColor(bool with_color);
+
+   private:
+    Level level_ = Level::INFO;
+    bool with_color_ = false;
   };
 
 }  // namespace soralog

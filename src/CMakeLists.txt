@@ -89,6 +89,9 @@ target_link_libraries(soralog
     logger
     )
 
+add_library(yaml ALIAS configurator_yaml)
+add_library(fallback ALIAS fallback_configurator)
+
 add_library(soralog::soralog ALIAS soralog)
 add_library(soralog::yaml ALIAS configurator_yaml)
 add_library(soralog::fallback ALIAS fallback_configurator)

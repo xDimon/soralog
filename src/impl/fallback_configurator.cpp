@@ -13,14 +13,22 @@ namespace soralog {
 
   Configurator::Result FallbackConfigurator::applyOn(
       LoggerSystem &system) const {
-    system.makeSink<SinkToConsole>("console", false);
-    system.makeGroup("*", {}, "console", Level::INFO);
+    system.makeSink<SinkToConsole>("console", with_color_);
+    system.makeGroup("*", {}, "console", level_);
 
     return {.has_error = false,
             .has_warning = true,
             .message =
                 "I: Using fallback configurator of logger system.\n"
                 "I: All logs will be write into console with 'INFO' level."};
+  }
+
+  void FallbackConfigurator::setLevel(Level level) {
+    level_ = level;
+  }
+
+  void FallbackConfigurator::withColor(bool with_color) {
+    with_color_ = with_color;
   }
 
 }  // namespace soralog
