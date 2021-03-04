@@ -201,7 +201,7 @@ namespace soralog {
 
           // Timestamp
 
-          {
+          if (with_color_) {
             const auto &style = fmt::internal::make_foreground_color<char>(
                 fmt::terminal_color::black);
 
@@ -214,7 +214,7 @@ namespace soralog {
           std::memcpy(ptr, datetime.data(), datetime.size());
           ptr = ptr + datetime.size();  // NOLINT
 
-          {
+          if (with_color_) {
             const auto &style =
                 fmt::internal::make_foreground_color<char>(fmt::color::gray);
 
@@ -226,50 +226,56 @@ namespace soralog {
 
           ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
 
-          {
-            const auto &style = fmt::internal::data::reset_color;
-
-            auto size = std::end(style) - std::begin(style) - 1;
-
-            std::memcpy(ptr, std::begin(style), size);
-            ptr = ptr + size;  // NOLINT
+          if (with_color_) {
+            put_reset_style(ptr);
           }
 
           put_separator(ptr);
 
-          put_style(ptr, level_to_fg(event.level),
-                    fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+          if (with_color_) {
+            put_style(ptr, level_to_fg(event.level),
+                      fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+          }
           put_level(ptr, event.level);
-          put_reset_style(ptr);
+          if (with_color_) {
+            put_reset_style(ptr);
+          }
 
           put_separator(ptr);
 
-          put_style(ptr,
-                    fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
-          put_name(ptr, event.name);
-          put_reset_style(ptr);
-
-          put_separator(ptr);
-
-          put_style(ptr,
-                    event.level == Level::TRACE
-                        ? fmt::internal::make_foreground_color<char>(
-                            fmt::color::dark_gray)
-                        : event.level == Level::DEBUG
-                            ? fmt::internal::make_foreground_color<char>(
-                                fmt::color::gray)
-                            : event.level == Level::VERBOSE
-                                ? fmt::internal::make_foreground_color<char>(
-                                    fmt::color::dim_gray)
-                                : fmt::internal::make_foreground_color<char>(
-                                    fmt::color::black));
-          if (event.level <= Level::ERROR)
+          if (with_color_) {
             put_style(ptr,
                       fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+          }
+          put_name(ptr, event.name);
+          if (with_color_) {
+            put_reset_style(ptr);
+          }
 
+          put_separator(ptr);
+
+          if (with_color_) {
+            put_style(ptr,
+                      event.level == Level::TRACE
+                          ? fmt::internal::make_foreground_color<char>(
+                              fmt::color::dark_gray)
+                          : event.level == Level::DEBUG
+                              ? fmt::internal::make_foreground_color<char>(
+                                  fmt::color::gray)
+                              : event.level == Level::VERBOSE
+                                  ? fmt::internal::make_foreground_color<char>(
+                                      fmt::color::dim_gray)
+                                  : fmt::internal::make_foreground_color<char>(
+                                      fmt::color::black));
+            if (event.level <= Level::ERROR)
+              put_style(
+                  ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+          }
           std::memcpy(ptr, event.message.data(), event.size);
           ptr = ptr + event.size;  // NOLINT
-          put_reset_style(ptr);
+          if (with_color_) {
+            put_reset_style(ptr);
+          }
 
           *ptr++ = '\n';  // NOLINT
 

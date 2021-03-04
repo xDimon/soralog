@@ -1,7 +1,7 @@
 sinks:
   - name: console
     type: console
-    color: false
+    color: true
   - name: file
     type: file
     directory: .
