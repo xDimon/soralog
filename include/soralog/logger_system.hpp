@@ -54,34 +54,34 @@ namespace soralog {
                    const std::optional<std::string> &sink,
                    const std::optional<Level> &level);
 
-    void setParentForGroup(const std::string &group_name,
-                           const std::string &parent);
-    void setSinkForGroup(const std::string &group_name,
-                         const std::string &sink_name);
-    void resetSinkForGroup(const std::string &group_name);
-    void setLevelForGroup(const std::string &group_name, Level level);
-    void resetLevelForGroup(const std::string &group_name);
+    bool setParentOfGroup(const std::string &group_name,
+                          const std::string &parent);
+    bool setSinkOfGroup(const std::string &group_name,
+                        const std::string &sink_name);
+    bool resetSinkOfGroup(const std::string &group_name);
+    bool setLevelOfGroup(const std::string &group_name, Level level);
+    bool resetLevelOfGroup(const std::string &group_name);
 
-    void setGroupForLogger(const std::string &logger_name,
-                           const std::string &group_name);
-    void setSinkForLogger(const std::string &logger_name,
-                          const std::string &sink_name);
-    void resetSinkForLogger(const std::string &logger_name);
-    void setLevelForLogger(const std::string &logger_name, Level level);
-    void resetLevelForLogger(const std::string &logger_name);
+    bool setGroupOfLogger(const std::string &logger_name,
+                          const std::string &group_name);
+    bool setSinkOfLogger(const std::string &logger_name,
+                         const std::string &sink_name);
+    bool resetSinkOfLogger(const std::string &logger_name);
+    bool setLevelOfLogger(const std::string &logger_name, Level level);
+    bool resetLevelOfLogger(const std::string &logger_name);
 
    private:
-    void setParentForGroup(const std::shared_ptr<Group> &group,
-                           const std::shared_ptr<Group> &parent);
-    void setSinkForGroup(const std::shared_ptr<Group> &group,
-                         std::optional<std::shared_ptr<Sink>> sink);
-    void setLevelForGroup(const std::shared_ptr<Group> &group,
-                          std::optional<Level> level);
+    void setParentOfGroup(const std::shared_ptr<Group> &group,
+                          const std::shared_ptr<Group> &parent);
+    void setSinkOfGroup(const std::shared_ptr<Group> &group,
+                        std::optional<std::shared_ptr<Sink>> sink);
+    void setLevelOfGroup(const std::shared_ptr<Group> &group,
+                         std::optional<Level> level);
 
-    static void setSinkForLogger(const std::shared_ptr<Logger> &logger,
-                          std::optional<std::shared_ptr<Sink>> sink);
-    static void setLevelForLogger(const std::shared_ptr<Logger>& logger,
-                           std::optional<Level> level);
+    static void setSinkOfLogger(const std::shared_ptr<Logger> &logger,
+                                std::optional<std::shared_ptr<Sink>> sink);
+    static void setLevelOfLogger(const std::shared_ptr<Logger> &logger,
+                                 std::optional<Level> level);
 
     std::shared_ptr<Configurator> configurator_;
     bool is_configured_ = false;

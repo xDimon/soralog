@@ -19,8 +19,8 @@ namespace soralog {
     return {.has_error = false,
             .has_warning = true,
             .message =
-                "I: Using fallback configurator of logger system.\n"
-                "I: All logs will be write into console with 'INFO' level."};
+                "I: Using fallback configurator for logger system\n"
+                "I: All logs will be write into console with 'INFO' level"};
   }
 
   void FallbackConfigurator::setLevel(Level level) {
