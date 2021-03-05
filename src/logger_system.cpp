@@ -136,16 +136,16 @@ namespace soralog {
     }
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
-      auto cit = *++it;
-      if (auto logger = cit.second.lock()) {
+      if (auto logger = it->second.lock()) {
         if (auto it2 = passed_groups.find(logger->group());
             it2 != passed_groups.end()) {
           if (it2->second != -1) {
             logger->setGroup(logger->group());
           }
         }
+        ++it;
       } else {
-        loggers_.erase(cit.first);
+        it = loggers_.erase(it);
       }
     }
   }
@@ -198,16 +198,16 @@ namespace soralog {
     }
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
-      auto cit = *++it;
-      if (auto logger = cit.second.lock()) {
+      if (auto logger = it->second.lock()) {
         if (auto it2 = passed_groups.find(logger->group());
             it2 != passed_groups.end()) {
           if (it2->second != -1) {
-            logger->setSinkFromGroup(logger->group());
+            logger->setGroup(logger->group());
           }
         }
+        ++it;
       } else {
-        loggers_.erase(cit.first);
+        it = loggers_.erase(it);
       }
     }
   }
@@ -260,16 +260,16 @@ namespace soralog {
     }
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
-      auto cit = *++it;
-      if (auto logger = cit.second.lock()) {
+      if (auto logger = it->second.lock()) {
         if (auto it2 = passed_groups.find(logger->group());
             it2 != passed_groups.end()) {
           if (it2->second != -1) {
-            logger->setLevelFromGroup(logger->group());
+            logger->setGroup(logger->group());
           }
         }
+        ++it;
       } else {
-        loggers_.erase(cit.first);
+        it = loggers_.erase(it);
       }
     }
   }
