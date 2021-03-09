@@ -32,6 +32,10 @@ namespace soralog {
       system_.makeSink<SinkToNowhere>("*");
     }
 
+    if (previous_ != nullptr) {
+      previous_->applyOn(system_);
+    }
+
     YAML::Node node;
 
     std::visit(

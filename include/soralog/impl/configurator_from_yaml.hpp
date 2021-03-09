@@ -25,17 +25,30 @@ namespace soralog {
     explicit ConfiguratorFromYAML(std::string config_content)
         : config_(std::move(config_content)){};
 
+    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
+                                  std::filesystem::path config_path)
+        : previous_(std::move(previous)), config_(std::move(config_path)){};
+
+    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
+                                  std::string config_content)
+        : previous_(std::move(previous)), config_(std::move(config_content)){};
+
     ~ConfiguratorFromYAML() override = default;
 
     Result applyOn(LoggerSystem &system) const override;
 
    private:
+    std::shared_ptr<Configurator> previous_;
     std::variant<std::filesystem::path, std::string> config_;
 
     class Applicator {
      public:
-      Applicator(LoggerSystem &system, std::variant<std::filesystem::path, std::string> config)
-          : system_(system), config_(std::move(config)) {}
+      Applicator(LoggerSystem &system,
+                 std::variant<std::filesystem::path, std::string> config,
+                 std::shared_ptr<Configurator> previous = {})
+          : system_(system),
+            previous_(std::move(previous)),
+            config_(std::move(config)) {}
 
       Result run() &&;
 
@@ -58,6 +71,7 @@ namespace soralog {
                       const std::optional<std::string> &parent);
 
       LoggerSystem &system_;
+      std::shared_ptr<Configurator> previous_ = nullptr;
       std::variant<std::filesystem::path, std::string> config_;
       bool has_warning_ = false;
       bool has_error_ = false;
