@@ -17,7 +17,7 @@
 
 namespace soralog {
 
-  class ConfiguratorFromYAML final : public Configurator {
+  class ConfiguratorFromYAML : public Configurator {
    public:
     explicit ConfiguratorFromYAML(std::filesystem::path config_path)
         : config_(std::move(config_path)){};

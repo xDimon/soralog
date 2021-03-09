@@ -12,7 +12,7 @@
 
 namespace soralog {
 
-  class FallbackConfigurator final : public Configurator {
+  class FallbackConfigurator : public Configurator {
    public:
     ~FallbackConfigurator() override = default;
 
