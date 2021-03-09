@@ -13,22 +13,56 @@
 
 #include "sink_to_console.hpp"
 #include "sink_to_file.hpp"
+#include "sink_to_nowhere.hpp"
 
 namespace soralog {
 
+  namespace {
+    template <typename>
+    inline constexpr bool always_false_v = false;
+  }
+
   Configurator::Result ConfiguratorFromYAML::applyOn(
       LoggerSystem &system) const {
-    return Applicator(system, config_file_).run();
+    return Applicator(system, config_).run();
   }
 
   ConfiguratorFromYAML::Result ConfiguratorFromYAML::Applicator::run() && {
-    YAML::Node node;
-    try {
-      node = YAML::LoadFile(config_file_);
-    } catch (const std::exception &exception) {
-      errors_ << "E: Can not parse config file: " << exception.what() << "\n";
-      has_error_ = true;
+    if (not system_.getSink("*")) {
+      system_.makeSink<SinkToNowhere>("*");
     }
+
+    YAML::Node node;
+
+    std::visit(
+        [&](auto &&arg) {
+          using T = std::decay_t<decltype(arg)>;
+
+          T z = arg;
+
+          if constexpr (std::is_same_v<T, std::filesystem::path>) {
+            try {
+              node = YAML::LoadFile(arg);
+            } catch (const std::exception &exception) {
+              errors_ << "E: Can't parse file `"
+                      << std::filesystem::canonical(arg).string()
+                      << "': " << exception.what() << "\n";
+              has_error_ = true;
+            }
+
+          } else if constexpr (std::is_same_v<T, std::string>) {
+            try {
+              node = YAML::Load(arg);
+            } catch (const std::exception &exception) {
+              errors_ << "E: Can't parse content: " << exception.what() << "\n";
+              has_error_ = true;
+            }
+
+          } else {
+            static_assert(always_false_v<T>, "non-exhaustive visitor!");
+          }
+        },
+        config_);
 
     if (not has_error_) {
       parse(node);
@@ -37,9 +71,7 @@ namespace soralog {
     return {.has_error = has_error_,
             .has_warning = has_warning_,
             .message = (has_error_ or has_warning_)
-                ? ("I: Some problems are found in logger config `"
-                   + std::filesystem::canonical(config_file_).string() + "':\n"
-                   + errors_.str())
+                ? ("I: Some problems are found in config:\n" + errors_.str())
                 : ""};
   }
 
@@ -136,6 +168,13 @@ namespace soralog {
 
     auto name = name_node.as<std::string>();
     auto type = name_node.as<std::string>();
+
+    if (name == "*") {
+      errors_ << "E: Sink name '*' is reserved; "
+                 "Try to use some other else\n";
+      has_error_ = true;
+      return;
+    }
 
     if (type == "console") {
       parseSinkToConsole(name, sink);
@@ -302,9 +341,10 @@ namespace soralog {
         sink.emplace(sink_node.as<std::string>());
       }
     } else if (not parent) {
-      fail = true;
-      errors_ << "E: Not found 'sink' of root group " << tmp_name << "\n";
-      has_error_ = true;
+      sink.emplace("*");
+      errors_ << "W: Not found 'sink' of root group " << tmp_name << "; "
+              << "Will be used default sink (to nowhere)\n";
+      has_warning_ = true;
     }
 
     std::optional<std::string> level_string{};
@@ -319,9 +359,10 @@ namespace soralog {
         level_string.emplace(level_node.as<std::string>());
       }
     } else if (not parent) {
-      fail = true;
-      errors_ << "E: Not found 'level' of root group " << tmp_name << "\n";
-      has_error_ = true;
+      errors_ << "W: Not found 'level' of root group " << tmp_name << "; "
+              << "Will be used default level (info)\n";
+      has_warning_ = true;
+      level_string.emplace("info");
     }
 
     auto children_node = group["children"];
@@ -383,12 +424,19 @@ namespace soralog {
 
     if (fail) {
       errors_ << "W: There are probably more bugs in the group " << tmp_name
-              << ". Fix the existing ones first.\n";
+              << "; Fix the existing ones first.\n";
       has_warning_ = true;
       return;
     }
 
     auto name = name_node.as<std::string>();
+
+    if (name == "*") {
+      errors_ << "E: Group name '*' is reserved; "
+                 "Try to use some other else\n";
+      has_error_ = true;
+      return;
+    }
 
     system_.makeGroup(name, parent, sink, level);
 

@@ -8,20 +8,57 @@
 
 #include "logging_object.hpp"
 
+enum ConfiguratorType { Fallback, Customized, YamlByPath, YamlByContent };
+
 template <typename Injector>
-std::shared_ptr<soralog::ConfiguratorFromYAML> get_configurator(
+std::shared_ptr<soralog::Configurator> get_customized_configurator(
+    const Injector &injector) {
+  static auto cfg = std::make_shared<soralog::FallbackConfigurator>();
+  cfg->setLevel(soralog::Level::TRACE);
+  cfg->withColor(true);
+  return cfg;
+}
+
+template <typename Injector>
+std::shared_ptr<soralog::Configurator> get_yaml_configurator_from_file(
     const Injector &injector) {
   static auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(
-      "../../../example/01-simple/logger.yml");
+      std::filesystem::path("../../../example/01-simple/logger.yml"));
+  return cfg;
+}
+
+template <typename Injector>
+std::shared_ptr<soralog::Configurator> get_yaml_configurator_by_content(
+    const Injector &injector) {
+  static auto cfg =
+      std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: trace
+  - name: azaza
+  )"));
   return cfg;
 }
 
 int main() {
+  ConfiguratorType cfg_type = ConfiguratorType::YamlByContent;
+
   auto injector = soralog::injector::makeInjector(
 
       // Replace fallback configurator by ConfiguratorFromYAML
-      boost::di::bind<soralog::Configurator>.to([](const auto &i) {
-        return get_configurator(i);
+      boost::di::bind<soralog::Configurator>.to([cfg_type](const auto &i) {
+        return cfg_type == ConfiguratorType::YamlByContent
+            ? get_yaml_configurator_by_content(i)
+            : cfg_type == ConfiguratorType::YamlByPath
+                ? get_yaml_configurator_from_file(i)
+                : cfg_type == ConfiguratorType::Customized
+                    ? get_customized_configurator(i)
+                    : std::make_shared<soralog::FallbackConfigurator>();
       })[boost::di::override]
 
   );

@@ -9,6 +9,7 @@
 #include <soralog/configurator.hpp>
 
 #include <filesystem>
+#include <variant>
 
 #include <yaml-cpp/yaml.h>
 
@@ -18,20 +19,23 @@ namespace soralog {
 
   class ConfiguratorFromYAML final : public Configurator {
    public:
-    explicit ConfiguratorFromYAML(std::filesystem::path config_file)
-        : config_file_(std::move(config_file)){};
+    explicit ConfiguratorFromYAML(std::filesystem::path config_path)
+        : config_(std::move(config_path)){};
+
+    explicit ConfiguratorFromYAML(std::string config_content)
+        : config_(std::move(config_content)){};
 
     ~ConfiguratorFromYAML() override = default;
 
     Result applyOn(LoggerSystem &system) const override;
 
    private:
-    std::filesystem::path config_file_;
+    std::variant<std::filesystem::path, std::string> config_;
 
     class Applicator {
      public:
-      Applicator(LoggerSystem &system, std::filesystem::path config_file)
-          : system_(system), config_file_(std::move(config_file)) {}
+      Applicator(LoggerSystem &system, std::variant<std::filesystem::path, std::string> config)
+          : system_(system), config_(std::move(config)) {}
 
       Result run() &&;
 
@@ -54,7 +58,7 @@ namespace soralog {
                       const std::optional<std::string> &parent);
 
       LoggerSystem &system_;
-      std::filesystem::path config_file_;
+      std::variant<std::filesystem::path, std::string> config_;
       bool has_warning_ = false;
       bool has_error_ = false;
       std::ostringstream errors_;

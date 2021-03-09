@@ -21,6 +21,13 @@ target_link_libraries(sink INTERFACE
     fmt::fmt
     )
 
+add_library(sink_to_nowhere
+    impl/sink_to_nowhere.cpp
+    )
+target_link_libraries(sink_to_nowhere
+    sink
+    )
+
 add_library(sink_to_console
     impl/sink_to_console.cpp
     )
@@ -54,6 +61,7 @@ target_link_libraries(logger
 
 add_library(configurator INTERFACE)
 target_link_libraries(configurator INTERFACE
+    sink_to_nowhere
     sink_to_console
     sink_to_file
     )
@@ -104,6 +112,7 @@ set(INSTALL_TARGETS
     logger
 
     sink
+    sink_to_nowhere
     sink_to_console
     sink_to_file
 
