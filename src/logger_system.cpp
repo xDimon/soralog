@@ -32,13 +32,20 @@ namespace soralog {
     is_configured_ = true;
     auto result = configurator_->applyOn(*this);
 
+    if (groups_.empty()) {
+      result.message +=
+          "E: No one group is defined; "
+          "Logging system is unworkable\n";
+      result.has_error = true;
+    }
     for (auto &item : groups_) {
       if (item.first == "*") {
         continue;
       }
       if (item.second->sink()->name() == "*") {
-        result.message += "W: Group '" + item.first + "' has undefined sink; "
-                                                      "Sink to nowhere will be used\n";
+        result.message +=
+            "W: Group '" + item.first + "' has undefined sink;"
+            "Sink to nowhere will be used\n";
         result.has_warning = true;
       }
     }
