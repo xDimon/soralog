@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 
+#include <soralog/group.hpp>
 #include <soralog/level.hpp>
 
 #include "sink_to_console.hpp"
@@ -24,16 +25,21 @@ namespace soralog {
 
   Configurator::Result ConfiguratorFromYAML::applyOn(
       LoggerSystem &system) const {
-    return Applicator(system, config_).run();
+    return Applicator(system, config_, previous_).run();
   }
 
   ConfiguratorFromYAML::Result ConfiguratorFromYAML::Applicator::run() && {
+    ConfiguratorFromYAML::Result result;
+
     if (not system_.getSink("*")) {
       system_.makeSink<SinkToNowhere>("*");
     }
 
     if (previous_ != nullptr) {
-      previous_->applyOn(system_);
+      auto prev_result = previous_->applyOn(system_);
+      result.has_error = result.has_error || prev_result.has_error;
+      result.has_warning = result.has_warning || prev_result.has_warning;
+      result.message += prev_result.message;
     }
 
     YAML::Node node;
@@ -41,8 +47,6 @@ namespace soralog {
     std::visit(
         [&](auto &&arg) {
           using T = std::decay_t<decltype(arg)>;
-
-          T z = arg;
 
           if constexpr (std::is_same_v<T, std::filesystem::path>) {
             try {
@@ -72,29 +76,26 @@ namespace soralog {
       parse(node);
     }
 
-    return {.has_error = has_error_,
-            .has_warning = has_warning_,
-            .message = (has_error_ or has_warning_)
-                ? ("I: Some problems are found in config:\n" + errors_.str())
-                : ""};
+    result.has_error = result.has_error || has_error_;
+    result.has_warning = result.has_warning || has_warning_;
+    result.message += (has_error_ or has_warning_)
+        ? ("I: Some problems are found in config:\n" + errors_.str())
+        : "";
+    return result;
   }
 
   void ConfiguratorFromYAML::Applicator::parse(const YAML::Node &node) {
     if (not node.IsMap()) {
-      errors_ << "E: Root node is not map\n";
+      errors_ << "E: Config is not YAML map\n";
       has_error_ = true;
       return;
     }
 
     auto sinks = node["sinks"];
-    if (not sinks.IsDefined()) {
-      errors_ << "E: Undefined 'sinks' in root node\n";
-      has_error_ = true;
-    }
 
     auto groups = node["groups"];
     if (not groups.IsDefined()) {
-      errors_ << "E: Undefined 'groups' in root node\n";
+      errors_ << "E: Groups are undefined\n";
       has_error_ = true;
     }
 
@@ -104,7 +105,7 @@ namespace soralog {
         continue;
       if (key == "groups")
         continue;
-      errors_ << "W: Unknown property in root node: " << key << "\n";
+      errors_ << "W: Unknown property: " << key << "\n";
       has_warning_ = true;
     }
 
@@ -119,13 +120,13 @@ namespace soralog {
 
   void ConfiguratorFromYAML::Applicator::parseSinks(const YAML::Node &sinks) {
     if (sinks.IsNull()) {
-      errors_ << "E: Node 'sinks' is empty\n";
+      errors_ << "E: Sinks list is empty\n";
       has_error_ = true;
       return;
     }
 
     if (not sinks.IsSequence()) {
-      errors_ << "E: Node 'sinks' is not a sequence\n";
+      errors_ << "E: Sinks is not a YAML sequence\n";
       has_error_ = true;
       return;
     }
@@ -133,7 +134,7 @@ namespace soralog {
     for (auto i = 0; i < sinks.size(); ++i) {
       auto sink = sinks[i];
       if (not sink.IsMap()) {
-        errors_ << "W: Element #" << i << " of 'sinks' is not a map\n";
+        errors_ << "W: Element #" << i << " of 'sinks' is not a YAML map\n";
         continue;
       }
       parseSink(i, sink);
@@ -157,8 +158,9 @@ namespace soralog {
 
     auto type_node = sink["type"];
     if (not type_node.IsDefined()) {
-      errors_ << "E: Not found 'type' of sink node #" << number << "\n";
       fail = true;
+      errors_ << "E: Not found 'type' of sink node #" << number << "\n";
+      has_error_ = true;
     } else if (not type_node.IsScalar()) {
       fail = true;
       errors_ << "E: Property 'type' of sink node #" << number
@@ -171,7 +173,7 @@ namespace soralog {
     }
 
     auto name = name_node.as<std::string>();
-    auto type = name_node.as<std::string>();
+    auto type = type_node.as<std::string>();
 
     if (name == "*") {
       errors_ << "E: Sink name '*' is reserved; "
@@ -188,12 +190,19 @@ namespace soralog {
       errors_ << "E: Unknown 'type' of sink node '" << name << "': " << type
               << "\n";
       has_error_ = true;
+
+      if (system_.getSink(name)) {
+        errors_ << "W: Already exists sink with name '" << name
+                << "'; Previous version will be overriden\n";
+        has_error_ = true;
+      }
+      system_.makeSink<SinkToNowhere>(name);
     }
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToConsole(
       const std::string &name, const YAML::Node &sink_node) {
-    bool color = true;
+    bool color = false;
 
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
@@ -221,9 +230,9 @@ namespace soralog {
     }
 
     if (system_.getSink(name)) {
-      errors_ << "E: Already exists sink with name '" << name << "'\n";
+      errors_ << "W: Already exists sink with name '" << name
+              << "'; Previous version will be overriden\n";
       has_error_ = true;
-      return;
     }
 
     system_.makeSink<SinkToConsole>(name, color);
@@ -343,12 +352,15 @@ namespace soralog {
         has_error_ = true;
       } else {
         sink.emplace(sink_node.as<std::string>());
+        if (not system_.getSink(sink.value())) {
+          fail = true;
+          errors_ << "E: Sink '" << *sink << "' of group " << tmp_name
+                  << " is undefined\n";
+          has_error_ = true;
+        }
       }
     } else if (not parent) {
       sink.emplace("*");
-      errors_ << "W: Not found 'sink' of root group " << tmp_name << "; "
-              << "Will be used default sink (to nowhere)\n";
-      has_warning_ = true;
     }
 
     std::optional<std::string> level_string{};
@@ -363,10 +375,9 @@ namespace soralog {
         level_string.emplace(level_node.as<std::string>());
       }
     } else if (not parent) {
-      errors_ << "W: Not found 'level' of root group " << tmp_name << "; "
-              << "Will be used default level (info)\n";
-      has_warning_ = true;
-      level_string.emplace("info");
+      fail = true;
+      errors_ << "E: Not found 'level' of root group " << tmp_name << "\n";
+      has_error_ = true;
     }
 
     auto children_node = group["children"];
@@ -442,7 +453,20 @@ namespace soralog {
       return;
     }
 
-    system_.makeGroup(name, parent, sink, level);
+    auto target = system_.getGroup(name);
+    if (target == nullptr) {
+      system_.makeGroup(name, parent, sink, level);
+    } else {
+      if (parent.has_value()) {
+        target->setParentGroup(parent.value());
+      }
+      if (sink.has_value()) {
+        target->setSink(system_.getSink(sink.value()));
+      }
+      if (level.has_value()) {
+        target->setLevel(level.value());
+      }
+    }
 
     if (children_node.IsDefined() and children_node.IsSequence()) {
       parseGroups(children_node, name);

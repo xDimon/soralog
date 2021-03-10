@@ -8,7 +8,7 @@
 
 #include "logging_object.hpp"
 
-enum ConfiguratorType { Fallback, Customized, YamlByPath, YamlByContent };
+enum ConfiguratorType { Fallback, Customized, YamlByPath, YamlByContent, Cascade };
 
 template <typename Injector>
 std::shared_ptr<soralog::Configurator> get_customized_configurator(
@@ -37,7 +37,7 @@ sinks:
     type: console
     color: true
 groups:
-  - name: main
+  - name: main_
     sink: console
     level: trace
   - name: azaza
@@ -45,14 +45,40 @@ groups:
   return cfg;
 }
 
+template <typename Injector>
+std::shared_ptr<soralog::Configurator> get_cascade_configurator(
+    const Injector &injector) {
+
+  auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+groups:
+  - name: main
+    level: info
+  )"));
+
+  static auto cfg =
+      std::make_shared<soralog::ConfiguratorFromYAML>(/*std::move(prev),*/ std::string(R"(
+sinks:
+  - name: console
+    type: console
+    color: true
+groups:
+  - name: main
+    sink: console
+    level: trace
+  )"));
+  return cfg;
+}
+
 int main() {
-  ConfiguratorType cfg_type = ConfiguratorType::YamlByContent;
+  ConfiguratorType cfg_type = ConfiguratorType::Cascade;
 
   auto injector = soralog::injector::makeInjector(
 
       // Replace fallback configurator by ConfiguratorFromYAML
       boost::di::bind<soralog::Configurator>.to([cfg_type](const auto &i) {
-        return cfg_type == ConfiguratorType::YamlByContent
+        return cfg_type == ConfiguratorType::Cascade
+            ? get_cascade_configurator(i)
+            : cfg_type == ConfiguratorType::YamlByContent
             ? get_yaml_configurator_by_content(i)
             : cfg_type == ConfiguratorType::YamlByPath
                 ? get_yaml_configurator_from_file(i)

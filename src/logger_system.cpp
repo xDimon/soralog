@@ -30,7 +30,20 @@ namespace soralog {
       throw std::logic_error("LoggerSystem is already configured");
     }
     is_configured_ = true;
-    return configurator_->applyOn(*this);
+    auto result = configurator_->applyOn(*this);
+
+    for (auto &item : groups_) {
+      if (item.first == "*") {
+        continue;
+      }
+      if (item.second->sink()->name() == "*") {
+        result.message += "W: Group '" + item.first + "' has undefined sink; "
+                                                      "Sink to nowhere will be used\n";
+        result.has_warning = true;
+      }
+    }
+
+    return result;
   }
 
   std::shared_ptr<Logger> LoggerSystem::getLogger(
