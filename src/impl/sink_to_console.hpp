@@ -8,12 +8,14 @@
 
 #include <soralog/sink.hpp>
 
+#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <thread>
 
 namespace soralog {
+  using namespace std::chrono_literals;
 
   class SinkToConsole final : public Sink {
    public:
@@ -39,10 +41,11 @@ namespace soralog {
 
     std::string name_;
     bool with_color_;
+    std::chrono::milliseconds latency_ = 250ms;
 
     std::unique_ptr<std::thread> sink_worker_;
 
-    std::unique_ptr<std::array<char, 50u << 20>> buff_;
+    std::unique_ptr<std::array<char, 128u << 10>> buff_;
     std::mutex mutex_;
     std::condition_variable condvar_;
     bool need_to_finalize_ = false;

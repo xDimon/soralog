@@ -43,9 +43,11 @@ namespace soralog {
 
     std::string name_{};
     std::filesystem::path path_{};
+    std::chrono::milliseconds latency_ = 1s;
+
     std::unique_ptr<std::thread> sink_worker_{};
 
-    std::unique_ptr<std::array<char, 50u << 20>> buff_;
+    std::unique_ptr<std::array<char, 2u << 20>> buff_;
     std::ofstream out_{};
     std::mutex mutex_{};
     std::condition_variable condvar_{};

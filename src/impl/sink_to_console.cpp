@@ -158,16 +158,16 @@ namespace soralog {
   }
 
   void SinkToConsole::run() {
+    auto next_flush = std::chrono::steady_clock::now();
+
     while (true) {
-      if (need_to_finalize_) {
-        if (events_->size() == 0) {
+      if (events_->size() == 0) {
+        if (need_to_finalize_) {
           return;
         }
       }
 
       std::unique_lock lock(mutex_);
-
-      // Condition for run thread
       if (not condvar_.wait_for(lock, std::chrono::milliseconds(100),
                                 [this] { return events_->size() > 0; })) {
         continue;
@@ -282,7 +282,9 @@ namespace soralog {
           size_ -= event.size;
         }
 
-        if ((end - ptr) < (1u << 13) or not node) {
+        if ((end - ptr) < sizeof(Event) or not node
+            or std::chrono::steady_clock::now() >= next_flush) {
+          next_flush = std::chrono::steady_clock::now() + latency_;
           std::cout.write(begin, ptr - begin);
           ptr = begin;
         }

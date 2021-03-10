@@ -12,7 +12,6 @@
 #include <fmt/chrono.h>
 
 namespace soralog {
-
   using namespace std::chrono_literals;
 
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
@@ -46,11 +45,14 @@ namespace soralog {
   }
 
   void SinkToFile::run() {
+    auto next_flush = std::chrono::steady_clock::now();
+
     while (true) {
       if (events_->size() == 0) {
         if (need_to_finalize_) {
           return;
         }
+
         bool true_v = true;
         if (need_to_rotate_.compare_exchange_weak(true_v, false)) {
           std::ofstream out;
@@ -70,8 +72,6 @@ namespace soralog {
       }
 
       std::unique_lock lock(mutex_);
-
-      // Condition for run thread
       if (not condvar_.wait_for(lock, std::chrono::milliseconds(100),
                                 [this] { return events_->size() > 0; })) {
         continue;
@@ -117,7 +117,8 @@ namespace soralog {
           size_ -= event.size;
         }
 
-        if ((end - ptr) < (1u << 13) or not node) {
+        if ((end - ptr) < sizeof(Event) or not node
+            or std::chrono::steady_clock::now() >= next_flush) {
           out_.write(begin, ptr - begin);
           ptr = begin;
         }
