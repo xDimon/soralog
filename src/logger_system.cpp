@@ -44,7 +44,7 @@ namespace soralog {
       }
       if (item.second->sink()->name() == "*") {
         result.message +=
-            "W: Group '" + item.first + "' has undefined sink;"
+            "W: Group '" + item.first + "' has undefined sink; "
             "Sink to nowhere will be used\n";
         result.has_warning = true;
       }
@@ -127,11 +127,11 @@ namespace soralog {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
-      if (current->isLevelOverriden() && current->isSinkOverriden()) {
-        return -1;
-      }
       if (current == group) {
         return 0;
+      }
+      if (current->isLevelOverriden() && current->isSinkOverriden()) {
+        return -1;
       }
       if (not current->parent()) {
         return -1;
@@ -139,6 +139,9 @@ namespace soralog {
       auto n = fn(current->parent());
       if (n == -1) {
         return -1;
+      }
+      if (n >= affecting_groups.size()) {
+        affecting_groups.resize(n + 1);
       }
       affecting_groups[n].emplace(std::const_pointer_cast<Group>(current));
       return ++n;
@@ -189,11 +192,11 @@ namespace soralog {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
-      if (current->isSinkOverriden()) {
-        return -1;
-      }
       if (current == group) {
         return 0;
+      }
+      if (current->isSinkOverriden()) {
+        return -1;
       }
       if (not current->parent()) {
         return -1;
@@ -201,6 +204,9 @@ namespace soralog {
       auto n = fn(current->parent());
       if (n == -1) {
         return -1;
+      }
+      if (n >= affecting_groups.size()) {
+        affecting_groups.resize(n + 1);
       }
       affecting_groups[n].emplace(std::const_pointer_cast<Group>(current));
       return ++n;
@@ -251,11 +257,11 @@ namespace soralog {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
-      if (current->isLevelOverriden()) {
-        return -1;
-      }
       if (current == group) {
         return 0;
+      }
+      if (current->isLevelOverriden()) {
+        return -1;
       }
       if (not current->parent()) {
         return -1;
@@ -263,6 +269,9 @@ namespace soralog {
       auto n = fn(current->parent());
       if (n == -1) {
         return -1;
+      }
+      if (n >= affecting_groups.size()) {
+        affecting_groups.resize(n + 1);
       }
       affecting_groups[n].emplace(std::const_pointer_cast<Group>(current));
       return ++n;

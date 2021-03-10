@@ -8,7 +8,13 @@
 
 #include "logging_object.hpp"
 
-enum ConfiguratorType { Fallback, Customized, YamlByPath, YamlByContent, Cascade };
+enum ConfiguratorType {
+  Fallback,
+  Customized,
+  YamlByPath,
+  YamlByContent,
+  Cascade
+};
 
 template <typename Injector>
 std::shared_ptr<soralog::Configurator> get_customized_configurator(
@@ -48,15 +54,27 @@ groups:
 template <typename Injector>
 std::shared_ptr<soralog::Configurator> get_cascade_configurator(
     const Injector &injector) {
-
   auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
   - name: main
     level: info
+    children:
+      - name: first-1
+        children:
+          - name: second-1-1
+          - name: second-1-2
+            children:
+              - name: third-1-2-1
+          - name: second-1-3
+      - name: first-2
+        children:
+          - name: second-2-1
+          - name: second-2-2
+      - name: first-3
   )"));
 
-  static auto cfg =
-      std::make_shared<soralog::ConfiguratorFromYAML>(/*std::move(prev),*/ std::string(R"(
+  static auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(
+      std::move(prev), std::string(R"(
 sinks:
   - name: console
     type: console
@@ -79,12 +97,12 @@ int main() {
         return cfg_type == ConfiguratorType::Cascade
             ? get_cascade_configurator(i)
             : cfg_type == ConfiguratorType::YamlByContent
-            ? get_yaml_configurator_by_content(i)
-            : cfg_type == ConfiguratorType::YamlByPath
-                ? get_yaml_configurator_from_file(i)
-                : cfg_type == ConfiguratorType::Customized
-                    ? get_customized_configurator(i)
-                    : std::make_shared<soralog::FallbackConfigurator>();
+                ? get_yaml_configurator_by_content(i)
+                : cfg_type == ConfiguratorType::YamlByPath
+                    ? get_yaml_configurator_from_file(i)
+                    : cfg_type == ConfiguratorType::Customized
+                        ? get_customized_configurator(i)
+                        : std::make_shared<soralog::FallbackConfigurator>();
       })[boost::di::override]
 
   );

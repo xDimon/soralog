@@ -418,15 +418,17 @@ namespace soralog {
     if (level_string) {
       if (level_string == "off") {
         level.emplace(Level::OFF);
-      } else if (level_string == "critical") {
+      } else if (level_string == "critical" || level_string == "crit") {
         level.emplace(Level::CRITICAL);
       } else if (level_string == "error") {
         level.emplace(Level::ERROR);
+      } else if (level_string == "warning" || level_string == "warn") {
+        level.emplace(Level::WARN);
       } else if (level_string == "info") {
         level.emplace(Level::INFO);
       } else if (level_string == "verbose") {
         level.emplace(Level::VERBOSE);
-      } else if (level_string == "debug") {
+      } else if (level_string == "debug" || level_string == "deb") {
         level.emplace(Level::DEBUG);
       } else if (level_string == "trace") {
         level.emplace(Level::TRACE);
@@ -453,19 +455,18 @@ namespace soralog {
       return;
     }
 
-    auto target = system_.getGroup(name);
-    if (target == nullptr) {
-      system_.makeGroup(name, parent, sink, level);
-    } else {
+    if (system_.getGroup(name)) {
       if (parent.has_value()) {
-        target->setParentGroup(parent.value());
+        system_.setParentOfGroup(name, parent.value());
       }
       if (sink.has_value()) {
-        target->setSink(system_.getSink(sink.value()));
+        system_.setSinkOfGroup(name, sink.value());
       }
       if (level.has_value()) {
-        target->setLevel(level.value());
+        system_.setLevelOfGroup(name, level.value());
       }
+    } else {
+      system_.makeGroup(name, parent, sink, level);
     }
 
     if (children_node.IsDefined() and children_node.IsSequence()) {

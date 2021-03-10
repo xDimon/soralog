@@ -41,7 +41,10 @@ namespace soralog {
    private:
     void run();
 
-    std::string name_{};
+   protected:
+    std::string name_;
+
+   private:
     std::filesystem::path path_{};
     std::chrono::milliseconds latency_ = 1s;
 

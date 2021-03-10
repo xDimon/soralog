@@ -39,7 +39,10 @@ namespace soralog {
    private:
     void run();
 
+   protected:
     std::string name_;
+
+   private:
     bool with_color_;
     std::chrono::milliseconds latency_ = 250ms;
 

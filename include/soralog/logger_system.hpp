@@ -33,13 +33,15 @@ namespace soralog {
     explicit LoggerSystem(std::shared_ptr<Configurator> configurator)
         : configurator_(std::move(configurator)){};
 
-    Configurator::Result configure();
+    [[nodiscard]] Configurator::Result configure();
 
+   protected:
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
         const std::optional<std::string> &sink_name,
         const std::optional<Level> &level) override;
 
+   public:
     [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
 
     [[nodiscard]] std::shared_ptr<Group> getGroup(const std::string &name);

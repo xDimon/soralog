@@ -31,7 +31,7 @@ namespace soralog {
     void rotate() noexcept override;
 
    private:
-    std::string name_{};
+    std::string name_;
   };
 
 }  // namespace soralog

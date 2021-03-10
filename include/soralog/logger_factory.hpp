@@ -21,11 +21,13 @@ namespace soralog {
    public:
     virtual ~LoggerFactory() = default;
 
+   protected:
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
         const std::optional<std::string> &sink_name,
         const std::optional<Level> &level) = 0;
 
+   public:
     [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
         std::string sink_name) {
