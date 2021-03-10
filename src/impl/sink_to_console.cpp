@@ -131,7 +131,8 @@ namespace soralog {
       *ptr++ = levelToChar(level);  // NOLINT
     }
 
-    void put_name(char *&ptr, std::string_view name) {
+    template <typename T>
+    void put_string(char *&ptr, const T &name) {
       for (auto c : name) {
         *ptr++ = c;  // NOLINT
       }
@@ -186,7 +187,7 @@ namespace soralog {
         if (node) {
           const auto &event = *node;
 
-          const auto time = event.time.time_since_epoch();
+          const auto time = event.timestamp().time_since_epoch();
           const auto sec = time / 1s;
           const auto usec = time % 1s / 1us;
 
@@ -233,10 +234,10 @@ namespace soralog {
           put_separator(ptr);
 
           if (with_color_) {
-            put_style(ptr, level_to_fg(event.level),
+            put_style(ptr, level_to_fg(event.level()),
                       fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
           }
-          put_level(ptr, event.level);
+          put_level(ptr, event.level());
           if (with_color_) {
             put_reset_style(ptr);
           }
@@ -247,7 +248,7 @@ namespace soralog {
             put_style(ptr,
                       fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
           }
-          put_name(ptr, event.name);
+          put_string(ptr, event.name());
           if (with_color_) {
             put_reset_style(ptr);
           }
@@ -256,30 +257,29 @@ namespace soralog {
 
           if (with_color_) {
             put_style(ptr,
-                      event.level == Level::TRACE
+                      event.level() == Level::TRACE
                           ? fmt::internal::make_foreground_color<char>(
                               fmt::color::dark_gray)
-                          : event.level == Level::DEBUG
+                          : event.level() == Level::DEBUG
                               ? fmt::internal::make_foreground_color<char>(
                                   fmt::color::gray)
-                              : event.level == Level::VERBOSE
+                              : event.level() == Level::VERBOSE
                                   ? fmt::internal::make_foreground_color<char>(
                                       fmt::color::dim_gray)
                                   : fmt::internal::make_foreground_color<char>(
                                       fmt::color::black));
-            if (event.level <= Level::ERROR)
+            if (event.level() <= Level::ERROR)
               put_style(
                   ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
           }
-          std::memcpy(ptr, event.message.data(), event.size);
-          ptr = ptr + event.size;  // NOLINT
+          put_string(ptr, event.message());
           if (with_color_) {
             put_reset_style(ptr);
           }
 
           *ptr++ = '\n';  // NOLINT
 
-          size_ -= event.size;
+          size_ -= event.message().size();
         }
 
         if ((end - ptr) < sizeof(Event) or not node

@@ -90,7 +90,7 @@ namespace soralog {
         if (node) {
           const auto &event = *node;
 
-          const auto time = event.time.time_since_epoch();
+          const auto time = event.timestamp().time_since_epoch();
           const auto sec = time / 1s;
           const auto usec = time % 1s / 1us;
 
@@ -106,15 +106,14 @@ namespace soralog {
           std::memcpy(ptr, datetime.data(), datetime.size());
           ptr = ptr + datetime.size();  // NOLINT
 
-          ptr = fmt::format_to_n(ptr, end - ptr, "{:0>6}  {: <8}  {}  ", usec,
-                                 levelToStr(event.level), event.name)
+          ptr = fmt::format_to_n(ptr, end - ptr, "{:0>6}  {: <8}  {}  {}", usec,
+                                 levelToStr(event.level()), event.name(),
+                                 event.message())
                     .out;
 
-          std::memcpy(ptr, event.message.data(), event.size);
-          ptr = ptr + event.size;  // NOLINT
-          *ptr++ = '\n';           // NOLINT
+          *ptr++ = '\n';  // NOLINT
 
-          size_ -= event.size;
+          size_ -= event.message().size();
         }
 
         if ((end - ptr) < sizeof(Event) or not node

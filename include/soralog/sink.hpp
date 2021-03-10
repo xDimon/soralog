@@ -40,7 +40,7 @@ namespace soralog {
 
         // Event is queued successfully
         if (node) {
-          size_ += node->size;
+          size_ += node->message().size();
           node.release();
           break;
         }

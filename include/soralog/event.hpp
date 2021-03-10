@@ -29,19 +29,37 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event(std::string_view name, Level level, std::string_view format,
           const Args &... args)
-        : time(std::chrono::system_clock::now()),
-          name(name.data(), std::min(name.size(), 15ul)),
-          level(level) {
+        : timestamp_(std::chrono::system_clock::now()), level_(level) {
+      name_size_ = std::min(name.size(), name_.size());
+      std::copy_n(name.begin(), name_size_, name_.begin());
       auto result =
-          fmt::format_to_n(message.begin(), message.size(), format, args...);
-      size = result.size;
+          fmt::format_to_n(message_.begin(), message_.size(), format, args...);
+      message_size_ = result.size;
     }
 
-    std::chrono::system_clock::time_point time;
-    const std::string name;
-    Level level = Level::OFF;
-    std::array<char, 4096> message;
-    size_t size = 0;
+    std::chrono::system_clock::time_point timestamp() const noexcept {
+      return timestamp_;
+    };
+
+    std::string_view name() const noexcept {
+      return {name_.data(), name_size_};
+    }
+
+    Level level() const noexcept {
+      return level_;
+    }
+
+    std::string_view message() const noexcept {
+      return {message_.data(), message_size_};
+    }
+
+   private:
+    std::chrono::system_clock::time_point timestamp_;
+    std::array<char, 32> name_;
+    size_t name_size_;
+    Level level_ = Level::OFF;
+    std::array<char, 4096> message_;
+    size_t message_size_ = 0;
   };
 }  // namespace soralog
 
