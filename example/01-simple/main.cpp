@@ -122,6 +122,19 @@ int main() {
 
   main_log->info("Start");
 
+  auto lambda = [](const auto &tag) {
+    std::cout << "CALCULATED AT LOGGING: " << tag << std::endl;
+    return "message";
+  };
+
+  main_log->debug("Debug: {}", lambda("logger: debug for trace level"));
+  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for trace level"));
+
+  main_log->setLevel(soralog::Level::INFO);
+
+  main_log->trace("Debug: {}", lambda("logger: debug for info level"));
+  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for info level"));
+
   auto &object = injector.create<LoggingObject &>();
 
   object.method();

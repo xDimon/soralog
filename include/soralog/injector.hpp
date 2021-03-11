@@ -8,8 +8,9 @@
 
 #include <boost/di.hpp>
 
-#include <soralog/logger_system.hpp>
 #include <soralog/impl/fallback_configurator.hpp>
+#include <soralog/logger_system.hpp>
+#include <soralog/macro.hpp>
 
 namespace soralog::injector {
 
