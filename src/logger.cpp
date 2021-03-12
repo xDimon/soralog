@@ -5,12 +5,12 @@
 
 #include <soralog/logger.hpp>
 
-#include <soralog/logger_system.hpp>
 #include <soralog/group.hpp>
+#include <soralog/logging_system.hpp>
 
 namespace soralog {
 
-  Logger::Logger(soralog::LoggerSystem &system, std::string logger_name,
+  Logger::Logger(soralog::LoggingSystem &system, std::string logger_name,
                  std::shared_ptr<const Group> group)
       : system_(system),
         name_(std::move(logger_name)),

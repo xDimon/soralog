@@ -107,7 +107,7 @@ int main() {
 
   );
 
-  auto &log_system = injector.create<soralog::LoggerSystem &>();
+  auto &log_system = injector.create<soralog::LoggingSystem &>();
 
   auto r = log_system.configure();
   if (not r.message.empty()) {

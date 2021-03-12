@@ -8,7 +8,7 @@
 
 #include <soralog/configurator.hpp>
 
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 
 namespace soralog {
 
@@ -16,7 +16,7 @@ namespace soralog {
    public:
     ~FallbackConfigurator() override = default;
 
-    Result applyOn(LoggerSystem &system) const override;
+    Result applyOn(LoggingSystem &system) const override;
 
     void setLevel(Level level);
     void withColor(bool with_color);

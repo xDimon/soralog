@@ -9,7 +9,7 @@
 #include <string>
 
 namespace soralog {
-  class LoggerSystem;
+  class LoggingSystem;
 
   class Configurator {
    public:
@@ -21,7 +21,7 @@ namespace soralog {
       std::string message{};
     };
 
-    virtual Result applyOn(LoggerSystem &system) const = 0;
+    virtual Result applyOn(LoggingSystem &system) const = 0;
   };
 
 }  // namespace soralog

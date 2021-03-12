@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 
 #include <set>
 
@@ -12,10 +12,10 @@
 
 namespace soralog {
 
-  void LoggerSystem::makeGroup(std::string name,
-                               const std::optional<std::string> &parent,
-                               const std::optional<std::string> &sink,
-                               const std::optional<Level> &level) {
+  void LoggingSystem::makeGroup(std::string name,
+                                const std::optional<std::string> &parent,
+                                const std::optional<std::string> &sink,
+                                const std::optional<Level> &level) {
     auto group =
         std::make_shared<Group>(*this, std::move(name), parent, sink, level);
     if (not fallback_group_) {
@@ -25,7 +25,7 @@ namespace soralog {
     groups_[group->name()] = std::move(group);
   }
 
-  Configurator::Result LoggerSystem::configure() {
+  Configurator::Result LoggingSystem::configure() {
     if (is_configured_) {
       throw std::logic_error("LoggerSystem is already configured");
     }
@@ -53,7 +53,7 @@ namespace soralog {
     return result;
   }
 
-  std::shared_ptr<Logger> LoggerSystem::getLogger(
+  std::shared_ptr<Logger> LoggingSystem::getLogger(
       std::string logger_name, const std::string &group_name,
       const std::optional<std::string> &sink_name,
       const std::optional<Level> &level) {
@@ -93,7 +93,7 @@ namespace soralog {
     return logger;
   }
 
-  [[nodiscard]] std::shared_ptr<Sink> LoggerSystem::getSink(
+  [[nodiscard]] std::shared_ptr<Sink> LoggingSystem::getSink(
       const std::string &sink_name) {
     auto it = sinks_.find(sink_name);
     if (it == sinks_.end()) {
@@ -102,7 +102,7 @@ namespace soralog {
     return it->second;
   }
 
-  [[nodiscard]] std::shared_ptr<Group> LoggerSystem::getGroup(
+  [[nodiscard]] std::shared_ptr<Group> LoggingSystem::getGroup(
       const std::string &group_name) {
     auto it = groups_.find(group_name);
     if (it == groups_.end()) {
@@ -111,8 +111,8 @@ namespace soralog {
     return it->second;
   }
 
-  void LoggerSystem::setParentOfGroup(const std::shared_ptr<Group> &group,
-                                      const std::shared_ptr<Group> &parent) {
+  void LoggingSystem::setParentOfGroup(const std::shared_ptr<Group> &group,
+                                       const std::shared_ptr<Group> &parent) {
     assert(group != nullptr);
     assert(parent != nullptr);
 
@@ -173,8 +173,9 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setSinkOfGroup(const std::shared_ptr<Group> &group,
-                                    std::optional<std::shared_ptr<Sink>> sink) {
+  void LoggingSystem::setSinkOfGroup(
+      const std::shared_ptr<Group> &group,
+      std::optional<std::shared_ptr<Sink>> sink) {
     assert(group != nullptr);
 
     if (sink) {
@@ -238,8 +239,8 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setLevelOfGroup(const std::shared_ptr<Group> &group,
-                                     std::optional<Level> level) {
+  void LoggingSystem::setLevelOfGroup(const std::shared_ptr<Group> &group,
+                                      std::optional<Level> level) {
     assert(group != nullptr);
 
     if (level) {
@@ -303,7 +304,7 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setSinkOfLogger(
+  void LoggingSystem::setSinkOfLogger(
       const std::shared_ptr<Logger> &logger,
       std::optional<std::shared_ptr<Sink>> sink) {
     assert(logger != nullptr);
@@ -315,8 +316,8 @@ namespace soralog {
     }
   }
 
-  void LoggerSystem::setLevelOfLogger(const std::shared_ptr<Logger> &logger,
-                                      std::optional<Level> level) {
+  void LoggingSystem::setLevelOfLogger(const std::shared_ptr<Logger> &logger,
+                                       std::optional<Level> level) {
     assert(logger != nullptr);
 
     if (level) {
@@ -326,8 +327,8 @@ namespace soralog {
     }
   }
 
-  bool LoggerSystem::setParentOfGroup(const std::string &group_name,
-                                      const std::string &parent_name) {
+  bool LoggingSystem::setParentOfGroup(const std::string &group_name,
+                                       const std::string &parent_name) {
     auto it1 = groups_.find(group_name);
     if (it1 == groups_.end()) {
       return false;
@@ -353,8 +354,8 @@ namespace soralog {
     return true;
   }
 
-  bool LoggerSystem::setSinkOfGroup(const std::string &group_name,
-                                    const std::string &sink_name) {
+  bool LoggingSystem::setSinkOfGroup(const std::string &group_name,
+                                     const std::string &sink_name) {
     auto sink = getSink(sink_name);
     if (not sink) {
       return false;
@@ -367,7 +368,7 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::resetSinkOfGroup(const std::string &group_name) {
+  bool LoggingSystem::resetSinkOfGroup(const std::string &group_name) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
       setSinkOfGroup(group, {});
@@ -376,8 +377,8 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::setLevelOfGroup(const std::string &group_name,
-                                     Level level) {
+  bool LoggingSystem::setLevelOfGroup(const std::string &group_name,
+                                      Level level) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
       setLevelOfGroup(group, level);
@@ -386,7 +387,7 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::resetLevelOfGroup(const std::string &group_name) {
+  bool LoggingSystem::resetLevelOfGroup(const std::string &group_name) {
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
       setLevelOfGroup(group, {});
@@ -395,8 +396,8 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::setGroupOfLogger(const std::string &logger_name,
-                                      const std::string &group_name) {
+  bool LoggingSystem::setGroupOfLogger(const std::string &logger_name,
+                                       const std::string &group_name) {
     if (auto group = getGroup(group_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
         if (auto logger = it->second.lock()) {
@@ -409,8 +410,8 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::setSinkOfLogger(const std::string &logger_name,
-                                     const std::string &sink_name) {
+  bool LoggingSystem::setSinkOfLogger(const std::string &logger_name,
+                                      const std::string &sink_name) {
     if (auto sink = getSink(sink_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
         if (auto logger = it->second.lock()) {
@@ -423,7 +424,7 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::resetSinkOfLogger(const std::string &logger_name) {
+  bool LoggingSystem::resetSinkOfLogger(const std::string &logger_name) {
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         logger->setSinkFromGroup(logger->group());
@@ -433,8 +434,8 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::setLevelOfLogger(const std::string &logger_name,
-                                      Level level) {
+  bool LoggingSystem::setLevelOfLogger(const std::string &logger_name,
+                                       Level level) {
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         logger->setLevel(level);
@@ -445,7 +446,7 @@ namespace soralog {
     return false;
   }
 
-  bool LoggerSystem::resetLevelOfLogger(const std::string &logger_name) {
+  bool LoggingSystem::resetLevelOfLogger(const std::string &logger_name) {
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         logger->setLevelFromGroup(logger->group());

@@ -24,7 +24,7 @@ namespace soralog {
   }
 
   Configurator::Result ConfiguratorFromYAML::applyOn(
-      LoggerSystem &system) const {
+      LoggingSystem &system) const {
     return Applicator(system, config_, previous_).run();
   }
 

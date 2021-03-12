@@ -12,7 +12,7 @@
 namespace soralog {
 
   Configurator::Result FallbackConfigurator::applyOn(
-      LoggerSystem &system) const {
+      LoggingSystem &system) const {
     system.makeSink<SinkToConsole>("console", with_color_);
     system.makeGroup("*", {}, "console", level_);
 

@@ -13,7 +13,7 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 
 namespace soralog {
 
@@ -35,7 +35,7 @@ namespace soralog {
 
     ~ConfiguratorFromYAML() override = default;
 
-    Result applyOn(LoggerSystem &system) const override;
+    Result applyOn(LoggingSystem &system) const override;
 
    private:
     std::shared_ptr<Configurator> previous_;
@@ -43,7 +43,7 @@ namespace soralog {
 
     class Applicator {
      public:
-      Applicator(LoggerSystem &system,
+      Applicator(LoggingSystem &system,
                  std::variant<std::filesystem::path, std::string> config,
                  std::shared_ptr<Configurator> previous = {})
           : system_(system),
@@ -70,7 +70,7 @@ namespace soralog {
       void parseGroup(int number, const YAML::Node &group,
                       const std::optional<std::string> &parent);
 
-      LoggerSystem &system_;
+      LoggingSystem &system_;
       std::shared_ptr<Configurator> previous_ = nullptr;
       std::variant<std::filesystem::path, std::string> config_;
       bool has_warning_ = false;

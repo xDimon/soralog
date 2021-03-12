@@ -56,7 +56,7 @@ add_library(logger
     )
 target_link_libraries(logger
     sink
-    logger_system
+    logging_system
     )
 
 add_library(configurator INTERFACE)
@@ -81,17 +81,17 @@ target_link_libraries(fallback_configurator
     configurator
     )
 
-add_library(logger_system
-    logger_system.cpp
+add_library(logging_system
+    logging_system.cpp
     )
-target_link_libraries(logger_system
+target_link_libraries(logging_system
     group
     logger
     )
 
 add_library(soralog soralog.cpp)
 target_link_libraries(soralog
-    logger_system
+    logging_system
     sink
     group
     logger
@@ -107,7 +107,7 @@ add_library(soralog::fallback ALIAS fallback_configurator)
 set(INSTALL_TARGETS
     soralog
 
-    logger_system
+    logging_system
     group
     logger
 

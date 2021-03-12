@@ -10,7 +10,7 @@
 #include <string>
 
 #include <soralog/level.hpp>
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 
 namespace soralog {
 
@@ -23,7 +23,7 @@ namespace soralog {
     Group &operator=(Group &&) noexcept = delete;
     Group &operator=(Group const &) = delete;
 
-    Group(LoggerSystem &logger_system, std::string group_name,
+    Group(LoggingSystem &logging_system, std::string group_name,
           const std::optional<std::string> &parent_name,
           const std::optional<std::string> &sink_name,
           std::optional<Level> level);
@@ -70,7 +70,7 @@ namespace soralog {
     void setParentGroup(const std::string &group_name);
 
    private:
-    LoggerSystem &system_;
+    LoggingSystem &system_;
     const std::string name_;
 
     std::shared_ptr<const Group> parent_group_;

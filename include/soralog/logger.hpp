@@ -14,7 +14,7 @@
 
 namespace soralog {
 
-  class LoggerSystem;
+  class LoggingSystem;
   class Group;
 
   class Logger final {
@@ -26,7 +26,7 @@ namespace soralog {
     Logger &operator=(Logger &&) noexcept = delete;
     Logger &operator=(Logger const &) = delete;
 
-    Logger(LoggerSystem &system, std::string logger_name,
+    Logger(LoggingSystem &system, std::string logger_name,
            std::shared_ptr<const Group> group);
 
    private:
@@ -159,7 +159,7 @@ namespace soralog {
     void setGroup(const std::string &group_name);
 
    private:
-    LoggerSystem &system_;
+    LoggingSystem &system_;
 
     const std::string name_;
     std::shared_ptr<const Group> group_;

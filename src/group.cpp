@@ -7,11 +7,11 @@
 
 namespace soralog {
 
-  Group::Group(LoggerSystem &logger_system, std::string group_name,
+  Group::Group(LoggingSystem &logging_system, std::string group_name,
                const std::optional<std::string> &parent_name,
                const std::optional<std::string> &sink_name,
                std::optional<Level> level)
-      : system_(logger_system), name_(std::move(group_name)) {
+      : system_(logging_system), name_(std::move(group_name)) {
     if (parent_name) {
       parent_group_ = system_.getGroup(*parent_name);
       if (parent_group_) {

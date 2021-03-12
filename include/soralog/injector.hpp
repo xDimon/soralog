@@ -9,7 +9,7 @@
 #include <boost/di.hpp>
 
 #include <soralog/impl/fallback_configurator.hpp>
-#include <soralog/logger_system.hpp>
+#include <soralog/logging_system.hpp>
 #include <soralog/macro.hpp>
 
 namespace soralog::injector {
@@ -22,7 +22,7 @@ namespace soralog::injector {
 
         // clang-format off
         di::bind<Configurator>.template to<FallbackConfigurator>().in(di::unique),
-        di::bind<LoggerFactory>.template to<LoggerSystem>().in(di::singleton),
+        di::bind<LoggerFactory>.template to<LoggingSystem>().in(di::singleton),
         // clang-format on
 
         // user-defined overrides...

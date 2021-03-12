@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_LOGGERMANAGER
-#define SORALOG_LOGGERMANAGER
+#ifndef SORALOG_LOGGINGSYSTEM
+#define SORALOG_LOGGINGSYSTEM
 
 #include <soralog/logger_factory.hpp>
 
@@ -21,16 +21,16 @@ namespace soralog {
   class Group;
   class Logger;
 
-  class LoggerSystem final : public LoggerFactory {
+  class LoggingSystem final : public LoggerFactory {
    public:
-    LoggerSystem() = delete;
-    LoggerSystem(const LoggerSystem &) = delete;
-    LoggerSystem &operator=(LoggerSystem const &) = delete;
-    ~LoggerSystem() override = default;
-    LoggerSystem(LoggerSystem &&tmp) noexcept = delete;
-    LoggerSystem &operator=(LoggerSystem &&tmp) noexcept = delete;
+    LoggingSystem() = delete;
+    LoggingSystem(const LoggingSystem &) = delete;
+    LoggingSystem &operator=(LoggingSystem const &) = delete;
+    ~LoggingSystem() override = default;
+    LoggingSystem(LoggingSystem &&tmp) noexcept = delete;
+    LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
 
-    explicit LoggerSystem(std::shared_ptr<Configurator> configurator)
+    explicit LoggingSystem(std::shared_ptr<Configurator> configurator)
         : configurator_(std::move(configurator)){};
 
     [[nodiscard]] Configurator::Result configure();
@@ -95,4 +95,4 @@ namespace soralog {
 
 }  // namespace soralog
 
-#endif  // SORALOG_LOGGERMANAGER
+#endif  // SORALOG_LOGGINGSYSTEM
