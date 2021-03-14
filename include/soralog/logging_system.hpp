@@ -35,13 +35,34 @@ namespace soralog {
 
     [[nodiscard]] Configurator::Result configure();
 
-   protected:
+    [[nodiscard]] std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name) override {
+      return getLogger(std::move(logger_name), group_name, std::nullopt,
+                       std::nullopt);
+    }
+
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
-        const std::optional<std::string> &sink_name,
-        const std::optional<Level> &level) override;
+        Level level) override {
+      return getLogger(std::move(logger_name), group_name, std::nullopt,
+                       std::make_optional(level));
+    }
 
-   public:
+    [[nodiscard]] std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        std::string sink_name) override {
+      return getLogger(std::move(logger_name), group_name,
+                       std::make_optional(std::move(sink_name)), std::nullopt);
+    }
+
+    [[nodiscard]] std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        std::string sink_name, Level level) override {
+      return getLogger(std::move(logger_name), group_name,
+                       std::make_optional(std::move(sink_name)),
+                       std::make_optional(level));
+    }
+
     [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
 
     [[nodiscard]] std::shared_ptr<Group> getGroup(const std::string &name);
@@ -73,6 +94,11 @@ namespace soralog {
     bool resetLevelOfLogger(const std::string &logger_name);
 
    private:
+    [[nodiscard]] std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        const std::optional<std::string> &sink_name,
+        const std::optional<Level> &level);
+
     void setParentOfGroup(const std::shared_ptr<Group> &group,
                           const std::shared_ptr<Group> &parent);
     void setSinkOfGroup(const std::shared_ptr<Group> &group,

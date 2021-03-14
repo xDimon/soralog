@@ -21,29 +21,20 @@ namespace soralog {
    public:
     virtual ~LoggerFactory() = default;
 
-   protected:
+    [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name) = 0;
+
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
-        const std::optional<std::string> &sink_name,
-        const std::optional<Level> &level) = 0;
+        Level level) = 0;
 
-   public:
-    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
+    [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
-        std::string sink_name) {
-      return getLogger(std::move(logger_name), group_name,
-                       {std::move(sink_name)}, {});
-    }
+        std::string sink_name) = 0;
 
-    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name, Level level) {
-      return getLogger(std::move(logger_name), group_name, {}, {level});
-    }
-
-    [[nodiscard]] inline std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name) {
-      return getLogger(std::move(logger_name), group_name, {}, {});
-    }
+    [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
+        std::string logger_name, const std::string &group_name,
+        std::string sink_name, Level level) = 0;
   };
 
 }  // namespace soralog
