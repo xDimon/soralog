@@ -27,13 +27,13 @@ namespace soralog {
   }
 
   void Logger::setLevel(Level level) {
-    level_is_overriden_ = true;
+    has_level_overriden_ = true;
     level_ = level;
   }
 
   void Logger::setLevelFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    level_is_overriden_ = group != group_;
+    has_level_overriden_ = group != group_;
     level_ = group->level();
   }
 
@@ -47,7 +47,7 @@ namespace soralog {
 
   void Logger::resetSink() {
     sink_ = std::const_pointer_cast<Sink>(group_->sink());
-    sink_is_overriden_ = false;
+    has_sink_overriden_ = false;
   }
 
   void Logger::setSink(const std::string &sink_name) {
@@ -58,14 +58,14 @@ namespace soralog {
 
   void Logger::setSink(std::shared_ptr<Sink> sink) {
     assert(sink);
-    sink_is_overriden_ = true;
+    has_sink_overriden_ = true;
     sink_ = std::move(sink);
   }
 
   void Logger::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
     if (auto sink = std::const_pointer_cast<Sink>(group->sink())) {
-      sink_is_overriden_ = group != group_;
+      has_sink_overriden_ = group != group_;
       sink_ = std::move(sink);
     }
   }
@@ -79,13 +79,13 @@ namespace soralog {
   // Group
 
   void Logger::setGroup(std::shared_ptr<const Group> group) {
-    if (group) {
-      group_ = std::move(group);
+    assert(group);
+    group_ = std::move(group);
+    if (not has_sink_overriden_) {
       setSinkFromGroup(group_);
+    }
+    if (not has_level_overriden_) {
       setLevelFromGroup(group_);
-    } else {
-      sink_is_overriden_ = false;
-      level_is_overriden_ = false;
     }
   }
 

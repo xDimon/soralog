@@ -114,7 +114,6 @@ namespace soralog {
   void LoggingSystem::setParentOfGroup(const std::shared_ptr<Group> &group,
                                        const std::shared_ptr<Group> &parent) {
     assert(group != nullptr);
-    assert(parent != nullptr);
 
     group->setParentGroup(parent);
 
@@ -130,7 +129,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->isLevelOverriden() && current->isSinkOverriden()) {
+      if (current->hasLevelOverriden() && current->hasSinkOverriden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -196,7 +195,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->isSinkOverriden()) {
+      if (current->hasSinkOverriden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -226,10 +225,12 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (auto it2 = passed_groups.find(logger->group());
-            it2 != passed_groups.end()) {
-          if (it2->second != -1) {
-            logger->setGroup(logger->group());
+        if (not logger->hasSinkOverriden()) {
+          if (auto it2 = passed_groups.find(logger->group());
+              it2 != passed_groups.end()) {
+            if (it2->second != -1) {
+              logger->setSinkFromGroup(logger->group());
+            }
           }
         }
         ++it;
@@ -261,7 +262,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->isLevelOverriden()) {
+      if (current->hasLevelOverriden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -291,10 +292,12 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (auto it2 = passed_groups.find(logger->group());
-            it2 != passed_groups.end()) {
-          if (it2->second != -1) {
-            logger->setGroup(logger->group());
+        if (not logger->hasLevelOverriden()) {
+          if (auto it2 = passed_groups.find(logger->group());
+              it2 != passed_groups.end()) {
+            if (it2->second != -1) {
+              logger->setLevelFromGroup(logger->group());
+            }
           }
         }
         ++it;
@@ -456,4 +459,5 @@ namespace soralog {
     }
     return false;
   }
+
 }  // namespace soralog

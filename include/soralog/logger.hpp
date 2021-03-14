@@ -131,6 +131,9 @@ namespace soralog {
     [[nodiscard]] Level level() const noexcept {
       return level_;
     }
+    [[nodiscard]] bool hasLevelOverriden() const noexcept {
+      return has_level_overriden_;
+    }
 
     void resetLevel();
     void setLevel(Level level);
@@ -141,6 +144,9 @@ namespace soralog {
 
     [[nodiscard]] std::shared_ptr<const Sink> sink() const noexcept {
       return sink_;
+    }
+    [[nodiscard]] bool hasSinkOverriden() const noexcept {
+      return has_sink_overriden_;
     }
 
     void resetSink();
@@ -165,10 +171,10 @@ namespace soralog {
     std::shared_ptr<const Group> group_;
 
     std::shared_ptr<Sink> sink_;
-    bool sink_is_overriden_{};
+    bool has_sink_overriden_{};
 
     Level level_{};
-    bool level_is_overriden_{};
+    bool has_level_overriden_{};
   };
 
   using Log = std::shared_ptr<Logger>;
