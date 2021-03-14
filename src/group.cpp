@@ -17,17 +17,22 @@ namespace soralog {
       : system_(logging_system), name_(std::move(group_name)) {
     if (parent_name) {
       parent_group_ = system_.getGroup(*parent_name);
-      if (parent_group_) {
-        assert(parent_group_);
-        setParentGroup(parent_group_);
+      if (not parent_group_) {
+        throw std::invalid_argument("Provided parent group does not exist yet");
       }
+      setParentGroup(parent_group_);
     }
     if (sink_name) {
       auto sink = system_.getSink(*sink_name);
+      if (not sink) {
+        throw std::invalid_argument("Provided sink does not exist yet");
+      }
       setSink(std::move(sink));
     }
     if (level) {
       setLevel(*level);
+    } else if (not parent_group_) {
+      throw std::invalid_argument("Level is not provided for root group");
     }
   }
 
@@ -60,8 +65,10 @@ namespace soralog {
   // Sink
 
   void Group::resetSink() {
-    sink_ = parent_group_->sink();
-    has_sink_overriden_ = false;
+    if (parent_group_) {
+      sink_ = parent_group_->sink();
+      has_sink_overriden_ = false;
+    }
   }
 
   void Group::setSink(std::shared_ptr<const Sink> sink) {

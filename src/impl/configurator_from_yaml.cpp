@@ -221,7 +221,7 @@ namespace soralog {
     if (system_.getSink(name)) {
       errors_ << "W: Already exists sink with name '" << name
               << "'; Previous version will be overriden\n";
-      has_error_ = true;
+      has_warning_ = true;
     }
 
     system_.makeSink<SinkToConsole>(name, color);
@@ -278,9 +278,9 @@ namespace soralog {
     auto filename = file_node.as<std::string>();
 
     if (system_.getSink(name)) {
-      errors_ << "E: Already exists sink with name '" << name << "'\n";
-      has_error_ = true;
-      return;
+      errors_ << "W: Already exists sink with name '" << name
+              << "'; Previous version will be overriden\n";
+      has_warning_ = true;
     }
 
     system_.makeSink<SinkToFile>(name, directory, filename);
