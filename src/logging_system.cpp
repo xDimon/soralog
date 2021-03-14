@@ -9,8 +9,14 @@
 
 #include <soralog/group.hpp>
 #include <soralog/logger.hpp>
+#include "impl/sink_to_nowhere.hpp"
 
 namespace soralog {
+
+  LoggingSystem::LoggingSystem(std::shared_ptr<Configurator> configurator)
+      : configurator_(std::move(configurator)) {
+    makeSink<SinkToNowhere>("*");
+  }
 
   void LoggingSystem::makeGroup(std::string name,
                                 const std::optional<std::string> &parent,

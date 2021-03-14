@@ -14,6 +14,8 @@
 
 namespace soralog {
 
+  class Sink;
+
   class Group final {
    public:
     Group() = delete;

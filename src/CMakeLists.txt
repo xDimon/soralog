@@ -86,6 +86,7 @@ add_library(logging_system
     )
 target_link_libraries(logging_system
     group
+    sink_to_nowhere
     logger
     )
 

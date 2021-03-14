@@ -14,10 +14,10 @@
 #include <string>
 
 #include <soralog/configurator.hpp>
-#include <soralog/sink.hpp>
 
 namespace soralog {
 
+  class Sink;
   class Group;
   class Logger;
 
@@ -30,8 +30,7 @@ namespace soralog {
     LoggingSystem(LoggingSystem &&tmp) noexcept = delete;
     LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
 
-    explicit LoggingSystem(std::shared_ptr<Configurator> configurator)
-        : configurator_(std::move(configurator)){};
+    explicit LoggingSystem(std::shared_ptr<Configurator> configurator);
 
     [[nodiscard]] Configurator::Result configure();
 

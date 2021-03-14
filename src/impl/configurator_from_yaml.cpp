@@ -31,10 +31,6 @@ namespace soralog {
   ConfiguratorFromYAML::Result ConfiguratorFromYAML::Applicator::run() && {
     ConfiguratorFromYAML::Result result;
 
-    if (not system_.getSink("*")) {
-      system_.makeSink<SinkToNowhere>("*");
-    }
-
     if (previous_ != nullptr) {
       auto prev_result = previous_->applyOn(system_);
       result.has_error = result.has_error || prev_result.has_error;
@@ -190,13 +186,6 @@ namespace soralog {
       errors_ << "E: Unknown 'type' of sink node '" << name << "': " << type
               << "\n";
       has_error_ = true;
-
-      if (system_.getSink(name)) {
-        errors_ << "W: Already exists sink with name '" << name
-                << "'; Previous version will be overriden\n";
-        has_error_ = true;
-      }
-      system_.makeSink<SinkToNowhere>(name);
     }
   }
 
