@@ -16,10 +16,16 @@ include("cmake/Hunter/init.cmake")
 cmake_policy(SET CMP0048 NEW)
 project(soralog VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 option(TESTING "Build tests" ON)
 option(EXAMPLES "Build examples" ON)
 
+# the property is out of "if TESTING" scope due to addtest func is out too
+set_property(GLOBAL PROPERTY TEST_TARGETS)
+
 include(cmake/dependencies.cmake)
+include(cmake/functions.cmake)
 
 add_subdirectory(src)
 
