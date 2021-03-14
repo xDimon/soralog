@@ -68,6 +68,7 @@ namespace soralog {
       return parent_group_;
     }
 
+    void unsetParentGroup();
     void setParentGroup(std::shared_ptr<const Group> group);
     void setParentGroup(const std::string &group_name);
 

@@ -78,6 +78,7 @@ namespace soralog {
 
     bool setParentOfGroup(const std::string &group_name,
                           const std::string &parent);
+    bool unsetParentOfGroup(const std::string &group_name);
     bool setSinkOfGroup(const std::string &group_name,
                         const std::string &sink_name);
     bool resetSinkOfGroup(const std::string &group_name);

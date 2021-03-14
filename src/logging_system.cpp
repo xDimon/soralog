@@ -363,6 +363,17 @@ namespace soralog {
     return true;
   }
 
+  bool LoggingSystem::unsetParentOfGroup(const std::string &group_name) {
+    auto it = groups_.find(group_name);
+    if (it == groups_.end()) {
+      return false;
+    }
+    auto &group = it->second;
+
+    setParentOfGroup(group, {});
+    return true;
+  }
+
   bool LoggingSystem::setSinkOfGroup(const std::string &group_name,
                                      const std::string &sink_name) {
     auto sink = getSink(sink_name);

@@ -5,6 +5,9 @@
 
 #include <soralog/group.hpp>
 
+#include <cassert>
+#include <stdexcept>
+
 namespace soralog {
 
   Group::Group(LoggingSystem &logging_system, std::string group_name,
@@ -80,6 +83,12 @@ namespace soralog {
   }
 
   // Parent group
+
+  void Group::unsetParentGroup() {
+    parent_group_.reset();
+    has_level_overriden_ = true;
+    has_sink_overriden_ = true;
+  }
 
   void Group::setParentGroup(std::shared_ptr<const Group> group) {
     parent_group_ = std::move(group);
