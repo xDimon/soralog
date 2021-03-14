@@ -22,16 +22,9 @@ namespace soralog {
     explicit SinkToNowhere(std::string name);
     ~SinkToNowhere() override;
 
-    [[nodiscard]] const std::string &name() const noexcept override {
-      return name_;
-    }
-
     void flush() noexcept override;
 
     void rotate() noexcept override;
-
-   private:
-    std::string name_;
   };
 
 }  // namespace soralog

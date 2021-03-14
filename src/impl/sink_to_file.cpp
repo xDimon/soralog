@@ -15,10 +15,13 @@ namespace soralog {
   using namespace std::chrono_literals;
 
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
-                         std::string filename)
-      : name_(std::move(name)),
-        path_(std::move(path).string() + "/" + std::move(filename)) {
-    buff_ = std::make_unique<decltype(buff_)::element_type>();
+                         std::string filename, size_t events_capacity,
+                         size_t buffer_size, size_t latency_ms)
+      : Sink(std::move(name), events_capacity, buffer_size),
+        path_(std::move(path).string() + "/" + std::move(filename)),
+        buffer_size_(buffer_size),
+        latency_(latency_ms),
+        buff_(buffer_size_) {
     sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     out_.open(path_, std::ios::app);
     if (not out_.is_open()) {
@@ -77,8 +80,8 @@ namespace soralog {
         continue;
       }
 
-      auto *const begin = buff_->data();
-      auto *const end = buff_->data() + buff_->size();
+      auto *const begin = buff_.data();
+      auto *const end = buff_.data() + buff_.size();  // NOLINT
       auto *ptr = begin;
 
       decltype(1s / 1s) psec = 0;

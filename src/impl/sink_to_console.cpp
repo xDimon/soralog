@@ -140,9 +140,14 @@ namespace soralog {
 
   }  // namespace
 
-  SinkToConsole::SinkToConsole(std::string name, bool with_color)
-      : name_(std::move(name)), with_color_(with_color) {
-    buff_ = std::make_unique<decltype(buff_)::element_type>();
+  SinkToConsole::SinkToConsole(std::string name, bool with_color,
+                               size_t events_capacity, size_t buffer_size,
+                               size_t latency_ms)
+      : Sink(std::move(name), events_capacity, buffer_size),
+        with_color_(with_color),
+        buffer_size_(buffer_size),
+        latency_(latency_ms),
+        buff_(buffer_size_) {
     sink_worker_ = std::make_unique<std::thread>([this] { run(); });
   }
 
@@ -174,8 +179,8 @@ namespace soralog {
         continue;
       }
 
-      auto *const begin = buff_->data();
-      auto *const end = buff_->data() + buff_->size();
+      auto *const begin = buff_.data();
+      auto *const end = buff_.data() + buff_.size();  // NOLINT
       auto *ptr = begin;
 
       decltype(1s / 1s) psec = 0;

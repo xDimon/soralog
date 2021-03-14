@@ -27,12 +27,11 @@ namespace soralog {
     SinkToFile &operator=(SinkToFile const &) = delete;
 
     SinkToFile(std::string name, std::filesystem::path path,
-               std::string filename);
+               std::string filename,
+               size_t events_capacity = 1u << 11,  // 2048 events
+               size_t buffer_size = 1u << 22,      // 4 Mb
+               size_t latency_ms = 1000);          // 1 sec
     ~SinkToFile() override;
-
-    [[nodiscard]] const std::string &name() const noexcept override {
-      return name_;
-    }
 
     void flush() noexcept override;
 
@@ -41,16 +40,13 @@ namespace soralog {
    private:
     void run();
 
-   protected:
-    std::string name_;
-
-   private:
     std::filesystem::path path_{};
-    std::chrono::milliseconds latency_ = 1s;
+    const size_t buffer_size_ = 1 << 22;             // 4Mb
+    const std::chrono::milliseconds latency_{1000};  // 1sec
 
     std::unique_ptr<std::thread> sink_worker_{};
 
-    std::unique_ptr<std::array<char, 2u << 20>> buff_;
+    std::vector<char> buff_;
     std::ofstream out_{};
     std::mutex mutex_{};
     std::condition_variable condvar_{};

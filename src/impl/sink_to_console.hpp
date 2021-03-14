@@ -25,12 +25,11 @@ namespace soralog {
     SinkToConsole &operator=(SinkToConsole &&) noexcept = delete;
     SinkToConsole &operator=(SinkToConsole const &) = delete;
 
-    SinkToConsole(std::string name, bool with_color);
+    SinkToConsole(std::string name, bool with_color,
+                  size_t events_capacity = 1u << 6,  // 64 events
+                  size_t buffer_size = 1u << 17,     // 128 Kb
+                  size_t latency_ms = 200);          // 200 ms
     ~SinkToConsole() override;
-
-    [[nodiscard]] const std::string &name() const noexcept override {
-      return name_;
-    }
 
     void flush() noexcept override;
 
@@ -39,16 +38,13 @@ namespace soralog {
    private:
     void run();
 
-   protected:
-    std::string name_;
-
-   private:
     bool with_color_;
-    std::chrono::milliseconds latency_ = 250ms;
+    const size_t buffer_size_ = 1 << 17;            // 128Kb
+    const std::chrono::milliseconds latency_{200};  // 200ms
 
     std::unique_ptr<std::thread> sink_worker_;
 
-    std::unique_ptr<std::array<char, 128u << 10>> buff_;
+    std::vector<char> buff_;
     std::mutex mutex_;
     std::condition_variable condvar_;
     bool need_to_finalize_ = false;

@@ -16,12 +16,8 @@ namespace soralog {
     std::string name_;
 
    public:
-    SinkMock(std::string name) : name_(std::move(name)) {}
+    SinkMock(std::string name) : Sink(std::move(name), 4, sizeof(Event[4])) {}
     ~SinkMock() override = default;
-
-    const std::string &name() const noexcept override {
-      return name_;
-    }
 
     template <typename... Args>
     void push(std::string_view name, Level level, std::string_view format,
