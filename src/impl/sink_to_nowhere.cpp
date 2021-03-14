@@ -16,8 +16,8 @@ namespace soralog {
   }
 
   void SinkToNowhere::flush() noexcept {
-    while (events_->size() > 0) {
-      [[maybe_unused]] auto node = events_->get();
+    while (events_.size() > 0) {
+      [[maybe_unused]] auto node = events_.get();
     }
   }
 

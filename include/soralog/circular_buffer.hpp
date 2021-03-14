@@ -6,7 +6,7 @@
 #ifndef SORALOG_CIRCULARBUFFER
 #define SORALOG_CIRCULARBUFFER
 
-#include <array>
+#include <vector>
 #include <atomic>
 #include <cassert>
 #include <cstddef>
@@ -20,7 +20,7 @@
 
 namespace soralog {
 
-  template <typename T, size_t N>
+  template <typename T>
   class CircularBuffer final {
    public:
     using element_type = T;
@@ -82,15 +82,17 @@ namespace soralog {
       }
     };
 
-    CircularBuffer() = default;
+    CircularBuffer() = delete;
     CircularBuffer(CircularBuffer &&) noexcept = delete;
     CircularBuffer(const CircularBuffer &) = delete;
     ~CircularBuffer() = default;
     CircularBuffer &operator=(CircularBuffer &&) noexcept = delete;
     CircularBuffer &operator=(CircularBuffer const &) = delete;
 
+    explicit CircularBuffer(size_t capacity) : data_(capacity){};
+
     size_t capacity() const noexcept {
-      return N;
+      return data_.size();
     }
 
     size_t size() const noexcept {
@@ -98,14 +100,14 @@ namespace soralog {
     }
 
     size_t avail() const noexcept {
-      return N - size_;
+      return data_.size() - size_;
     }
 
     template <typename... Args>
     [[nodiscard]] NodeRef put(const Args &... args) noexcept(IF_RELEASE) {
       while (true) {
         auto push_index = push_index_.load();
-        auto next_index = (push_index + 1) % N;
+        auto next_index = (push_index + 1) % data_.size();
 
         // Tail is caught up - queue is full
         if (pop_index_.load() == next_index) {
@@ -125,7 +127,7 @@ namespace soralog {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? N : 0) + push_index_ - pop_index_;
+        size_ = ((push_index_ < pop_index_) ? data_.size() : 0) + push_index_ - pop_index_;
 
         // Emplace item
         new (&node) Node(args...);
@@ -150,12 +152,12 @@ namespace soralog {
         }
 
         // Go to next item
-        if (not pop_index_.compare_exchange_weak(pop_index, (pop_index + 1) % N,
+        if (not pop_index_.compare_exchange_weak(pop_index, (pop_index + 1) % data_.size(),
                                                  std::memory_order_relaxed)) {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? N : 0) + push_index_ - pop_index_;
+        size_ = ((push_index_ < pop_index_) ? data_.size() : 0) + push_index_ - pop_index_;
 
         return NodeRef{node, false};
       }
@@ -163,7 +165,7 @@ namespace soralog {
 
    private:
     size_t size_ = 0;
-    std::array<Node, N> data_;
+    std::vector<Node> data_;
     std::atomic_size_t push_index_ = 0;
     std::atomic_size_t pop_index_ = 0;
   };

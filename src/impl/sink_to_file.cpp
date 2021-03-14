@@ -48,7 +48,7 @@ namespace soralog {
     auto next_flush = std::chrono::steady_clock::now();
 
     while (true) {
-      if (events_->size() == 0) {
+      if (events_.size() == 0) {
         if (need_to_finalize_) {
           return;
         }
@@ -73,7 +73,7 @@ namespace soralog {
 
       std::unique_lock lock(mutex_);
       if (not condvar_.wait_for(lock, std::chrono::milliseconds(100),
-                                [this] { return events_->size() > 0; })) {
+                                [this] { return events_.size() > 0; })) {
         continue;
       }
 
@@ -86,7 +86,7 @@ namespace soralog {
       std::array<char, 18> datetime{};  // "00.00.00 00:00:00."
 
       while (true) {
-        auto node = events_->get();
+        auto node = events_.get();
         if (node) {
           const auto &event = *node;
 

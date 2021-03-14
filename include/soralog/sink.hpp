@@ -23,7 +23,7 @@ namespace soralog {
 
   class Sink {
    public:
-    Sink() : events_(std::make_unique<decltype(events_)::element_type>()){};
+    Sink() : events_(1<<18) {};
     Sink(const Sink &) = delete;
     Sink(Sink &&) noexcept = delete;
     virtual ~Sink() = default;
@@ -36,7 +36,7 @@ namespace soralog {
     void push(std::string_view name, Level level, std::string_view format,
               const Args&... args) noexcept(IF_RELEASE) {
       while (true) {
-        auto node = events_->put(name, level, format, args...);
+        auto node = events_.put(name, level, format, args...);
 
         // Event is queued successfully
         if (node) {
@@ -58,7 +58,7 @@ namespace soralog {
     virtual void rotate() noexcept = 0;
 
    protected:
-    std::unique_ptr<CircularBuffer<Event, 1 << 18>> events_;
+    CircularBuffer<Event> events_;
     size_t size_ = 0;
   };
 
