@@ -13,7 +13,7 @@
 namespace soralog {
 
   /**
-   * Level detalisation of logging
+   * Level detalization of logging or event
    */
   enum class Level : uint8_t {
     OFF = 0,   /// No log
@@ -23,7 +23,7 @@ namespace soralog {
     INFO,      /// Important information
     VERBOSE,   /// All information
     DEBUG,     /// Message for debug
-    TRACE,     /// Trace
+    TRACE,     /// Trace event
   };
 
   namespace detail {
@@ -42,10 +42,16 @@ namespace soralog {
         }();
   }
 
+  /**
+   * @returns symbol in according with {@param level}
+   */
   constexpr char levelToChar(Level level) {
     return detail::level_to_str_map[static_cast<uint8_t>(level)][0];
   }
 
+  /**
+   * @returns C-string in according with {@param level}
+   */
   constexpr const char *levelToStr(Level level) {
     return detail::level_to_str_map[static_cast<uint8_t>(level)];
   }

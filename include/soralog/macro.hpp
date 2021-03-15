@@ -8,6 +8,20 @@
 
 #include <soralog/logger.hpp>
 
+/**
+ * SL_LOG
+ * SL_TRACE
+ * SL_DEBUG
+ * SL_VERBOSE
+ * SL_INFO
+ * SL_WARN
+ * SL_ERROR
+ * SL_CRITICAL
+ *
+ * Macros is using to wrap logging argument to lambda to avoid calculation them
+ * if their level not enough for logging
+ */
+
 namespace soralog::macro {
   template <typename... Args>
   void proxy(const std::shared_ptr<soralog::Logger> &log, soralog::Level level,

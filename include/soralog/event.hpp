@@ -15,6 +15,11 @@
 #include <soralog/level.hpp>
 
 namespace soralog {
+
+  /**
+   * @class Event
+   * Data of logging event
+   */
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
   class Event final {
    public:
@@ -25,6 +30,11 @@ namespace soralog {
     Event &operator=(Event &&) noexcept = delete;
     Event &operator=(Event const &) = delete;
 
+    /**
+     * @param name of logger
+     * @param level of event
+     * @param format and @param args defines message of event
+     */
     template <typename... Args>
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event(std::string_view name, Level level, std::string_view format,
@@ -37,18 +47,30 @@ namespace soralog {
       message_size_ = result.size;
     }
 
+    /**
+     * @returns time when event is happened
+     */
     std::chrono::system_clock::time_point timestamp() const noexcept {
       return timestamp_;
     };
 
+    /**
+     * @returns name of logger through which the event was created
+     */
     std::string_view name() const noexcept {
       return {name_.data(), name_size_};
     }
 
+    /**
+     * @returns level of event
+     */
     Level level() const noexcept {
       return level_;
     }
 
+    /**
+     * @returns message of event
+     */
     std::string_view message() const noexcept {
       return {message_.data(), message_size_};
     }

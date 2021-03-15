@@ -21,6 +21,12 @@
 
 namespace soralog {
 
+  /**
+   * @class Sink
+   * This is base class of all sink.
+   * It is accumulate events in inner lock-free circular buffer and drop it into
+   * destination place on demand or condition
+   */
   class Sink {
    public:
     Sink() = delete;
@@ -37,10 +43,20 @@ namespace soralog {
       assert(max_buffer_size_ >= sizeof(Event));
     };
 
+    /**
+     * @returns name of sink
+     */
     const std::string &name() const noexcept {
       return name_;
     }
 
+    /**
+     * Emplaces new log event
+     * @param name is name of logger
+     * @param level is level log event
+     * @param format is format of message
+     * @param args arguments is of log message
+     */
     template <typename... Args>
     void push(std::string_view name, Level level, std::string_view format,
               const Args &... args) noexcept(IF_RELEASE) {
@@ -63,7 +79,14 @@ namespace soralog {
       }
     }
 
+    /**
+     * Does writing all events in destination place immediately
+     */
     virtual void flush() noexcept = 0;
+
+    /**
+     * Does some actions to rorate log data (e.g. reopen log-file)
+     */
     virtual void rotate() noexcept = 0;
 
    protected:

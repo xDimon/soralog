@@ -77,6 +77,12 @@ namespace soralog {
     sink_ = std::move(sink);
   }
 
+  void Group::setSink(const std::string &sink_name) {
+    if (auto sink = system_.getSink(sink_name)) {
+      setSink(std::move(sink));
+    }
+  }
+
   void Group::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
     has_sink_overriden_ = group != parent_group_;

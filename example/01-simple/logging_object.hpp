@@ -27,7 +27,7 @@ class LoggingObject final {
   void method() const;
 
  private:
-  soralog::Log log_;
+  std::shared_ptr<soralog::Logger> log_;
 };
 
 #endif  // SORALOG_EXAMPLE_LOGGINGOBJECT
