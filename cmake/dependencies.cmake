@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-if (TESTING)
+if (TESTING OR COVERAGE)
   hunter_add_package(GTest)
   find_package(GTest CONFIG REQUIRED)
   find_package(GMock CONFIG REQUIRED)

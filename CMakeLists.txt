@@ -20,6 +20,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(TESTING "Build tests" ON)
 option(EXAMPLES "Build examples" ON)
+option(COVERAGE "Enable generation of coverage info" OFF)
 
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
@@ -29,7 +30,7 @@ include(cmake/functions.cmake)
 
 add_subdirectory(src)
 
-if(TESTING)
+if(TESTING OR COVERAGE)
     enable_testing()
     add_subdirectory(test)
 endif()
@@ -37,3 +38,7 @@ endif()
 if(EXAMPLES)
     add_subdirectory(example)
 endif()
+
+if (COVERAGE)
+    include(cmake/coverage.cmake)
+endif ()

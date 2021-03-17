@@ -26,7 +26,7 @@ CLANG_TIDY=$(which clang-tidy)
 RUN_CLANG_TIDY=$(which run-clang-tidy.py)
 
 # filter compile_commands.json
-echo ${FILES} | python3 ./.github/aux/filter_compile_commands.py -p ${BUILD_DIR}
+echo ${FILES} | python3 ./aux/filter_compile_commands.py -p ${BUILD_DIR}
 
 # exec run-clang-tidy.py
 python3 ${RUN_CLANG_TIDY} -clang-tidy-binary=${CLANG_TIDY} -p ${BUILD_DIR} -header-filter "include/.*\.hpp"
