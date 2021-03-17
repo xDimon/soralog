@@ -18,17 +18,10 @@ namespace soralog {
 
     return {.has_error = false,
             .has_warning = true,
-            .message =
+            .message = std::string() +
                 "I: Using fallback configurator for logger system\n"
-                "I: All logs will be write into console with 'INFO' level"};
-  }
-
-  void FallbackConfigurator::setLevel(Level level) {
-    level_ = level;
-  }
-
-  void FallbackConfigurator::withColor(bool with_color) {
-    with_color_ = with_color;
+                "I: All logs will be write into " + (with_color_ ? "color " : "") +
+                "console with '" + levelToStr(level_) + "' level"};
   }
 
 }  // namespace soralog

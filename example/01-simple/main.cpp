@@ -18,9 +18,8 @@ enum ConfiguratorType {
 };
 
 std::shared_ptr<soralog::Configurator> customized_configurator = [] {
-  static auto cfg = std::make_shared<soralog::FallbackConfigurator>();
-  cfg->setLevel(soralog::Level::TRACE);
-  cfg->withColor(true);
+  static auto cfg = std::make_shared<soralog::FallbackConfigurator>(
+      soralog::Level::TRACE, true);
   return cfg;
 }();
 
@@ -75,7 +74,7 @@ groups:
 }();
 
 int main() {
-  ConfiguratorType cfg_type = ConfiguratorType::Cascade;
+  ConfiguratorType cfg_type = ConfiguratorType::Customized;
 
   std::shared_ptr<soralog::Configurator> configurator =
       cfg_type == ConfiguratorType::Cascade
