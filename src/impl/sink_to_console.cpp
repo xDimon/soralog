@@ -12,10 +12,12 @@
 
 #include <fmt/chrono.h>
 #include <fmt/color.h>
+#include <climits>
 
 namespace soralog {
 
   namespace {
+
     using namespace std::chrono_literals;
 
     constexpr std::string_view separator = "  ";
@@ -138,12 +140,25 @@ namespace soralog {
       }
     }
 
+    template <typename T>
+    void put_string(char *&ptr, const T &name, size_t width) {
+      if (width == 0)
+        return;
+      for (auto c : name) {
+        if (c == '\0' or width == 0)
+          break;
+        *ptr++ = c;  // NOLINT
+        --width;
+      }
+      while (width--) *ptr++ = ' ';  // NOLINT
+    }
+
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
-                               size_t events_capacity, size_t buffer_size,
-                               size_t latency_ms)
-      : Sink(std::move(name), events_capacity, buffer_size),
+                               ThreadFlag thread_flag, size_t events_capacity,
+                               size_t buffer_size, size_t latency_ms)
+      : Sink(std::move(name), thread_flag, events_capacity, buffer_size),
         with_color_(with_color),
         buffer_size_(buffer_size),
         latency_(latency_ms),
@@ -164,6 +179,8 @@ namespace soralog {
   }
 
   void SinkToConsole::run() {
+    util::setThreadName("log:" + name_);
+
     auto next_flush = std::chrono::steady_clock::now();
 
     while (true) {
@@ -238,6 +255,27 @@ namespace soralog {
 
           put_separator(ptr);
 
+          // Thread
+
+          switch (thread_flag_) {
+            case ThreadFlag::NAME: {
+              put_string(ptr, event.thread_name(), 15);
+              put_separator(ptr);
+              break;
+            }
+
+            case ThreadFlag::ID: {
+              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}", event.tid()).out;
+              put_separator(ptr);
+              break;
+            }
+
+            default:
+              break;
+          }
+
+          // Level
+
           if (with_color_) {
             put_style(ptr, level_to_fg(event.level()),
                       fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
@@ -249,6 +287,8 @@ namespace soralog {
 
           put_separator(ptr);
 
+          // Name
+
           if (with_color_) {
             put_style(ptr,
                       fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
@@ -259,6 +299,8 @@ namespace soralog {
           }
 
           put_separator(ptr);
+
+          // Message
 
           if (with_color_) {
             put_style(ptr,

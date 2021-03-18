@@ -6,6 +6,7 @@
 #include <soralog/impl/configurator_from_yaml.hpp>
 #include <soralog/impl/fallback_configurator.hpp>
 #include <soralog/macro.hpp>
+#include <soralog/util.hpp>
 
 #include "logging_object.hpp"
 
@@ -66,6 +67,7 @@ sinks:
   - name: console
     type: console
     color: true
+    thread: name
 groups:
   - name: main
     sink: console
@@ -74,7 +76,7 @@ groups:
 }();
 
 int main() {
-  ConfiguratorType cfg_type = ConfiguratorType::Customized;
+  ConfiguratorType cfg_type = ConfiguratorType::Cascade;
 
   std::shared_ptr<soralog::Configurator> configurator =
       cfg_type == ConfiguratorType::Cascade
@@ -97,28 +99,45 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
+  soralog::util::setThreadName("MainThread");
+
   auto main_log = log_system.getLogger("main", "*");
+
+  main_log->info("Bad logging (one arg for two placeholders): {} {}", 1);
+  main_log->info("Bad logging (unclosed placeholders): {", 1);
 
   main_log->info("Start");
 
   auto lambda = [](const auto &tag) {
-    std::cout << "CALCULATED AT LOGGING: " << tag << std::endl;
-    return "message";
+    std::cout << "CALCULATED: " << tag << std::endl;
+    return tag;
   };
 
-  main_log->debug("Debug: {}", lambda("logger: debug for trace level"));
-  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for trace level"));
+  main_log->setLevel(soralog::Level::TRACE);
+  main_log->debug("{}", lambda("logger: debug msg for trace level"));
+  SL_DEBUG(main_log, "{}", lambda("macro: debug msg for trace level"));
 
   main_log->setLevel(soralog::Level::INFO);
+  main_log->debug("{}", lambda("logger: debug msg for info level"));
+  SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
-  main_log->trace("Debug: {}", lambda("logger: debug for info level"));
-  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for info level"));
+  std::vector<std::shared_ptr<std::thread>> threads;
+
+  for (const auto &name :
+       {"SecondThread", "ThirdThread", "FourthThread", "FifthThread"}) {
+    threads.emplace_back(std::make_shared<std::thread>(std::thread([&] {
+      soralog::util::setThreadName(name);
+      LoggingObject object(log_system);
+      object.method();
+    })));
+  }
 
   LoggingObject object(log_system);
-
   object.method();
 
   main_log->info("Finish");
+
+  for (auto &thread : threads) thread->join();
 
   return 0;
 }

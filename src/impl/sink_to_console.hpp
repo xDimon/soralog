@@ -26,6 +26,7 @@ namespace soralog {
     SinkToConsole &operator=(SinkToConsole const &) = delete;
 
     SinkToConsole(std::string name, bool with_color,
+                  ThreadFlag thread_flag = ThreadFlag::NONE,
                   size_t events_capacity = 1u << 6,  // 64 events
                   size_t buffer_size = 1u << 17,     // 128 Kb
                   size_t latency_ms = 200);          // 200 ms

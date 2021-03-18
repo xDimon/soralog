@@ -29,6 +29,12 @@ namespace soralog {
    */
   class Sink {
    public:
+    enum class ThreadFlag {
+      NONE,  //!< No log thread info
+      NAME,  //!< Log thread name
+      ID     //!< Log thread id
+    };
+
     Sink() = delete;
     Sink(const Sink &) = delete;
     Sink(Sink &&) noexcept = delete;
@@ -36,8 +42,10 @@ namespace soralog {
     Sink &operator=(Sink const &) = delete;
     Sink &operator=(Sink &&) noexcept = delete;
 
-    Sink(std::string name, size_t max_events, size_t max_buffer_size)
+    Sink(std::string name, ThreadFlag thread_flag, size_t max_events,
+         size_t max_buffer_size)
         : name_(std::move(name)),
+          thread_flag_(thread_flag),
           events_(max_events),
           max_buffer_size_(max_buffer_size) {
       assert(max_buffer_size_ >= sizeof(Event));
@@ -61,7 +69,7 @@ namespace soralog {
     void push(std::string_view name, Level level, std::string_view format,
               const Args &... args) noexcept(IF_RELEASE) {
       while (true) {
-        auto node = events_.put(name, level, format, args...);
+        auto node = events_.put(name, thread_flag_, level, format, args...);
 
         // Event is queued successfully
         if (node) {
@@ -91,6 +99,7 @@ namespace soralog {
 
    protected:
     const std::string name_;
+    ThreadFlag thread_flag_;
     CircularBuffer<Event> events_;
     const size_t max_buffer_size_;
     size_t size_ = 0;
