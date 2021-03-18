@@ -26,8 +26,6 @@ jobs:
            sanitizer: ASAN
          - name: "Leak Sanitizer"
            sanitizer: LSAN
-         - name: "Memory Sanitizer"
-           sanitizer: MSAN
          - name: "Thread Sanitizer"
            sanitizer: TSAN
          - name: "Undefined Behavior Sanitizer"
