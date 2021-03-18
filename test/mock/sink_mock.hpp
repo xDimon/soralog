@@ -17,7 +17,7 @@ namespace soralog {
 
    public:
     SinkMock(std::string name)
-        : Sink(std::move(name), ThreadFlag::NONE, 4, sizeof(Event[4])) {}
+        : Sink(std::move(name), UsingThreadInfo::NONE, 4, sizeof(Event) * 4) {}
     ~SinkMock() override = default;
 
     template <typename... Args>

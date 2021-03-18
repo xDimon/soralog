@@ -17,6 +17,9 @@ namespace soralog {
 
     using namespace std::chrono_literals;
 
+    // Separator is using between logical parts of log record.
+    // Might be any substring or symbol: space, tab, etc.
+    // Couple of space is selected to differ of single space
     constexpr std::string_view separator = "  ";
 
     void put_separator(char *&ptr) {
@@ -63,9 +66,10 @@ namespace soralog {
   }  // namespace
 
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
-                         ThreadFlag thread_flag, size_t events_capacity,
-                         size_t buffer_size, size_t latency_ms)
-      : Sink(std::move(name), thread_flag, events_capacity, buffer_size),
+                         UsingThreadInfo using_thread_info,
+                         size_t events_capacity, size_t buffer_size,
+                         size_t latency_ms)
+      : Sink(std::move(name), using_thread_info, events_capacity, buffer_size),
         path_(std::move(path)),
         buffer_size_(buffer_size),
         latency_(latency_ms),
@@ -168,14 +172,14 @@ namespace soralog {
 
           // Thread
 
-          switch (thread_flag_) {
-            case ThreadFlag::NAME: {
+          switch (using_thread_info_) {
+            case UsingThreadInfo::NAME: {
               put_string(ptr, event.thread_name(), 15);
               put_separator(ptr);
               break;
             }
 
-            case ThreadFlag::ID: {
+            case UsingThreadInfo::ID: {
               ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
                                      event.thread_number())
                         .out;

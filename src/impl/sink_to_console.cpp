@@ -19,24 +19,21 @@ namespace soralog {
 
     using namespace std::chrono_literals;
 
+    // Separator is using between logical parts of log record.
+    // Might be any substring or symbol: space, tab, etc.
+    // Couple of space is selected to differ of single space
     constexpr std::string_view separator = "  ";
 
-    using cl = fmt::color;
-
-    const auto mfc = [](cl cl) {
-      return fmt::internal::make_foreground_color<char>(cl);
-    };
-
-    constexpr std::array<cl, static_cast<size_t>(Level::TRACE) + 1>
+    constexpr std::array<fmt::color, static_cast<size_t>(Level::TRACE) + 1>
         level_to_color_map{
-            cl::brown,         // OFF
-            cl::red,           // CRITICAL
-            cl::orange_red,    // ERROR
-            cl::orange,        // WARNING
-            cl::forest_green,  // INFO
-            cl::dark_green,    // VERBOSE
-            cl::medium_blue,   // DEBUG
-            cl::gray,          // TRACE
+            fmt::color::brown,         // OFF
+            fmt::color::red,           // CRITICAL
+            fmt::color::orange_red,    // ERROR
+            fmt::color::orange,        // WARNING
+            fmt::color::forest_green,  // INFO
+            fmt::color::dark_green,    // VERBOSE
+            fmt::color::medium_blue,   // DEBUG
+            fmt::color::gray,          // TRACE
         };
 
     template <typename... Args>
@@ -128,9 +125,10 @@ namespace soralog {
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
-                               ThreadFlag thread_flag, size_t events_capacity,
-                               size_t buffer_size, size_t latency_ms)
-      : Sink(std::move(name), thread_flag, events_capacity, buffer_size),
+                               UsingThreadInfo using_thread_info,
+                               size_t events_capacity, size_t buffer_size,
+                               size_t latency_ms)
+      : Sink(std::move(name), using_thread_info, events_capacity, buffer_size),
         with_color_(with_color),
         buffer_size_(buffer_size),
         latency_(latency_ms),
@@ -219,13 +217,13 @@ namespace soralog {
 
           // Thread
 
-          switch (thread_flag_) {
-            case ThreadFlag::NAME:
+          switch (using_thread_info_) {
+            case UsingThreadInfo::NAME:
               put_string(ptr, event.thread_name(), 15);
               put_separator(ptr);
               break;
 
-            case ThreadFlag::ID:
+            case UsingThreadInfo::ID:
               ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
                                      event.thread_number())
                         .out;

@@ -7,6 +7,7 @@
 #define SORALOG_EVENT
 
 #include <chrono>
+#include <cstring>
 #include <string_view>
 
 #include <fmt/format.h>
@@ -38,19 +39,17 @@ namespace soralog {
      * @param level of event
      * @param format and @param args defines message of event
      */
-    template <typename ThreadFlag, typename... Args>
+    template <typename UsingThreadInfo, typename... Args>
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    Event(std::string_view name, ThreadFlag thread_flag, Level level,
+    Event(std::string_view name, UsingThreadInfo using_thread_info, Level level,
           std::string_view format, const Args &... args)
         : timestamp_(std::chrono::system_clock::now()), level_(level) {
-      switch (thread_flag) {
-        case ThreadFlag::NAME:
+      switch (using_thread_info) {
+        case UsingThreadInfo::NAME:
           util::getThreadName(thread_name_);
-          thread_name_[thread_name_.size() - 1] = 0;  // NOLINT
-          while (thread_name_[thread_name_size_++])   // NOLINT
-            ;
+          thread_name_size_ = ::strnlen(thread_name_.data(), 15);
           [[fallthrough]];
-        case ThreadFlag::ID:
+        case UsingThreadInfo::ID:
           thread_number_ = util::getThreadNumber();
           [[fallthrough]];
         default:
