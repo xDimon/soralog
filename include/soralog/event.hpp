@@ -50,7 +50,6 @@ namespace soralog {
           thread_name_[thread_name_.size() - 1] = 0;  // NOLINT
           while (thread_name_[thread_name_size_++])   // NOLINT
             ;
-
           [[fallthrough]];
         case ThreadFlag::ID:
           thread_number_ = util::getThreadNumber();

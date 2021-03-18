@@ -39,7 +39,7 @@ namespace soralog {
    private:
     void run();
 
-    bool with_color_;
+    bool with_color_ = false;
     const size_t buffer_size_ = 1 << 17;            // 128Kb
     const std::chrono::milliseconds latency_{200};  // 200ms
 
