@@ -135,9 +135,9 @@ int main() {
   LoggingObject object(log_system);
   object.method();
 
-  main_log->info("Finish");
-
   for (auto &thread : threads) thread->join();
+
+  main_log->info("Finish");
 
   return 0;
 }

@@ -47,6 +47,7 @@ namespace soralog {
       switch (thread_flag) {
         case ThreadFlag::NAME:
           util::getThreadName(thread_name_);
+          thread_name_[thread_name_.size() - 1] = 0;
           while (thread_name_[thread_name_size_++])
             ;
           [[fallthrough]];
@@ -84,7 +85,7 @@ namespace soralog {
     /**
      * @returns id of thread which the event was created in
      */
-    pthread_t tid() const noexcept {
+    size_t tid() const noexcept {
       return tid_;
     }
 
@@ -118,7 +119,7 @@ namespace soralog {
 
    private:
     std::chrono::system_clock::time_point timestamp_;
-    pthread_t tid_;
+    size_t tid_;
     std::array<char, 16> thread_name_;
     size_t thread_name_size_;
     std::array<char, 32> name_;

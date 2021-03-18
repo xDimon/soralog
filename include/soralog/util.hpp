@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <array>
 #include <string>
-#include <thread>
 
 namespace soralog::util {
 
