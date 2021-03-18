@@ -24,11 +24,21 @@ option(CLANG_FORMAT "Enable clang-format target"                  OFF)
 option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
 option(COVERAGE     "Enable generation of coverage info"          OFF)
 
+# Sanitizers enables only for this project, and will be disabled for dependencies
+option(ASAN         "Enable address sanitizer"                    OFF)
+option(LSAN         "Enable leak sanitizer"                       OFF)
+option(MSAN         "Enable memory sanitizer"                     OFF)
+option(TSAN         "Enable thread sanitizer"                     OFF)
+option(UBSAN        "Enable UB sanitizer"                         OFF)
+
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
 
-include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
+include(cmake/toolchain/compiler.cmake)
+include(cmake/toolchain/cxx17.cmake)
+include(cmake/dependencies.cmake)
+include(cmake/sanitizers.cmake)
 
 if(CLANG_TIDY)
     # Must be included before creating any target
