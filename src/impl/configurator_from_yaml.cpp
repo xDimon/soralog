@@ -192,7 +192,7 @@ namespace soralog {
   void ConfiguratorFromYAML::Applicator::parseSinkToConsole(
       const std::string &name, const YAML::Node &sink_node) {
     bool color = false;
-    Sink::UsingThreadInfo using_thread_info = Sink::UsingThreadInfo::NONE;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
 
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
@@ -212,9 +212,9 @@ namespace soralog {
       } else {
         auto thread_str = thread_node.as<std::string>();
         if (thread_str == "name") {
-          using_thread_info = Sink::UsingThreadInfo::NAME;
+          thread_info_type = Sink::ThreadInfoType::NAME;
         } else if (thread_str == "id") {
-          using_thread_info = Sink::UsingThreadInfo::ID;
+          thread_info_type = Sink::ThreadInfoType::ID;
         } else if (thread_str != "none") {
           errors_ << "W: Wrong property 'thread' value of sink '" << name
                   << "': " << thread_str << "\n";
@@ -246,13 +246,13 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, color, using_thread_info);
+    system_.makeSink<SinkToConsole>(name, color, thread_info_type);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
       const std::string &name, const YAML::Node &sink_node) {
     bool fail = false;
-    Sink::UsingThreadInfo using_thread_info = Sink::UsingThreadInfo::NONE;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
 
     auto path_node = sink_node["path"];
     if (not path_node.IsDefined()) {
@@ -273,9 +273,9 @@ namespace soralog {
       } else {
         auto thread_str = thread_node.as<std::string>();
         if (thread_str == "name") {
-          using_thread_info = Sink::UsingThreadInfo::NAME;
+          thread_info_type = Sink::ThreadInfoType::NAME;
         } else if (thread_str == "id") {
-          using_thread_info = Sink::UsingThreadInfo::ID;
+          thread_info_type = Sink::ThreadInfoType::ID;
         } else if (thread_str != "none") {
           errors_ << "W: Wrong property 'thread' value of sink '" << name
                   << "': " << thread_str << "\n";
@@ -311,7 +311,7 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, path, using_thread_info);
+    system_.makeSink<SinkToFile>(name, path, thread_info_type);
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(

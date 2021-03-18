@@ -125,10 +125,10 @@ namespace soralog {
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
-                               UsingThreadInfo using_thread_info,
+                               ThreadInfoType thread_info_type,
                                size_t events_capacity, size_t buffer_size,
                                size_t latency_ms)
-      : Sink(std::move(name), using_thread_info, events_capacity, buffer_size),
+      : Sink(std::move(name), thread_info_type, events_capacity, buffer_size),
         with_color_(with_color),
         buffer_size_(buffer_size),
         latency_(latency_ms),
@@ -217,13 +217,13 @@ namespace soralog {
 
           // Thread
 
-          switch (using_thread_info_) {
-            case UsingThreadInfo::NAME:
+          switch (thread_info_type_) {
+            case ThreadInfoType::NAME:
               put_string(ptr, event.thread_name(), 15);
               put_separator(ptr);
               break;
 
-            case UsingThreadInfo::ID:
+            case ThreadInfoType::ID:
               ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
                                      event.thread_number())
                         .out;

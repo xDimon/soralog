@@ -10,7 +10,7 @@ namespace soralog {
   using namespace std::chrono_literals;
 
   SinkToNowhere::SinkToNowhere(std::string name)
-      : Sink(std::move(name), UsingThreadInfo::NONE, 32, sizeof(Event) * 32) {}
+      : Sink(std::move(name), ThreadInfoType::NONE, 32, sizeof(Event) * 32) {}
 
   SinkToNowhere::~SinkToNowhere() {
     flush();

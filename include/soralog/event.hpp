@@ -39,17 +39,17 @@ namespace soralog {
      * @param level of event
      * @param format and @param args defines message of event
      */
-    template <typename UsingThreadInfo, typename... Args>
+    template <typename ThreadInfoType, typename... Args>
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    Event(std::string_view name, UsingThreadInfo using_thread_info, Level level,
+    Event(std::string_view name, ThreadInfoType thread_info_type, Level level,
           std::string_view format, const Args &... args)
         : timestamp_(std::chrono::system_clock::now()), level_(level) {
-      switch (using_thread_info) {
-        case UsingThreadInfo::NAME:
+      switch (thread_info_type) {
+        case ThreadInfoType::NAME:
           util::getThreadName(thread_name_);
           thread_name_size_ = ::strnlen(thread_name_.data(), 15);
           [[fallthrough]];
-        case UsingThreadInfo::ID:
+        case ThreadInfoType::ID:
           thread_number_ = util::getThreadNumber();
           [[fallthrough]];
         default:

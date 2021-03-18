@@ -27,7 +27,7 @@ namespace soralog::util {
     pthread_setname_np(buff.data());
 #else
 #warning \
-    "Function setThreadName() is not implemented for current platform; Will be used auto-generated name"
+    "Function setThreadName() is not implemented for current platform; An auto-generated name will be used instead"
 #endif
   }
 
@@ -38,7 +38,7 @@ namespace soralog::util {
       pthread_getname_np(pthread_self(), thr_name.data(), thr_name.size());
 #else
 #warning \
-    "Function getThreadName() is not implemented for current platform; Will be used auto-generated name"
+    "Function getThreadName() is not implemented for current platform; An auto-generated name will be used instead"
       auto generated = "Thread#" + std::to_string(getThreadNumber());
       memcpy(thr_name.data(), generated.data(),
              std::min(generated.size(), thr_name.size()));

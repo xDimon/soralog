@@ -29,7 +29,7 @@ namespace soralog {
    */
   class Sink {
    public:
-    enum class UsingThreadInfo {
+    enum class ThreadInfoType {
       NONE,  //!< No log thread info
       NAME,  //!< Log thread name
       ID     //!< Log thread id
@@ -42,10 +42,10 @@ namespace soralog {
     Sink &operator=(Sink const &) = delete;
     Sink &operator=(Sink &&) noexcept = delete;
 
-    Sink(std::string name, UsingThreadInfo using_thread_info, size_t max_events,
+    Sink(std::string name, ThreadInfoType thread_info_type, size_t max_events,
          size_t max_buffer_size)
         : name_(std::move(name)),
-          using_thread_info_(using_thread_info),
+          thread_info_type_(thread_info_type),
           events_(max_events),
           max_buffer_size_(max_buffer_size) {
       assert(max_buffer_size_ >= sizeof(Event));
@@ -70,7 +70,7 @@ namespace soralog {
               const Args &... args) noexcept(IF_RELEASE) {
       while (true) {
         auto node =
-            events_.put(name, using_thread_info_, level, format, args...);
+            events_.put(name, thread_info_type_, level, format, args...);
 
         // Event is queued successfully
         if (node) {
@@ -102,7 +102,7 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::string name_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
-    const UsingThreadInfo using_thread_info_;
+    const ThreadInfoType thread_info_type_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     CircularBuffer<Event> events_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
