@@ -63,11 +63,10 @@ namespace soralog {
   }  // namespace
 
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
-                         std::string filename, ThreadFlag thread_flag,
-                         size_t events_capacity, size_t buffer_size,
-                         size_t latency_ms)
+                         ThreadFlag thread_flag, size_t events_capacity,
+                         size_t buffer_size, size_t latency_ms)
       : Sink(std::move(name), thread_flag, events_capacity, buffer_size),
-        path_(std::move(path).string() + "/" + std::move(filename)),
+        path_(std::move(path)),
         buffer_size_(buffer_size),
         latency_(latency_ms),
         buff_(buffer_size_) {

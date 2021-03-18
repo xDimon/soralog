@@ -63,13 +63,9 @@ namespace soralog {
       ptr = ptr + size;  // NOLINT
     }
 
-    void put_thread_style(char *&ptr, bool dark = false) {
-      ;  // No style
-    }
-
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
-      auto color = level_to_color_map[static_cast<size_t>(level)];
+      auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
       put_style(ptr, fmt::internal::make_foreground_color<char>(color),
                 fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
     }

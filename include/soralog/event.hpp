@@ -25,6 +25,7 @@ namespace soralog {
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
   class Event final {
    public:
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event() = default;
     Event(Event &&) noexcept = delete;
     Event(const Event &) = delete;
@@ -41,9 +42,7 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event(std::string_view name, ThreadFlag thread_flag, Level level,
           std::string_view format, const Args &... args)
-        : timestamp_(std::chrono::system_clock::now()),
-          thread_number_(util::getThreadNumber()),
-          level_(level) {
+        : timestamp_(std::chrono::system_clock::now()), level_(level) {
       switch (thread_flag) {
         case ThreadFlag::NAME:
           util::getThreadName(thread_name_);
@@ -119,14 +118,14 @@ namespace soralog {
 
    private:
     std::chrono::system_clock::time_point timestamp_;
-    size_t thread_number_;
+    size_t thread_number_ = 0;
     std::array<char, 16> thread_name_;
-    size_t thread_name_size_;
+    size_t thread_name_size_ = 0;
     std::array<char, 32> name_;
     size_t name_size_;
     Level level_ = Level::OFF;
     std::array<char, 4096> message_;
-    size_t message_size_ = 0;
+    size_t message_size_;
   };
 }  // namespace soralog
 

@@ -24,8 +24,9 @@
 
 namespace soralog::macro {
   template <typename... Args>
-  inline void proxy(const std::shared_ptr<soralog::Logger> &log, soralog::Level level,
-             std::string_view fmt, Args &&... args) {
+  inline void proxy(const std::shared_ptr<soralog::Logger> &log,
+                    soralog::Level level, std::string_view fmt,
+                    Args &&... args) {
     if (log->level() >= level) {
       log->log(level, fmt, std::move(args)()...);
     }

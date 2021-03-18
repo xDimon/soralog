@@ -27,7 +27,7 @@ namespace soralog {
     SinkToFile &operator=(SinkToFile const &) = delete;
 
     SinkToFile(std::string name, std::filesystem::path path,
-               std::string filename, ThreadFlag thread_flag = ThreadFlag::NONE,
+               ThreadFlag thread_flag = ThreadFlag::NONE,
                size_t events_capacity = 1u << 11,  // 2048 events
                size_t buffer_size = 1u << 22,      // 4 Mb
                size_t latency_ms = 1000);          // 1 sec

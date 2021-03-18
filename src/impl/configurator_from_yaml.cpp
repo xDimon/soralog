@@ -95,7 +95,7 @@ namespace soralog {
       has_error_ = true;
     }
 
-    for (auto it : node) {
+    for (const auto &it : node) {
       auto key = it.first.as<std::string>();
       if (key == "sinks")
         continue;
@@ -223,7 +223,7 @@ namespace soralog {
       }
     }
 
-    for (auto it : sink_node) {
+    for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       auto val = it.second;
 
@@ -254,27 +254,14 @@ namespace soralog {
     bool fail = false;
     Sink::ThreadFlag thread_flag = Sink::ThreadFlag::NONE;
 
-    auto dir_node = sink_node["directory"];
-    if (not dir_node.IsDefined()) {
+    auto path_node = sink_node["path"];
+    if (not path_node.IsDefined()) {
       fail = true;
-      errors_ << "E: Not found 'directory' of sink '" << name << "'\n";
+      errors_ << "E: Not found 'path' of sink '" << name << "'\n";
       has_error_ = true;
-    } else if (not dir_node.IsScalar()) {
+    } else if (not path_node.IsScalar()) {
       fail = true;
-      errors_ << "E: Property 'directory' of sink '" << name
-              << "' is not scalar\n";
-      has_error_ = true;
-    }
-
-    auto file_node = sink_node["filename"];
-    if (not file_node.IsDefined()) {
-      fail = true;
-      errors_ << "E: Not found 'filename' of sink '" << name << "'\n";
-      has_error_ = true;
-    } else if (not file_node.IsScalar()) {
-      fail = true;
-      errors_ << "E: Property 'filename' of sink '" << name
-              << "' is not scalar\n";
+      errors_ << "E: Property 'path' of sink '" << name << "' is not scalar\n";
       has_error_ = true;
     }
 
@@ -297,15 +284,13 @@ namespace soralog {
       }
     }
 
-    for (auto it : sink_node) {
+    for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (key == "name")
         continue;
       if (key == "type")
         continue;
-      if (key == "directory")
-        continue;
-      if (key == "filename")
+      if (key == "path")
         continue;
       if (key == "thread")
         continue;
@@ -318,8 +303,7 @@ namespace soralog {
       return;
     }
 
-    auto directory = dir_node.as<std::string>();
-    auto filename = file_node.as<std::string>();
+    auto path = path_node.as<std::string>();
 
     if (system_.getSink(name)) {
       errors_ << "W: Already exists sink with name '" << name
@@ -327,7 +311,7 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, directory, filename, thread_flag);
+    system_.makeSink<SinkToFile>(name, path, thread_flag);
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
@@ -423,7 +407,7 @@ namespace soralog {
       }
     }
 
-    for (auto it : group) {
+    for (const auto &it : group) {
       auto key = it.first.as<std::string>();
 
       if (key == "name")

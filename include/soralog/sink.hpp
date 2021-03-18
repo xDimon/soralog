@@ -98,10 +98,15 @@ namespace soralog {
     virtual void rotate() noexcept = 0;
 
    protected:
+    // NOLINTNEXTLIE(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::string name_;
+    // NOLINTNEXTLIE(cppcoreguidelines-non-private-member-variables-in-classes)
     ThreadFlag thread_flag_;
+    // NOLINTNEXTLIE(cppcoreguidelines-non-private-member-variables-in-classes)
     CircularBuffer<Event> events_;
+    // NOLINTNEXTLIE(cppcoreguidelines-non-private-member-variables-in-classes)
     const size_t max_buffer_size_;
+    // _NOLINTNEXTLIE(cppcoreguidelines-non-private-member-variables-in-classes)
     size_t size_ = 0;
   };
 

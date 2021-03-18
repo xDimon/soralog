@@ -46,6 +46,7 @@ namespace soralog {
    * @returns symbol in according with {@param level}
    */
   constexpr char levelToChar(Level level) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return detail::level_to_str_map[static_cast<uint8_t>(level)][0];
   }
 
@@ -53,6 +54,7 @@ namespace soralog {
    * @returns C-string in according with {@param level}
    */
   constexpr const char *levelToStr(Level level) {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     return detail::level_to_str_map[static_cast<uint8_t>(level)];
   }
 

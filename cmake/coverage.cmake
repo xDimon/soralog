@@ -13,14 +13,23 @@ set(COVERAGE_EXCLUDES
 
 get_property(tests GLOBAL PROPERTY TEST_TARGETS)
 
-setup_target_for_coverage_gcovr_xml(
-    NAME ctest_coverage
-    DEPENDENCIES ${tests}
-    EXECUTABLE ctest
-)
+if(NOT CTEST_BIN)
+    find_program(CTEST_BIN NAMES ctest)
+    if(CTEST_BIN)
+        message(STATUS "Binary ctest has been found: ${CTEST_BIN}")
+    endif()
+endif()
 
-setup_target_for_coverage_gcovr_html(
-    NAME ctest_coverage_html
-    DEPENDENCIES ${tests}
-    EXECUTABLE ctest
-)
+if(CTEST_BIN)
+    setup_target_for_coverage_gcovr_xml(
+        NAME coverage_xml
+        DEPENDENCIES ${tests}
+        EXECUTABLE ${CTEST_BIN}
+    )
+
+    setup_target_for_coverage_gcovr_html(
+        NAME coverage_html
+        DEPENDENCIES ${tests}
+        EXECUTABLE ${CTEST_BIN}
+    )
+endif()

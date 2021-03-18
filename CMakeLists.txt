@@ -18,15 +18,25 @@ project(soralog VERSION 0.0.1 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(TESTING "Build tests" ON)
-option(EXAMPLES "Build examples" ON)
-option(COVERAGE "Enable generation of coverage info" OFF)
+option(TESTING      "Build tests"                                 ON)
+option(EXAMPLES     "Build examples"                              ON)
+option(CLANG_FORMAT "Enable clang-format target"                  OFF)
+option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
+option(COVERAGE     "Enable generation of coverage info"          OFF)
 
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
 
 include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
+
+if(CLANG_TIDY)
+    include(cmake/clang-tidy.cmake)
+endif()
+
+if(CLANG_FORMAT)
+    include(cmake/clang-format.cmake)
+endif()
 
 add_subdirectory(src)
 
@@ -42,3 +52,4 @@ endif()
 if (COVERAGE)
     include(cmake/coverage.cmake)
 endif ()
+
