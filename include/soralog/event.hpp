@@ -42,17 +42,18 @@ namespace soralog {
     Event(std::string_view name, ThreadFlag thread_flag, Level level,
           std::string_view format, const Args &... args)
         : timestamp_(std::chrono::system_clock::now()),
-          tid_(util::getThreadNumber()),
+          thread_number_(util::getThreadNumber()),
           level_(level) {
       switch (thread_flag) {
         case ThreadFlag::NAME:
           util::getThreadName(thread_name_);
-          thread_name_[thread_name_.size() - 1] = 0;
-          while (thread_name_[thread_name_size_++])
+          thread_name_[thread_name_.size() - 1] = 0;  // NOLINT
+          while (thread_name_[thread_name_size_++])   // NOLINT
             ;
+
           [[fallthrough]];
         case ThreadFlag::ID:
-          tid_ = util::getThreadNumber();
+          thread_number_ = util::getThreadNumber();
           [[fallthrough]];
         default:
           break;
@@ -83,10 +84,17 @@ namespace soralog {
     };
 
     /**
-     * @returns id of thread which the event was created in
+     * @returns number of thread which the event was created in
      */
-    size_t tid() const noexcept {
-      return tid_;
+    size_t thread_number() const noexcept {
+      return thread_number_;
+    }
+
+    /**
+     * @returns name of thread which the event was created in
+     */
+    std::string_view thread_name() const noexcept {
+      return {thread_name_.data(), thread_name_size_};
     }
 
     /**
@@ -94,13 +102,6 @@ namespace soralog {
      */
     std::string_view name() const noexcept {
       return {name_.data(), name_size_};
-    }
-
-    /**
-     * @returns name of logger through which the event was created
-     */
-    std::string_view thread_name() const noexcept {
-      return {thread_name_.data(), thread_name_size_};
     }
 
     /**
@@ -119,7 +120,7 @@ namespace soralog {
 
    private:
     std::chrono::system_clock::time_point timestamp_;
-    size_t tid_;
+    size_t thread_number_;
     std::array<char, 16> thread_name_;
     size_t thread_name_size_;
     std::array<char, 32> name_;

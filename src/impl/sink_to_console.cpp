@@ -265,7 +265,9 @@ namespace soralog {
             }
 
             case ThreadFlag::ID: {
-              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}", event.tid()).out;
+              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
+                                     event.thread_number())
+                        .out;
               put_separator(ptr);
               break;
             }

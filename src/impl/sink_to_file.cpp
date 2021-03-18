@@ -162,8 +162,7 @@ namespace soralog {
           std::memcpy(ptr, datetime.data(), datetime.size());
           ptr = ptr + datetime.size();  // NOLINT
 
-          ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec)
-              .out;
+          ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
           ptr = ptr + datetime.size();  // NOLINT
 
           put_separator(ptr);
@@ -178,8 +177,9 @@ namespace soralog {
             }
 
             case ThreadFlag::ID: {
-              ptr =
-                  fmt::format_to_n(ptr, end - ptr, "T:{:<6}", event.tid()).out;
+              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
+                                     event.thread_number())
+                        .out;
               put_separator(ptr);
               break;
             }
