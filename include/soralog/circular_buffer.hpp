@@ -6,11 +6,11 @@
 #ifndef SORALOG_CIRCULARBUFFER
 #define SORALOG_CIRCULARBUFFER
 
-#include <vector>
 #include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <optional>
+#include <vector>
 
 #ifdef NDEBUG
 #define IF_RELEASE true
@@ -127,7 +127,8 @@ namespace soralog {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? data_.size() : 0) + push_index_ - pop_index_;
+        size_ = ((push_index_ < pop_index_) ? data_.size() : 0)
+            + (push_index_ - pop_index_);
 
         // Emplace item
         new (&node) Node(args...);
@@ -152,12 +153,14 @@ namespace soralog {
         }
 
         // Go to next item
-        if (not pop_index_.compare_exchange_weak(pop_index, (pop_index + 1) % data_.size(),
+        if (not pop_index_.compare_exchange_weak(pop_index,
+                                                 (pop_index + 1) % data_.size(),
                                                  std::memory_order_relaxed)) {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? data_.size() : 0) + push_index_ - pop_index_;
+        size_ = ((push_index_ < pop_index_) ? data_.size() : 0)
+            + (push_index_ - pop_index_);
 
         return NodeRef{node, false};
       }

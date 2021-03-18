@@ -26,6 +26,7 @@ namespace soralog {
     SinkToConsole &operator=(SinkToConsole const &) = delete;
 
     SinkToConsole(std::string name, bool with_color,
+                  ThreadInfoType thread_info_type = ThreadInfoType::NONE,
                   size_t events_capacity = 1u << 6,  // 64 events
                   size_t buffer_size = 1u << 17,     // 128 Kb
                   size_t latency_ms = 200);          // 200 ms
@@ -38,7 +39,7 @@ namespace soralog {
    private:
     void run();
 
-    bool with_color_;
+    bool with_color_ = false;
     const size_t buffer_size_ = 1 << 17;            // 128Kb
     const std::chrono::milliseconds latency_{200};  // 200ms
 

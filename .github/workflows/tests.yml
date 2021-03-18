@@ -1,0 +1,67 @@
+name: Tests
+
+on:
+  push:
+    branches: [ master ]
+    tags: [ '*' ]
+  pull_request:
+
+env:
+  BUILD_DIR: build
+  CTEST_OUTPUT_ON_FAILURE: 1
+  GITHUB_HUNTER_USERNAME: ${{ secrets.HUNTER_USERNAME }}
+  GITHUB_HUNTER_TOKEN: ${{ secrets.HUNTER_TOKEN }}
+  CACHE_PATHS: |
+    ~/Library/Caches/pip
+    ~/.ccache
+    ~/.hunter
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        options:
+         - name: "Address Sanitizer"
+           sanitizer: ASAN
+         - name: "Leak Sanitizer"
+           sanitizer: LSAN
+         - name: "Thread Sanitizer"
+           sanitizer: TSAN
+         - name: "Undefined Behavior Sanitizer"
+           sanitizer: UBSAN
+    name: "${{ matrix.options.name }}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v1
+        with:
+          submodules: true
+          clean: true
+          fetch-depth: 1
+
+      - name: install dependencies
+        run: |
+          set -e
+          sudo apt-get update || true
+          sudo apt-get install -y ninja-build
+          sudo python3 -m pip install --upgrade pip
+          sudo pip3 install cmake requests gitpython gcovr pyyaml
+
+      - name: cmake
+        env:
+          CC: gcc
+          CXX: g++
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
+          GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
+          GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
+        run: cmake . -GNinja -Bbuild -D${{ matrix.options.sanitizer }}=ON
+
+      - name: build
+        run: cmake --build build -- -j4
+
+      - name: test
+        env:
+          CTEST_OUTPUT_ON_FAILURE: 1
+        run: cmake --build build --target test
+

@@ -1,3 +1,26 @@
+function(print)
+    message(STATUS "[${CMAKE_PROJECT_NAME}] ${ARGV}")
+endfunction()
+
+function(fatal_error)
+    message(FATAL_ERROOR "[${CMAKE_PROJECT_NAME}] ${ARGV}")
+endfunction()
+
+function(add_cache_flag var_name flag)
+    set(spaced_string " ${${var_name}} ")
+    string(FIND "${spaced_string}" " ${flag} " flag_index)
+    if(NOT flag_index EQUAL -1)
+        return()
+    endif()
+    string(COMPARE EQUAL "" "${${var_name}}" is_empty)
+    if(is_empty)
+        # beautify: avoid extra space at the end if var_name is empty
+        set("${var_name}" "${flag}" CACHE STRING "" FORCE)
+    else()
+        set("${var_name}" "${flag} ${${var_name}}" CACHE STRING "" FORCE)
+    endif()
+endfunction()
+
 function(disable_clang_tidy target)
     set_target_properties(${target} PROPERTIES
         C_CLANG_TIDY ""

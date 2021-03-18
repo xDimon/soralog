@@ -16,81 +16,25 @@
 namespace soralog {
 
   namespace {
+
     using namespace std::chrono_literals;
 
+    // Separator is using between logical parts of log record.
+    // Might be any substring or symbol: space, tab, etc.
+    // Couple of space is selected to differ of single space
     constexpr std::string_view separator = "  ";
 
-    constexpr auto level_to_bg(Level level) {
-      using cl = fmt::color;
-      auto mbc = [](cl cl) {
-        return fmt::internal::make_background_color<char>(cl);
-      };
-      switch (level) {
-        case Level::OFF:
-        default:
-          return mbc(cl::black);
-        case Level::CRITICAL:
-          return mbc(cl::red);
-        case Level::ERROR:
-          return mbc(cl::orange);
-        case Level::WARN:
-          return mbc(cl::yellow);
-        case Level::INFO:
-          return mbc(cl::green);
-        case Level::VERBOSE:
-          return mbc(cl::dark_green);
-        case Level::DEBUG:
-          return mbc(cl::blue);
-        case Level::TRACE:
-          return mbc(cl::gray);
-      }
-    }
-
-    constexpr auto level_to_fg(Level level) {
-      using cl = fmt::color;
-      auto mfc = [](cl cl) {
-        return fmt::internal::make_foreground_color<char>(cl);
-      };
-      switch (level) {
-        case Level::OFF:
-        default:
-          return mfc(cl::black);
-        case Level::CRITICAL:
-          return mfc(cl::red);
-        case Level::ERROR:
-          return mfc(cl::orange_red);
-        case Level::WARN:
-          return mfc(cl::orange);
-        case Level::INFO:
-          return mfc(cl::dark_green);
-        case Level::VERBOSE:
-          return mfc(cl::green);
-        case Level::DEBUG:
-          return mfc(cl::blue);
-        case Level::TRACE:
-          return mfc(cl::gray);
-      }
-    }
-
-    constexpr std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1>
-        level_to_bgcolor_map = [] {
-          std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1> r{};
-          r[static_cast<uint8_t>(Level::OFF)] = "?Unknown";
-          r[static_cast<uint8_t>(Level::CRITICAL)] = "Critical";
-          r[static_cast<uint8_t>(Level::ERROR)] = "Error";
-          r[static_cast<uint8_t>(Level::WARN)] = "Warning";
-          r[static_cast<uint8_t>(Level::INFO)] = "Info";
-          r[static_cast<uint8_t>(Level::VERBOSE)] = "Verbose";
-          r[static_cast<uint8_t>(Level::DEBUG)] = "Debug";
-          r[static_cast<uint8_t>(Level::TRACE)] = "Trace";
-          return r;
-        }();
-
-    void put_separator(char *&ptr) {
-      for (auto c : separator) {
-        *ptr++ = c;  // NOLINT
-      }
-    }
+    constexpr std::array<fmt::color, static_cast<size_t>(Level::TRACE) + 1>
+        level_to_color_map{
+            fmt::color::brown,         // OFF
+            fmt::color::red,           // CRITICAL
+            fmt::color::orange_red,    // ERROR
+            fmt::color::orange,        // WARNING
+            fmt::color::forest_green,  // INFO
+            fmt::color::dark_green,    // VERBOSE
+            fmt::color::medium_blue,   // DEBUG
+            fmt::color::gray,          // TRACE
+        };
 
     template <typename... Args>
     inline void pass(Args &&... styles) {}
@@ -116,6 +60,33 @@ namespace soralog {
       ptr = ptr + size;  // NOLINT
     }
 
+    void put_level_style(char *&ptr, Level level) {
+      assert(level <= Level::TRACE);
+      auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
+      put_style(ptr, fmt::internal::make_foreground_color<char>(color),
+                fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+    }
+
+    void put_name_style(char *&ptr) {
+      put_style(ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+    }
+
+    void put_text_style(char *&ptr, Level level) {
+      assert(level <= Level::TRACE);
+      if (level <= Level::ERROR) {
+        put_style(ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+      } else if (level >= Level::DEBUG) {
+        put_style(ptr,
+                  fmt::internal::make_emphasis<char>(fmt::emphasis::italic));
+      }
+    }
+
+    void put_separator(char *&ptr) {
+      for (auto c : separator) {
+        *ptr++ = c;  // NOLINT
+      }
+    }
+
     void put_level(char *&ptr, Level level) {
       const char *const end = ptr + 8;  // NOLINT
       const char *str = levelToStr(level);
@@ -138,12 +109,26 @@ namespace soralog {
       }
     }
 
+    template <typename T>
+    void put_string(char *&ptr, const T &name, size_t width) {
+      if (width == 0)
+        return;
+      for (auto c : name) {
+        if (c == '\0' or width == 0)
+          break;
+        *ptr++ = c;  // NOLINT
+        --width;
+      }
+      while (width--) *ptr++ = ' ';  // NOLINT
+    }
+
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
+                               ThreadInfoType thread_info_type,
                                size_t events_capacity, size_t buffer_size,
                                size_t latency_ms)
-      : Sink(std::move(name), events_capacity, buffer_size),
+      : Sink(std::move(name), thread_info_type, events_capacity, buffer_size),
         with_color_(with_color),
         buffer_size_(buffer_size),
         latency_(latency_ms),
@@ -164,6 +149,8 @@ namespace soralog {
   }
 
   void SinkToConsole::run() {
+    util::setThreadName("log:" + name_);
+
     auto next_flush = std::chrono::steady_clock::now();
 
     while (true) {
@@ -207,16 +194,6 @@ namespace soralog {
 
           // Timestamp
 
-          if (with_color_) {
-            const auto &style = fmt::internal::make_foreground_color<char>(
-                fmt::terminal_color::black);
-
-            auto size = std::end(style) - std::begin(style);
-            std::memcpy(ptr, std::begin(style),
-                        std::end(style) - std::begin(style));
-            ptr = ptr + size;  // NOLINT
-          }
-
           std::memcpy(ptr, datetime.data(), datetime.size());
           ptr = ptr + datetime.size();  // NOLINT
 
@@ -238,9 +215,29 @@ namespace soralog {
 
           put_separator(ptr);
 
+          // Thread
+
+          switch (thread_info_type_) {
+            case ThreadInfoType::NAME:
+              put_string(ptr, event.thread_name(), 15);
+              put_separator(ptr);
+              break;
+
+            case ThreadInfoType::ID:
+              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
+                                     event.thread_number())
+                        .out;
+              put_separator(ptr);
+              break;
+
+            default:
+              break;
+          }
+
+          // Level
+
           if (with_color_) {
-            put_style(ptr, level_to_fg(event.level()),
-                      fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+            put_level_style(ptr, event.level());
           }
           put_level(ptr, event.level());
           if (with_color_) {
@@ -249,9 +246,10 @@ namespace soralog {
 
           put_separator(ptr);
 
+          // Name
+
           if (with_color_) {
-            put_style(ptr,
-                      fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+            put_name_style(ptr);
           }
           put_string(ptr, event.name());
           if (with_color_) {
@@ -260,22 +258,10 @@ namespace soralog {
 
           put_separator(ptr);
 
+          // Message
+
           if (with_color_) {
-            put_style(ptr,
-                      event.level() == Level::TRACE
-                          ? fmt::internal::make_foreground_color<char>(
-                              fmt::color::dark_gray)
-                          : event.level() == Level::DEBUG
-                              ? fmt::internal::make_foreground_color<char>(
-                                  fmt::color::gray)
-                              : event.level() == Level::VERBOSE
-                                  ? fmt::internal::make_foreground_color<char>(
-                                      fmt::color::dim_gray)
-                                  : fmt::internal::make_foreground_color<char>(
-                                      fmt::color::black));
-            if (event.level() <= Level::ERROR)
-              put_style(
-                  ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+            put_text_style(ptr, event.level());
           }
           put_string(ptr, event.message());
           if (with_color_) {

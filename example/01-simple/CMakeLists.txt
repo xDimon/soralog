@@ -11,7 +11,6 @@ target_include_directories(example_simple
     PRIVATE ${CMAKE_SOURCE_DIR}/include
     )
 target_link_libraries(example_simple
-    Boost::Boost.DI
     soralog::soralog
     soralog::yaml
     soralog::fallback

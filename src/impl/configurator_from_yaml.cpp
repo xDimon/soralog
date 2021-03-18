@@ -95,7 +95,7 @@ namespace soralog {
       has_error_ = true;
     }
 
-    for (auto it : node) {
+    for (const auto &it : node) {
       auto key = it.first.as<std::string>();
       if (key == "sinks")
         continue;
@@ -192,6 +192,7 @@ namespace soralog {
   void ConfiguratorFromYAML::Applicator::parseSinkToConsole(
       const std::string &name, const YAML::Node &sink_node) {
     bool color = false;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
 
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
@@ -203,7 +204,26 @@ namespace soralog {
       }
     }
 
-    for (auto it : sink_node) {
+    auto thread_node = sink_node["thread"];
+    if (thread_node.IsDefined()) {
+      if (not thread_node.IsScalar()) {
+        errors_ << "W: Property 'thread' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto thread_str = thread_node.as<std::string>();
+        if (thread_str == "name") {
+          thread_info_type = Sink::ThreadInfoType::NAME;
+        } else if (thread_str == "id") {
+          thread_info_type = Sink::ThreadInfoType::ID;
+        } else if (thread_str != "none") {
+          errors_ << "W: Wrong property 'thread' value of sink '" << name
+                  << "': " << thread_str << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       auto val = it.second;
 
@@ -212,6 +232,8 @@ namespace soralog {
       if (key == "type")
         continue;
       if (key == "color")
+        continue;
+      if (key == "thread")
         continue;
       errors_ << "W: Unknown property of sink '" << name
               << "' with type 'console': " << key << "\n";
@@ -224,46 +246,53 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, color);
+    system_.makeSink<SinkToConsole>(name, color, thread_info_type);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
-      const std::string &name, const YAML::Node &sink) {
+      const std::string &name, const YAML::Node &sink_node) {
     bool fail = false;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
 
-    auto dir_node = sink["directory"];
-    if (not dir_node.IsDefined()) {
+    auto path_node = sink_node["path"];
+    if (not path_node.IsDefined()) {
       fail = true;
-      errors_ << "E: Not found 'directory' of sink '" << name << "'\n";
+      errors_ << "E: Not found 'path' of sink '" << name << "'\n";
       has_error_ = true;
-    } else if (not dir_node.IsScalar()) {
+    } else if (not path_node.IsScalar()) {
       fail = true;
-      errors_ << "E: Property 'directory' of sink '" << name
-              << "' is not scalar\n";
+      errors_ << "E: Property 'path' of sink '" << name << "' is not scalar\n";
       has_error_ = true;
     }
 
-    auto file_node = sink["filename"];
-    if (not file_node.IsDefined()) {
-      fail = true;
-      errors_ << "E: Not found 'filename' of sink '" << name << "'\n";
-      has_error_ = true;
-    } else if (not file_node.IsScalar()) {
-      fail = true;
-      errors_ << "E: Property 'filename' of sink '" << name
-              << "' is not scalar\n";
-      has_error_ = true;
+    auto thread_node = sink_node["thread"];
+    if (thread_node.IsDefined()) {
+      if (not thread_node.IsScalar()) {
+        errors_ << "W: Property 'thread' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto thread_str = thread_node.as<std::string>();
+        if (thread_str == "name") {
+          thread_info_type = Sink::ThreadInfoType::NAME;
+        } else if (thread_str == "id") {
+          thread_info_type = Sink::ThreadInfoType::ID;
+        } else if (thread_str != "none") {
+          errors_ << "W: Wrong property 'thread' value of sink '" << name
+                  << "': " << thread_str << "\n";
+          has_warning_ = true;
+        }
+      }
     }
 
-    for (auto it : sink) {
+    for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (key == "name")
         continue;
       if (key == "type")
         continue;
-      if (key == "directory")
+      if (key == "path")
         continue;
-      if (key == "filename")
+      if (key == "thread")
         continue;
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
@@ -274,8 +303,7 @@ namespace soralog {
       return;
     }
 
-    auto directory = dir_node.as<std::string>();
-    auto filename = file_node.as<std::string>();
+    auto path = path_node.as<std::string>();
 
     if (system_.getSink(name)) {
       errors_ << "W: Already exists sink with name '" << name
@@ -283,7 +311,7 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, directory, filename);
+    system_.makeSink<SinkToFile>(name, path, thread_info_type);
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
@@ -379,7 +407,7 @@ namespace soralog {
       }
     }
 
-    for (auto it : group) {
+    for (const auto &it : group) {
       auto key = it.first.as<std::string>();
 
       if (key == "name")

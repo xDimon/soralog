@@ -12,13 +12,65 @@
 #include <fmt/chrono.h>
 
 namespace soralog {
-  using namespace std::chrono_literals;
+
+  namespace {
+
+    using namespace std::chrono_literals;
+
+    // Separator is using between logical parts of log record.
+    // Might be any substring or symbol: space, tab, etc.
+    // Couple of space is selected to differ of single space
+    constexpr std::string_view separator = "  ";
+
+    void put_separator(char *&ptr) {
+      for (auto c : separator) {
+        *ptr++ = c;  // NOLINT
+      }
+    }
+
+    void put_level(char *&ptr, Level level) {
+      const char *const end = ptr + 8;  // NOLINT
+      const char *str = levelToStr(level);
+      do {
+        *ptr++ = *str++;  // NOLINT
+      } while (*str != '\0');
+      while (ptr < end) {
+        *ptr++ = ' ';  // NOLINT
+      }
+    }
+
+    void put_level_short(char *&ptr, Level level) {
+      *ptr++ = levelToChar(level);  // NOLINT
+    }
+
+    template <typename T>
+    void put_string(char *&ptr, const T &name) {
+      for (auto c : name) {
+        *ptr++ = c;  // NOLINT
+      }
+    }
+
+    template <typename T>
+    void put_string(char *&ptr, const T &name, size_t width) {
+      if (width == 0)
+        return;
+      for (auto c : name) {
+        if (c == '\0' or width == 0)
+          break;
+        *ptr++ = c;  // NOLINT
+        --width;
+      }
+      while (width--) *ptr++ = ' ';  // NOLINT
+    }
+
+  }  // namespace
 
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
-                         std::string filename, size_t events_capacity,
-                         size_t buffer_size, size_t latency_ms)
-      : Sink(std::move(name), events_capacity, buffer_size),
-        path_(std::move(path).string() + "/" + std::move(filename)),
+                         ThreadInfoType thread_info_type,
+                         size_t events_capacity, size_t buffer_size,
+                         size_t latency_ms)
+      : Sink(std::move(name), thread_info_type, events_capacity, buffer_size),
+        path_(std::move(path)),
         buffer_size_(buffer_size),
         latency_(latency_ms),
         buff_(buffer_size_) {
@@ -48,6 +100,8 @@ namespace soralog {
   }
 
   void SinkToFile::run() {
+    util::setThreadName("log:" + name_);
+
     auto next_flush = std::chrono::steady_clock::now();
 
     while (true) {
@@ -86,7 +140,7 @@ namespace soralog {
 
       decltype(1s / 1s) psec = 0;
       std::tm tm{};
-      std::array<char, 18> datetime{};  // "00.00.00 00:00:00."
+      std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
 
       while (true) {
         auto node = events_.get();
@@ -100,20 +154,56 @@ namespace soralog {
           if (psec != sec) {
             tm = fmt::localtime(sec);
             fmt::format_to_n(datetime.data(), datetime.size(),
-                             "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}.",
+                             "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
                              tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
                              tm.tm_hour, tm.tm_min, tm.tm_sec);
             psec = sec;
           }
 
+          // Timestamp
+
           std::memcpy(ptr, datetime.data(), datetime.size());
           ptr = ptr + datetime.size();  // NOLINT
 
-          ptr = fmt::format_to_n(ptr, end - ptr, "{:0>6}  {: <8}  {}  {}", usec,
-                                 levelToStr(event.level()), event.name(),
-                                 event.message())
-                    .out;
+          ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
+          ptr = ptr + datetime.size();  // NOLINT
 
+          put_separator(ptr);
+
+          // Thread
+
+          switch (thread_info_type_) {
+            case ThreadInfoType::NAME: {
+              put_string(ptr, event.thread_name(), 15);
+              put_separator(ptr);
+              break;
+            }
+
+            case ThreadInfoType::ID: {
+              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
+                                     event.thread_number())
+                        .out;
+              put_separator(ptr);
+              break;
+            }
+
+            default:
+              break;
+          }
+
+          // Level
+
+          put_level(ptr, event.level());
+          put_separator(ptr);
+
+          // Name
+
+          put_string(ptr, event.name());
+          put_separator(ptr);
+
+          // Message
+
+          put_string(ptr, event.message());
           *ptr++ = '\n';  // NOLINT
 
           size_ -= event.message().size();

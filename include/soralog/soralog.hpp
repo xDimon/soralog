@@ -5,6 +5,6 @@
 
 namespace soralog {
 
-  const char *__library_name; // NOLINT
+  const char *__library_name;  // NOLINT
 
 }  // namespace soralog

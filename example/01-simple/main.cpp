@@ -4,7 +4,9 @@
  */
 
 #include <soralog/impl/configurator_from_yaml.hpp>
-#include <soralog/injector.hpp>
+#include <soralog/impl/fallback_configurator.hpp>
+#include <soralog/macro.hpp>
+#include <soralog/util.hpp>
 
 #include "logging_object.hpp"
 
@@ -16,28 +18,21 @@ enum ConfiguratorType {
   Cascade
 };
 
-template <typename Injector>
-std::shared_ptr<soralog::Configurator> get_customized_configurator(
-    const Injector &injector) {
-  static auto cfg = std::make_shared<soralog::FallbackConfigurator>();
-  cfg->setLevel(soralog::Level::TRACE);
-  cfg->withColor(true);
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::shared_ptr<soralog::Configurator> customized_configurator = [] {
+  static auto cfg = std::make_shared<soralog::FallbackConfigurator>(
+      soralog::Level::TRACE, true);
   return cfg;
-}
+}();
 
-template <typename Injector>
-std::shared_ptr<soralog::Configurator> get_yaml_configurator_from_file(
-    const Injector &injector) {
-  static auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(
-      std::filesystem::path("../../../example/01-simple/logger.yml"));
-  return cfg;
-}
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::shared_ptr<soralog::Configurator> yaml_configurator_from_file =
+    std::make_shared<soralog::ConfiguratorFromYAML>(
+        std::filesystem::path("../../../example/01-simple/logger.yml"));
 
-template <typename Injector>
-std::shared_ptr<soralog::Configurator> get_yaml_configurator_by_content(
-    const Injector &injector) {
-  static auto cfg =
-      std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::shared_ptr<soralog::Configurator> yaml_configurator_by_content =
+    std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 sinks:
   - name: console
     type: console
@@ -48,12 +43,9 @@ groups:
     level: trace
   - name: azaza
   )"));
-  return cfg;
-}
 
-template <typename Injector>
-std::shared_ptr<soralog::Configurator> get_cascade_configurator(
-    const Injector &injector) {
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::shared_ptr<soralog::Configurator> cascade_configurator = [] {
   auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
   - name: main
@@ -73,41 +65,35 @@ groups:
       - name: first-3
   )"));
 
-  static auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(
-      std::move(prev), std::string(R"(
+  return std::make_shared<soralog::ConfiguratorFromYAML>(std::move(prev),
+                                                         std::string(R"(
 sinks:
   - name: console
     type: console
     color: true
+    thread: name
 groups:
   - name: main
     sink: console
     level: trace
   )"));
-  return cfg;
-}
+}();
 
 int main() {
   ConfiguratorType cfg_type = ConfiguratorType::Cascade;
 
-  auto injector = soralog::injector::makeInjector(
+  std::shared_ptr<soralog::Configurator> configurator =
+      cfg_type == ConfiguratorType::Cascade
+      ? cascade_configurator
+      : cfg_type == ConfiguratorType::YamlByContent
+          ? yaml_configurator_by_content
+          : cfg_type == ConfiguratorType::YamlByPath
+              ? yaml_configurator_from_file
+              : cfg_type == ConfiguratorType::Customized
+                  ? customized_configurator
+                  : std::make_shared<soralog::FallbackConfigurator>();
 
-      // Replace fallback configurator by ConfiguratorFromYAML
-      boost::di::bind<soralog::Configurator>.to([cfg_type](const auto &i) {
-        return cfg_type == ConfiguratorType::Cascade
-            ? get_cascade_configurator(i)
-            : cfg_type == ConfiguratorType::YamlByContent
-                ? get_yaml_configurator_by_content(i)
-                : cfg_type == ConfiguratorType::YamlByPath
-                    ? get_yaml_configurator_from_file(i)
-                    : cfg_type == ConfiguratorType::Customized
-                        ? get_customized_configurator(i)
-                        : std::make_shared<soralog::FallbackConfigurator>();
-      })[boost::di::override]
-
-  );
-
-  auto &log_system = injector.create<soralog::LoggingSystem &>();
+  soralog::LoggingSystem log_system(configurator);
 
   auto r = log_system.configure();
   if (not r.message.empty()) {
@@ -117,27 +103,43 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  auto main_log =
-      injector.create<soralog::LoggerFactory &>().getLogger("main", "*");
+  soralog::util::setThreadName("MainThread");
+
+  auto main_log = log_system.getLogger("main", "*");
+
+  main_log->info("Bad logging (one arg for two placeholders): {} {}", 1);
+  main_log->info("Bad logging (unclosed placeholders): {", 1);
 
   main_log->info("Start");
 
   auto lambda = [](const auto &tag) {
-    std::cout << "CALCULATED AT LOGGING: " << tag << std::endl;
-    return "message";
+    std::cout << "CALCULATED: " << tag << std::endl;
+    return tag;
   };
 
-  main_log->debug("Debug: {}", lambda("logger: debug for trace level"));
-  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for trace level"));
+  main_log->setLevel(soralog::Level::TRACE);
+  main_log->debug("{}", lambda("logger: debug msg for trace level"));
+  SL_DEBUG(main_log, "{}", lambda("macro: debug msg for trace level"));
 
   main_log->setLevel(soralog::Level::INFO);
+  main_log->debug("{}", lambda("logger: debug msg for info level"));
+  SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
-  main_log->trace("Debug: {}", lambda("logger: debug for info level"));
-  SL_DEBUG(main_log, "Debug: {}", lambda("macro: debug for info level"));
+  std::vector<std::shared_ptr<std::thread>> threads;
 
-  auto &object = injector.create<LoggingObject &>();
+  for (const auto &name :
+       {"SecondThread", "ThirdThread", "FourthThread", "FifthThread"}) {
+    threads.emplace_back(std::make_shared<std::thread>(std::thread([&] {
+      soralog::util::setThreadName(name);
+      LoggingObject object(log_system);
+      object.method();
+    })));
+  }
 
+  LoggingObject object(log_system);
   object.method();
+
+  for (auto &thread : threads) thread->join();
 
   main_log->info("Finish");
 
