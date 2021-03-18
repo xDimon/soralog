@@ -18,16 +18,19 @@ enum ConfiguratorType {
   Cascade
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> customized_configurator = [] {
   static auto cfg = std::make_shared<soralog::FallbackConfigurator>(
       soralog::Level::TRACE, true);
   return cfg;
 }();
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> yaml_configurator_from_file =
     std::make_shared<soralog::ConfiguratorFromYAML>(
         std::filesystem::path("../../../example/01-simple/logger.yml"));
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> yaml_configurator_by_content =
     std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 sinks:
@@ -41,6 +44,7 @@ groups:
   - name: azaza
   )"));
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> cascade_configurator = [] {
   auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
