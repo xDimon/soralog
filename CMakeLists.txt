@@ -31,6 +31,7 @@ include(cmake/dependencies.cmake)
 include(cmake/functions.cmake)
 
 if(CLANG_TIDY)
+    # Must be included before creating any target
     include(cmake/clang-tidy.cmake)
 endif()
 

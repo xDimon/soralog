@@ -22,7 +22,7 @@ endif()
 
 if(CTEST_BIN)
     setup_target_for_coverage_gcovr_xml(
-        NAME coverage_xml
+        NAME coverage
         DEPENDENCIES ${tests}
         EXECUTABLE ${CTEST_BIN}
     )
