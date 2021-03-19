@@ -72,23 +72,26 @@ class GroupTest : public ::testing::Test {
 TEST_F(GroupTest, MakeGroup) {
   /// @Given initial state for all next tests
 
+  // If parent isn't set, properties must be provided and not mark as overridden
   EXPECT_TRUE(group1_->parent() == nullptr);
   EXPECT_TRUE(group1_->level() == Level::TRACE);
-  EXPECT_TRUE(group1_->hasLevelOverriden());
+  EXPECT_FALSE(group1_->isLevelOverridden());
   EXPECT_TRUE(group1_->sink() == sink1_);
-  EXPECT_TRUE(group1_->hasSinkOverriden());
+  EXPECT_FALSE(group1_->isSinkOverridden());
 
+  // If parent is set and properties aren't provided, then they are inherited
   EXPECT_TRUE(group2_->parent() == group1_);
   EXPECT_TRUE(group2_->level() == Level::TRACE);
-  EXPECT_FALSE(group2_->hasLevelOverriden());
+  EXPECT_FALSE(group2_->isLevelOverridden());
   EXPECT_TRUE(group2_->sink() == sink1_);
-  EXPECT_FALSE(group2_->hasSinkOverriden());
+  EXPECT_FALSE(group2_->isSinkOverridden());
 
+  // If parent is set and properties are provided, then they mark as overridden
   EXPECT_TRUE(group3_->parent() == group2_);
   EXPECT_TRUE(group3_->level() == Level::DEBUG);
-  EXPECT_TRUE(group3_->hasLevelOverriden());
+  EXPECT_TRUE(group3_->isLevelOverridden());
   EXPECT_TRUE(group3_->sink() == sink3_);
-  EXPECT_TRUE(group3_->hasSinkOverriden());
+  EXPECT_TRUE(group3_->isSinkOverridden());
 }
 
 TEST_F(GroupTest, ChangeLevel) {
@@ -97,24 +100,24 @@ TEST_F(GroupTest, ChangeLevel) {
   group2_->setLevel(Level::CRITICAL);
   group3_->setLevel(Level::INFO);
 
-  /// @Then level is set and marked as overriden
+  /// @Then level is set and marked as overridden
 
   EXPECT_TRUE(group2_->level() == Level::CRITICAL);
-  EXPECT_TRUE(group2_->hasLevelOverriden());
+  EXPECT_TRUE(group2_->isLevelOverridden());
   EXPECT_TRUE(group3_->level() == Level::INFO);
-  EXPECT_TRUE(group3_->hasLevelOverriden());
+  EXPECT_TRUE(group3_->isLevelOverridden());
 
   /// @When reset level
 
   group2_->resetLevel();
   group3_->resetLevel();
 
-  /// @Then level is set from parent group and marked as no overriden
+  /// @Then level is set from parent group and marked as no overridden
 
   EXPECT_TRUE(group2_->level() == Level::TRACE);
-  EXPECT_FALSE(group2_->hasLevelOverriden());
+  EXPECT_FALSE(group2_->isLevelOverridden());
   EXPECT_TRUE(group3_->level() == Level::TRACE);
-  EXPECT_FALSE(group3_->hasLevelOverriden());
+  EXPECT_FALSE(group3_->isLevelOverridden());
 }
 
 TEST_F(GroupTest, ChangeSink) {
@@ -123,24 +126,24 @@ TEST_F(GroupTest, ChangeSink) {
   group2_->setSink(sink3_);
   group3_->setSink(sink4_);
 
-  /// @Then sink is set to provided and marked as overriden
+  /// @Then sink is set to provided and marked as overridden
 
   EXPECT_TRUE(group2_->sink() == sink3_);
-  EXPECT_TRUE(group2_->hasSinkOverriden());
+  EXPECT_TRUE(group2_->isSinkOverridden());
   EXPECT_TRUE(group3_->sink() == sink4_);
-  EXPECT_TRUE(group3_->hasSinkOverriden());
+  EXPECT_TRUE(group3_->isSinkOverridden());
 
   /// @When reset sink
 
   group2_->resetSink();
   group3_->resetSink();
 
-  /// @Then sink is set from parent group and marked as no overriden
+  /// @Then sink is set from parent group and marked as no overridden
 
   EXPECT_TRUE(group2_->sink() == sink1_);
-  EXPECT_FALSE(group2_->hasSinkOverriden());
+  EXPECT_FALSE(group2_->isSinkOverridden());
   EXPECT_TRUE(group3_->sink() == sink1_);
-  EXPECT_FALSE(group3_->hasSinkOverriden());
+  EXPECT_FALSE(group3_->isSinkOverridden());
 }
 
 TEST_F(GroupTest, ChangeGroup) {
@@ -150,36 +153,36 @@ TEST_F(GroupTest, ChangeGroup) {
   group3_->setParentGroup(group4_);
 
   /// @Then parent is changed and
-  ///  no overriden properties are set from new parent group
+  ///  no overridden properties are set from new parent group
 
   EXPECT_TRUE(group2_->parent() == group4_);
   EXPECT_TRUE(group2_->level() == Level::VERBOSE);
-  EXPECT_FALSE(group2_->hasLevelOverriden());
+  EXPECT_FALSE(group2_->isLevelOverridden());
   EXPECT_TRUE(group2_->sink() == sink4_);
-  EXPECT_FALSE(group2_->hasSinkOverriden());
+  EXPECT_FALSE(group2_->isSinkOverridden());
 
   EXPECT_TRUE(group3_->parent() == group4_);
   EXPECT_TRUE(group3_->level() == Level::DEBUG);
-  EXPECT_TRUE(group3_->hasLevelOverriden());
+  EXPECT_TRUE(group3_->isLevelOverridden());
   EXPECT_TRUE(group3_->sink() == sink3_);
-  EXPECT_TRUE(group3_->hasSinkOverriden());
+  EXPECT_TRUE(group3_->isSinkOverridden());
 
   /// @When unset parent group
 
   group2_->unsetParentGroup();
   group3_->unsetParentGroup();
 
-  /// @Then all properties are marked as overriden
+  /// @Then parent group changes to nullptr
 
   EXPECT_TRUE(group2_->parent() == nullptr);
   EXPECT_TRUE(group2_->level() == Level::VERBOSE);
-  EXPECT_TRUE(group2_->hasLevelOverriden());
+  EXPECT_FALSE(group2_->isLevelOverridden());
   EXPECT_TRUE(group2_->sink() == sink4_);
-  EXPECT_TRUE(group2_->hasSinkOverriden());
+  EXPECT_FALSE(group2_->isSinkOverridden());
 
   EXPECT_TRUE(group3_->parent() == nullptr);
   EXPECT_TRUE(group3_->level() == Level::DEBUG);
-  EXPECT_TRUE(group3_->hasLevelOverriden());
+  EXPECT_TRUE(group3_->isLevelOverridden());
   EXPECT_TRUE(group3_->sink() == sink3_);
-  EXPECT_TRUE(group3_->hasSinkOverriden());
+  EXPECT_TRUE(group3_->isSinkOverridden());
 }

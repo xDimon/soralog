@@ -48,7 +48,7 @@ groups:
 std::shared_ptr<soralog::Configurator> cascade_configurator = [] {
   auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
-  - name: main
+  - name: 3rd_party
     level: info
     children:
       - name: first-1
@@ -57,6 +57,7 @@ groups:
           - name: second-1-2
             children:
               - name: third-1-2-1
+                level: critical
           - name: second-1-3
       - name: first-2
         children:
@@ -76,6 +77,8 @@ groups:
   - name: main
     sink: console
     level: trace
+    children:
+      - name: 3rd_party
   )"));
 }();
 

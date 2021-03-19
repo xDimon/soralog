@@ -56,7 +56,7 @@ namespace soralog {
     /**
      * @returns loggers (with creating that if it isn't exists yet) with
      * name {@param logger_name}, group with name {@param group_name}, and level
-     * overriden to {@param level}
+     * overridden to {@param level}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
@@ -68,7 +68,7 @@ namespace soralog {
     /**
      * @returns loggers (with creating that if it isn't exists yet) with
      * name {@param logger_name}, group with name {@param group_name}, and sink
-     * overriden to sink with name {@param sink_name}
+     * overridden to sink with name {@param sink_name}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
@@ -80,7 +80,7 @@ namespace soralog {
     /**
      * @returns loggers (with creating that if it isn't exists yet) with
      * name {@param logger_name}, group with name {@param group_name}, and sink
-     * andd level overriden to {@param sink_name} and {@param level}
+     * andd level overridden to {@param sink_name} and {@param level}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name,
@@ -129,14 +129,14 @@ namespace soralog {
                           const std::string &parent);
     /**
      * Unset parent group of group {@param group_name}.
-     * All properties will be marked as overriden (stay his own)
+     * All properties will be marked as overridden (stay his own)
      * @returns true if success
      */
     bool unsetParentOfGroup(const std::string &group_name);
 
     /**
      * Set sink of group {@param group_name} to sink with name {@param
-     * sink_name}. Sink will be marked as overriden
+     * sink_name}. Sink will be marked as overridden
      * @returns true if success
      */
     bool setSinkOfGroup(const std::string &group_name,
@@ -151,7 +151,7 @@ namespace soralog {
 
     /**
      * Set level of group {@param group_name} to level {@param level}. Level
-     * will be marked as overriden
+     * will be marked as overridden
      * @returns true if success
      */
     bool setLevelOfGroup(const std::string &group_name, Level level);
@@ -173,7 +173,7 @@ namespace soralog {
 
     /**
      * Set sink of logger {@param logger_name} to sink with name {@param
-     * group_name}. Sink will be marked as overriden.
+     * group_name}. Sink will be marked as overridden.
      * @returns true if success
      */
     bool setSinkOfLogger(const std::string &logger_name,
@@ -188,7 +188,7 @@ namespace soralog {
 
     /**
      * Set sink of logger {@param logger_name} to sink with name {@param
-     * group_name}. Sink will be marked as overriden.
+     * group_name}. Sink will be marked as overridden.
      * @returns true if success
      */
     bool setLevelOfLogger(const std::string &logger_name, Level level);

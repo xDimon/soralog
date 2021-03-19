@@ -32,10 +32,7 @@ namespace soralog {
     ConfiguratorFromYAML::Result result;
 
     if (previous_ != nullptr) {
-      auto prev_result = previous_->applyOn(system_);
-      result.has_error = result.has_error || prev_result.has_error;
-      result.has_warning = result.has_warning || prev_result.has_warning;
-      result.message += prev_result.message;
+      result = previous_->applyOn(system_);
     }
 
     YAML::Node node;
@@ -242,7 +239,7 @@ namespace soralog {
 
     if (system_.getSink(name)) {
       errors_ << "W: Already exists sink with name '" << name
-              << "'; Previous version will be overriden\n";
+              << "'; Previous version will be overridden\n";
       has_warning_ = true;
     }
 
@@ -307,7 +304,7 @@ namespace soralog {
 
     if (system_.getSink(name)) {
       errors_ << "W: Already exists sink with name '" << name
-              << "'; Previous version will be overriden\n";
+              << "'; Previous version will be overridden\n";
       has_warning_ = true;
     }
 

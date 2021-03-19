@@ -235,37 +235,37 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
 
   auto expect_initial_state = [&] {
     EXPECT_TRUE(group1->level() == Level::INFO);
-    EXPECT_TRUE(group1->hasLevelOverriden());
+    EXPECT_FALSE(group1->isLevelOverridden());
 
     EXPECT_TRUE(group2->level() == group1->level());
-    EXPECT_FALSE(group2->hasLevelOverriden());
+    EXPECT_FALSE(group2->isLevelOverridden());
 
     EXPECT_TRUE(group3->level() == Level::WARN);
-    EXPECT_TRUE(group3->hasLevelOverriden());
+    EXPECT_TRUE(group3->isLevelOverridden());
 
     EXPECT_TRUE(log1->level() == Level::INFO);
     EXPECT_TRUE(log1->level() == group2->level());
-    EXPECT_FALSE(log1->hasLevelOverriden());
+    EXPECT_FALSE(log1->isLevelOverridden());
 
     EXPECT_TRUE(log2->level() == Level::TRACE);
     EXPECT_TRUE(log2->level() != group1->level());
-    EXPECT_TRUE(log2->hasLevelOverriden());
+    EXPECT_TRUE(log2->isLevelOverridden());
 
     EXPECT_TRUE(log3->level() == Level::INFO);
     EXPECT_TRUE(log3->level() == group2->level());
-    EXPECT_FALSE(log3->hasLevelOverriden());
+    EXPECT_FALSE(log3->isLevelOverridden());
 
     EXPECT_TRUE(log4->level() == Level::DEBUG);
     EXPECT_TRUE(log4->level() != group2->level());
-    EXPECT_TRUE(log4->hasLevelOverriden());
+    EXPECT_TRUE(log4->isLevelOverridden());
 
     EXPECT_TRUE(log5->level() == Level::WARN);
     EXPECT_TRUE(log5->level() == group3->level());
-    EXPECT_FALSE(log5->hasLevelOverriden());
+    EXPECT_FALSE(log5->isLevelOverridden());
 
     EXPECT_TRUE(log6->level() == Level::VERBOSE);
     EXPECT_TRUE(log6->level() != group3->level());
-    EXPECT_TRUE(log6->hasLevelOverriden());
+    EXPECT_TRUE(log6->isLevelOverridden());
   };
 
   /// @Given beginning state of groups
@@ -295,25 +295,27 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   //  Level:   @1=C  T     @2=C  D     @3=W  V
   //              ^           ^
 
+  // Properties not overridden because group doesn't have parent
   EXPECT_TRUE(group1->level() == Level::CRITICAL);  // *own
-  EXPECT_TRUE(group1->hasLevelOverriden());
+  EXPECT_FALSE(group1->isLevelOverridden());
   EXPECT_TRUE(group2->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(group2->hasLevelOverriden());
+  EXPECT_FALSE(
+      group2->isLevelOverridden());  // no overridden because no parent
   EXPECT_TRUE(group3->level() == Level::WARN);  // own
-  EXPECT_TRUE(group3->hasLevelOverriden());
+  EXPECT_TRUE(group3->isLevelOverridden());
 
   EXPECT_TRUE(log1->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
   EXPECT_TRUE(log2->level() == Level::TRACE);  // own
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
   EXPECT_TRUE(log3->level() == Level::CRITICAL);  // *g2<-g1
-  EXPECT_FALSE(log3->hasLevelOverriden());
+  EXPECT_FALSE(log3->isLevelOverridden());
   EXPECT_TRUE(log4->level() == Level::DEBUG);  // own
-  EXPECT_TRUE(log4->hasLevelOverriden());
+  EXPECT_TRUE(log4->isLevelOverridden());
   EXPECT_TRUE(log5->level() == Level::WARN);  // g3
-  EXPECT_FALSE(log5->hasLevelOverriden());
+  EXPECT_FALSE(log5->isLevelOverridden());
   EXPECT_TRUE(log6->level() == Level::VERBOSE);  // own
-  EXPECT_TRUE(log6->hasLevelOverriden());
+  EXPECT_TRUE(log6->isLevelOverridden());
 
   /// @When coming back previous group's level
   system_->setLevelOfGroup("first", Level::INFO);
@@ -337,24 +339,24 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   //                       ^
 
   EXPECT_TRUE(group1->level() == Level::INFO);  // own
-  EXPECT_TRUE(group1->hasLevelOverriden());
+  EXPECT_FALSE(group1->isLevelOverridden());
   EXPECT_TRUE(group2->level() == Level::CRITICAL);  // *own
-  EXPECT_TRUE(group2->hasLevelOverriden());
+  EXPECT_TRUE(group2->isLevelOverridden());
   EXPECT_TRUE(group3->level() == Level::WARN);  // own
-  EXPECT_TRUE(group3->hasLevelOverriden());
+  EXPECT_TRUE(group3->isLevelOverridden());
 
   EXPECT_TRUE(log1->level() == Level::INFO);  // g1
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
   EXPECT_TRUE(log2->level() == Level::TRACE);  // own
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
   EXPECT_TRUE(log3->level() == Level::CRITICAL);  // *g2
-  EXPECT_FALSE(log3->hasLevelOverriden());
+  EXPECT_FALSE(log3->isLevelOverridden());
   EXPECT_TRUE(log4->level() == Level::DEBUG);  // own
-  EXPECT_TRUE(log4->hasLevelOverriden());
+  EXPECT_TRUE(log4->isLevelOverridden());
   EXPECT_TRUE(log5->level() == Level::WARN);  // g3
-  EXPECT_FALSE(log5->hasLevelOverriden());
+  EXPECT_FALSE(log5->isLevelOverridden());
   EXPECT_TRUE(log6->level() == Level::VERBOSE);  // own
-  EXPECT_TRUE(log6->hasLevelOverriden());
+  EXPECT_TRUE(log6->isLevelOverridden());
 
   /// @When come back dependent of top group
   system_->resetLevelOfGroup("second");
@@ -418,37 +420,37 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
 
   auto expect_initial_state = [&] {
     EXPECT_TRUE(group1->sink() == sink1);
-    EXPECT_TRUE(group1->hasSinkOverriden());
+    EXPECT_FALSE(group1->isSinkOverridden());
 
     EXPECT_TRUE(group2->sink() == group1->sink());
-    EXPECT_FALSE(group2->hasSinkOverriden());
+    EXPECT_FALSE(group2->isSinkOverridden());
 
     EXPECT_TRUE(group3->sink() == sink2);
-    EXPECT_TRUE(group3->hasSinkOverriden());
+    EXPECT_TRUE(group3->isSinkOverridden());
 
     EXPECT_TRUE(log1->sink() == sink1);
     EXPECT_TRUE(log1->sink() == group2->sink());
-    EXPECT_FALSE(log1->hasSinkOverriden());
+    EXPECT_FALSE(log1->isSinkOverridden());
 
     EXPECT_TRUE(log2->sink() == sink3);
     EXPECT_TRUE(log2->sink() != group1->sink());
-    EXPECT_TRUE(log2->hasSinkOverriden());
+    EXPECT_TRUE(log2->isSinkOverridden());
 
     EXPECT_TRUE(log3->sink() == sink1);
     EXPECT_TRUE(log3->sink() == group2->sink());
-    EXPECT_FALSE(log3->hasSinkOverriden());
+    EXPECT_FALSE(log3->isSinkOverridden());
 
     EXPECT_TRUE(log4->sink() == sink4);
     EXPECT_TRUE(log4->sink() != group2->sink());
-    EXPECT_TRUE(log4->hasSinkOverriden());
+    EXPECT_TRUE(log4->isSinkOverridden());
 
     EXPECT_TRUE(log5->sink() == sink2);
     EXPECT_TRUE(log5->sink() == group3->sink());
-    EXPECT_FALSE(log5->hasSinkOverriden());
+    EXPECT_FALSE(log5->isSinkOverridden());
 
     EXPECT_TRUE(log6->sink() == sink5);
     EXPECT_TRUE(log6->sink() != group3->sink());
-    EXPECT_TRUE(log6->hasSinkOverriden());
+    EXPECT_TRUE(log6->isSinkOverridden());
   };
 
   /// @Given beginning state of groups
@@ -479,24 +481,24 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   //              ^           ^
 
   EXPECT_TRUE(group1->sink() == sink6);  // *own
-  EXPECT_TRUE(group1->hasSinkOverriden());
+  EXPECT_FALSE(group1->isSinkOverridden());
   EXPECT_TRUE(group2->sink() == sink6);  // *g1
-  EXPECT_FALSE(group2->hasSinkOverriden());
+  EXPECT_FALSE(group2->isSinkOverridden());
   EXPECT_TRUE(group3->sink() == sink2);  // own
-  EXPECT_TRUE(group3->hasSinkOverriden());
+  EXPECT_TRUE(group3->isSinkOverridden());
 
   EXPECT_TRUE(log1->sink() == sink6);  // *g1
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log2->sink() == sink3);  // own
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
   EXPECT_TRUE(log3->sink() == sink6);  // *g2<-g1
-  EXPECT_FALSE(log3->hasSinkOverriden());
+  EXPECT_FALSE(log3->isSinkOverridden());
   EXPECT_TRUE(log4->sink() == sink4);  // own
-  EXPECT_TRUE(log4->hasSinkOverriden());
+  EXPECT_TRUE(log4->isSinkOverridden());
   EXPECT_TRUE(log5->sink() == sink2);  // g3
-  EXPECT_FALSE(log5->hasSinkOverriden());
+  EXPECT_FALSE(log5->isSinkOverridden());
   EXPECT_TRUE(log6->sink() == sink5);  // own
-  EXPECT_TRUE(log6->hasSinkOverriden());
+  EXPECT_TRUE(log6->isSinkOverridden());
 
   /// @When come back sink of top group
   system_->setSinkOfGroup("first", "sink1");
@@ -520,24 +522,24 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   //                       ^
 
   EXPECT_TRUE(group1->sink() == sink1);  // own
-  EXPECT_TRUE(group1->hasSinkOverriden());
+  EXPECT_FALSE(group1->isSinkOverridden());
   EXPECT_TRUE(group2->sink() == sink6);  // *own
-  EXPECT_TRUE(group2->hasSinkOverriden());
+  EXPECT_TRUE(group2->isSinkOverridden());
   EXPECT_TRUE(group3->sink() == sink2);  // own
-  EXPECT_TRUE(group3->hasSinkOverriden());
+  EXPECT_TRUE(group3->isSinkOverridden());
 
   EXPECT_TRUE(log1->sink() == sink1);  // g1
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log2->sink() == sink3);  // own
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
   EXPECT_TRUE(log3->sink() == sink6);  // *g2
-  EXPECT_FALSE(log3->hasSinkOverriden());
+  EXPECT_FALSE(log3->isSinkOverridden());
   EXPECT_TRUE(log4->sink() == sink4);  // own
-  EXPECT_TRUE(log4->hasSinkOverriden());
+  EXPECT_TRUE(log4->isSinkOverridden());
   EXPECT_TRUE(log5->sink() == sink2);  // g3
-  EXPECT_FALSE(log5->hasSinkOverriden());
+  EXPECT_FALSE(log5->isSinkOverridden());
   EXPECT_TRUE(log6->sink() == sink5);  // own
-  EXPECT_TRUE(log6->hasSinkOverriden());
+  EXPECT_TRUE(log6->isSinkOverridden());
 
   /// @When come back dependent of top group
   system_->resetSinkOfGroup("second");
@@ -553,15 +555,12 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
     system.makeSink<SinkMock>("sink1");
     system.makeSink<SinkMock>("sink2");
     system.makeSink<SinkMock>("sink3");
-    system.makeSink<SinkMock>("sink4");
-    system.makeSink<SinkMock>("sink5");
-    system.makeSink<SinkMock>("sink6");
     system.makeGroup("first1", {}, "sink1", Level::TRACE);
     system.makeGroup("first2", {}, "sink2", Level::DEBUG);
     system.makeGroup("second1", "first1", {}, {});
     system.makeGroup("second2", "first1", {}, {});
-    system.makeGroup("third1", "second1", {}, {});
-    system.makeGroup("third2", "second1", {}, {});
+    system.makeGroup("third1", "second1", "sink3", {});
+    system.makeGroup("third2", "second1", {}, Level::CRITICAL);
     return Configurator::Result{};
   }));
   EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
@@ -574,12 +573,6 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   ASSERT_TRUE(sink2 != nullptr);
   auto sink3 = system_->getSink("sink3");
   ASSERT_TRUE(sink3 != nullptr);
-  auto sink4 = system_->getSink("sink4");
-  ASSERT_TRUE(sink4 != nullptr);
-  auto sink5 = system_->getSink("sink5");
-  ASSERT_TRUE(sink5 != nullptr);
-  auto sink6 = system_->getSink("sink6");
-  ASSERT_TRUE(sink6 != nullptr);
 
   auto group11 = system_->getGroup("first1");
   ASSERT_TRUE(group11 != nullptr);
@@ -608,50 +601,6 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   auto log6 = system_->getLogger("Log6", "third2");
   ASSERT_TRUE(log6 != nullptr);
 
-  auto expect_initial_state = [&] {
-    EXPECT_TRUE(group11->parent() == nullptr);
-    EXPECT_TRUE(group11->sink() == sink1);
-    EXPECT_TRUE(group11->level() == Level::TRACE);
-
-    EXPECT_TRUE(group12->parent() == nullptr);
-    EXPECT_TRUE(group12->sink() == sink2);
-    EXPECT_TRUE(group12->level() == Level::DEBUG);
-
-    EXPECT_TRUE(group21->parent() == group11);
-    EXPECT_TRUE(group21->sink() == sink1);
-    EXPECT_TRUE(group21->level() == Level::TRACE);
-
-    EXPECT_TRUE(group22->parent() == group11);
-    EXPECT_TRUE(group22->sink() == sink1);
-    EXPECT_TRUE(group22->level() == Level::TRACE);
-
-    EXPECT_TRUE(group31->parent() == group21);
-    EXPECT_TRUE(group31->sink() == sink1);
-    EXPECT_TRUE(group31->level() == Level::TRACE);
-
-    EXPECT_TRUE(group32->parent() == group21);
-    EXPECT_TRUE(group32->sink() == sink1);
-    EXPECT_TRUE(group32->level() == Level::TRACE);
-
-    EXPECT_TRUE(log1->sink() == sink1);
-    EXPECT_TRUE(log1->level() == Level::TRACE);
-
-    EXPECT_TRUE(log2->sink() == sink2);
-    EXPECT_TRUE(log2->level() == Level::DEBUG);
-
-    EXPECT_TRUE(log3->sink() == sink1);
-    EXPECT_TRUE(log3->level() == Level::TRACE);
-
-    EXPECT_TRUE(log4->sink() == sink1);
-    EXPECT_TRUE(log4->level() == Level::TRACE);
-
-    EXPECT_TRUE(log5->sink() == sink1);
-    EXPECT_TRUE(log5->level() == Level::TRACE);
-
-    EXPECT_TRUE(log6->sink() == sink1);
-    EXPECT_TRUE(log6->level() == Level::TRACE);
-  };
-
   /// @Given beginning state of groups
   //    G11 -- G21 -- G31
   //        \      `- G32
@@ -660,14 +609,60 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   //
   //  Group:   G11    G12    G21    G22    G31    G32
   //  Parent:  -      -      G11    G11    G21    G21
-  //  Sink:    S1     S2     @11=S1 @11=S1 @21=S1 @21=S1
-  //  Level:   T      D      @11=T  G11=T  @21=T  @21=T
+  //  Sink:    S1     S2     @11=S1 @11=S1 =S3 @21=S1
+  //  Level:   T      D      @11=T  G11=T  @21=T  =C
 
   /// @Given beginning state of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
   //  Group:   G11   G12   G21   G22   G31   G32
 
-  expect_initial_state();
+  EXPECT_TRUE(group11->parent() == nullptr);
+  EXPECT_TRUE(group11->sink() == sink1);
+  EXPECT_FALSE(group11->isSinkOverridden());
+  EXPECT_TRUE(group11->level() == Level::TRACE);
+  EXPECT_FALSE(group11->isLevelOverridden());
+  EXPECT_TRUE(log1->sink() == sink1);
+  EXPECT_TRUE(log1->level() == Level::TRACE);
+
+  EXPECT_TRUE(group12->parent() == nullptr);
+  EXPECT_TRUE(group12->sink() == sink2);
+  EXPECT_FALSE(group12->isSinkOverridden());
+  EXPECT_TRUE(group12->level() == Level::DEBUG);
+  EXPECT_FALSE(group12->isLevelOverridden());
+  EXPECT_TRUE(log2->sink() == sink2);
+  EXPECT_TRUE(log2->level() == Level::DEBUG);
+
+  EXPECT_TRUE(group21->parent() == group11);
+  EXPECT_TRUE(group21->sink() == sink1);
+  EXPECT_FALSE(group21->isSinkOverridden());
+  EXPECT_TRUE(group21->level() == Level::TRACE);
+  EXPECT_FALSE(group21->isLevelOverridden());
+  EXPECT_TRUE(log3->sink() == sink1);
+  EXPECT_TRUE(log3->level() == Level::TRACE);
+
+  EXPECT_TRUE(group22->parent() == group11);
+  EXPECT_TRUE(group22->sink() == sink1);
+  EXPECT_FALSE(group22->isSinkOverridden());
+  EXPECT_TRUE(group22->level() == Level::TRACE);
+  EXPECT_FALSE(group22->isLevelOverridden());
+  EXPECT_TRUE(log4->sink() == sink1);
+  EXPECT_TRUE(log4->level() == Level::TRACE);
+
+  EXPECT_TRUE(group31->parent() == group21);
+  EXPECT_TRUE(group31->sink() == sink3);
+  EXPECT_TRUE(group31->isSinkOverridden());
+  EXPECT_TRUE(group31->level() == Level::TRACE);
+  EXPECT_FALSE(group31->isLevelOverridden());
+  EXPECT_TRUE(log5->sink() == sink3);
+  EXPECT_TRUE(log5->level() == Level::TRACE);
+
+  EXPECT_TRUE(group32->parent() == group21);
+  EXPECT_TRUE(group32->sink() == sink1);
+  EXPECT_FALSE(group32->isSinkOverridden());
+  EXPECT_TRUE(group32->level() == Level::CRITICAL);
+  EXPECT_TRUE(group32->isLevelOverridden());
+  EXPECT_TRUE(log6->sink() == sink1);
+  EXPECT_TRUE(log6->level() == Level::CRITICAL);
 
   /// @When change parent of 2-level group
   system_->setParentOfGroup("second1", "first2");
@@ -679,57 +674,57 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   //
   //  Group:   G11    G12    G21    G22    G31    G32
   //  Parent:  -      -      G12    G11    G21    G21
-  //  Sink:    S1     S2     @12=S2 @11=S1 @21=S2 @21=S2
-  //  Level:   T      D      @12=D  G11=T  @21=D  @21=D
-  //                  ^                ^      ^      ^
+  //  Sink:    S1     S2     @12=S2 @11=S1 =S3 @21=S2
+  //  Level:   T      D      @12=D  G11=T  @21=D  =C
+  //                  ^                ^      ^
 
   EXPECT_TRUE(group11->parent() == nullptr);
   EXPECT_TRUE(group11->sink() == sink1);
-  EXPECT_TRUE(group11->hasSinkOverriden());
+  EXPECT_FALSE(group11->isSinkOverridden());
   EXPECT_TRUE(group11->level() == Level::TRACE);
-  EXPECT_TRUE(group11->hasLevelOverriden());
+  EXPECT_FALSE(group11->isLevelOverridden());
   EXPECT_TRUE(log1->sink() == sink1);
   EXPECT_TRUE(log1->level() == Level::TRACE);
 
   EXPECT_TRUE(group12->parent() == nullptr);
   EXPECT_TRUE(group12->sink() == sink2);
-  EXPECT_TRUE(group12->hasSinkOverriden());
+  EXPECT_FALSE(group12->isSinkOverridden());
   EXPECT_TRUE(group12->level() == Level::DEBUG);
-  EXPECT_TRUE(group12->hasLevelOverriden());
+  EXPECT_FALSE(group12->isLevelOverridden());
   EXPECT_TRUE(log2->sink() == sink2);
   EXPECT_TRUE(log2->level() == Level::DEBUG);
 
   EXPECT_TRUE(group21->parent() == group12);
   EXPECT_TRUE(group21->sink() == sink2);
-  EXPECT_FALSE(group21->hasSinkOverriden());
+  EXPECT_FALSE(group21->isSinkOverridden());
   EXPECT_TRUE(group21->level() == Level::DEBUG);
-  EXPECT_FALSE(group21->hasLevelOverriden());
+  EXPECT_FALSE(group21->isLevelOverridden());
   EXPECT_TRUE(log3->sink() == sink2);
   EXPECT_TRUE(log3->level() == Level::DEBUG);
 
   EXPECT_TRUE(group22->parent() == group11);
   EXPECT_TRUE(group22->sink() == sink1);
-  EXPECT_FALSE(group22->hasSinkOverriden());
+  EXPECT_FALSE(group22->isSinkOverridden());
   EXPECT_TRUE(group22->level() == Level::TRACE);
-  EXPECT_FALSE(group22->hasLevelOverriden());
+  EXPECT_FALSE(group22->isLevelOverridden());
   EXPECT_TRUE(log4->sink() == sink1);
   EXPECT_TRUE(log4->level() == Level::TRACE);
 
   EXPECT_TRUE(group31->parent() == group21);
-  EXPECT_TRUE(group31->sink() == sink2);
-  EXPECT_FALSE(group31->hasSinkOverriden());
+  EXPECT_TRUE(group31->sink() == sink3);
+  EXPECT_TRUE(group31->isSinkOverridden());
   EXPECT_TRUE(group31->level() == Level::DEBUG);
-  EXPECT_FALSE(group31->hasLevelOverriden());
-  EXPECT_TRUE(log5->sink() == sink2);
+  EXPECT_FALSE(group31->isLevelOverridden());
+  EXPECT_TRUE(log5->sink() == sink3);
   EXPECT_TRUE(log5->level() == Level::DEBUG);
 
   EXPECT_TRUE(group32->parent() == group21);
   EXPECT_TRUE(group32->sink() == sink2);
-  EXPECT_FALSE(group32->hasSinkOverriden());
-  EXPECT_TRUE(group32->level() == Level::DEBUG);
-  EXPECT_FALSE(group32->hasLevelOverriden());
+  EXPECT_FALSE(group32->isSinkOverridden());
+  EXPECT_TRUE(group32->level() == Level::CRITICAL);
+  EXPECT_TRUE(group32->isLevelOverridden());
   EXPECT_TRUE(log6->sink() == sink2);
-  EXPECT_TRUE(log6->level() == Level::DEBUG);
+  EXPECT_TRUE(log6->level() == Level::CRITICAL);
 
   /// @When unset parent of group
   system_->unsetParentOfGroup("third1");
@@ -741,60 +736,60 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   //
   //  Group:   G11    G12    G21    G22    G31    G32
   //  Parent:  -      -      G12    G11    -      G21
-  //  Sink:    S1     S2     @12=S2 @11=S1 S2     @21=S2
-  //  Level:   T      D      @12=D  G11=T  D      @21=D
+  //  Sink:    S1     S2     @12=S2 @11=S1 =S3    @21=S2
+  //  Level:   T      D      @12=D  G11=T  D      =C
   //                                       ^
 
   EXPECT_TRUE(group11->parent() == nullptr);
   EXPECT_TRUE(group11->sink() == sink1);
-  EXPECT_TRUE(group11->hasSinkOverriden());
+  EXPECT_FALSE(group11->isSinkOverridden());
   EXPECT_TRUE(group11->level() == Level::TRACE);
-  EXPECT_TRUE(group11->hasLevelOverriden());
+  EXPECT_FALSE(group11->isLevelOverridden());
   EXPECT_TRUE(log1->sink() == sink1);
   EXPECT_TRUE(log1->level() == Level::TRACE);
 
   EXPECT_TRUE(group12->parent() == nullptr);
   EXPECT_TRUE(group12->sink() == sink2);
-  EXPECT_TRUE(group12->hasSinkOverriden());
+  EXPECT_FALSE(group12->isSinkOverridden());
   EXPECT_TRUE(group12->level() == Level::DEBUG);
-  EXPECT_TRUE(group12->hasLevelOverriden());
+  EXPECT_FALSE(group12->isLevelOverridden());
   EXPECT_TRUE(log2->sink() == sink2);
   EXPECT_TRUE(log2->level() == Level::DEBUG);
 
   EXPECT_TRUE(group21->parent() == group12);
   EXPECT_TRUE(group21->sink() == sink2);
-  EXPECT_FALSE(group21->hasSinkOverriden());
+  EXPECT_FALSE(group21->isSinkOverridden());
   EXPECT_TRUE(group21->level() == Level::DEBUG);
-  EXPECT_FALSE(group21->hasLevelOverriden());
+  EXPECT_FALSE(group21->isLevelOverridden());
   EXPECT_TRUE(log3->sink() == sink2);
   EXPECT_TRUE(log3->level() == Level::DEBUG);
 
   EXPECT_TRUE(group22->parent() == group11);
   EXPECT_TRUE(group22->sink() == sink1);
-  EXPECT_FALSE(group22->hasSinkOverriden());
+  EXPECT_FALSE(group22->isSinkOverridden());
   EXPECT_TRUE(group22->level() == Level::TRACE);
-  EXPECT_FALSE(group22->hasLevelOverriden());
+  EXPECT_FALSE(group22->isLevelOverridden());
   EXPECT_TRUE(log4->sink() == sink1);
   EXPECT_TRUE(log4->level() == Level::TRACE);
 
   EXPECT_TRUE(group31->parent() == nullptr);
-  EXPECT_TRUE(group31->sink() == sink2);
-  EXPECT_TRUE(group31->hasSinkOverriden());
+  EXPECT_TRUE(group31->sink() == sink3);
+  EXPECT_TRUE(group31->isSinkOverridden());
   EXPECT_TRUE(group31->level() == Level::DEBUG);
-  EXPECT_TRUE(group31->hasLevelOverriden());
-  EXPECT_TRUE(log5->sink() == sink2);
+  EXPECT_FALSE(group31->isLevelOverridden());
+  EXPECT_TRUE(log5->sink() == sink3);
   EXPECT_TRUE(log5->level() == Level::DEBUG);
 
   EXPECT_TRUE(group32->parent() == group21);
   EXPECT_TRUE(group32->sink() == sink2);
-  EXPECT_FALSE(group32->hasSinkOverriden());
-  EXPECT_TRUE(group32->level() == Level::DEBUG);
-  EXPECT_FALSE(group32->hasLevelOverriden());
+  EXPECT_FALSE(group32->isSinkOverridden());
+  EXPECT_TRUE(group32->level() == Level::CRITICAL);
+  EXPECT_TRUE(group32->isLevelOverridden());
   EXPECT_TRUE(log6->sink() == sink2);
-  EXPECT_TRUE(log6->level() == Level::DEBUG);
+  EXPECT_TRUE(log6->level() == Level::CRITICAL);
 
   /// @When change level of group
-  system_->setLevelOfGroup("second1", Level::CRITICAL);
+  system_->setLevelOfGroup("second1", Level::INFO);
 
   /// @Then is have next state of groups
   //    G11 -- G22
@@ -803,55 +798,55 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   //
   //  Group:   G11    G12    G21    G22    G31    G32
   //  Parent:  -      -      G12    G11    -      G21
-  //  Sink:    S1     S2     @12=S2 @11=S1 S2     @21=S2
-  //  Level:   T      D      C      G11=T  D      @21=C
-  //                         ^                       ^
+  //  Sink:    S1     S2     @12=S2 @11=S1 =S3     @21=S2
+  //  Level:   T      D      I      G11=T  D      =C
+  //                         ^
 
   EXPECT_TRUE(group11->parent() == nullptr);
   EXPECT_TRUE(group11->sink() == sink1);
-  EXPECT_TRUE(group11->hasSinkOverriden());
+  EXPECT_FALSE(group11->isSinkOverridden());
   EXPECT_TRUE(group11->level() == Level::TRACE);
-  EXPECT_TRUE(group11->hasLevelOverriden());
+  EXPECT_FALSE(group11->isLevelOverridden());
   EXPECT_TRUE(log1->sink() == sink1);
   EXPECT_TRUE(log1->level() == Level::TRACE);
 
   EXPECT_TRUE(group12->parent() == nullptr);
   EXPECT_TRUE(group12->sink() == sink2);
-  EXPECT_TRUE(group12->hasSinkOverriden());
+  EXPECT_FALSE(group12->isSinkOverridden());
   EXPECT_TRUE(group12->level() == Level::DEBUG);
-  EXPECT_TRUE(group12->hasLevelOverriden());
+  EXPECT_FALSE(group12->isLevelOverridden());
   EXPECT_TRUE(log2->sink() == sink2);
   EXPECT_TRUE(log2->level() == Level::DEBUG);
 
   EXPECT_TRUE(group21->parent() == group12);
   EXPECT_TRUE(group21->sink() == sink2);
-  EXPECT_FALSE(group21->hasSinkOverriden());
-  EXPECT_TRUE(group21->level() == Level::CRITICAL);
-  EXPECT_TRUE(group21->hasLevelOverriden());
+  EXPECT_FALSE(group21->isSinkOverridden());
+  EXPECT_TRUE(group21->level() == Level::INFO);
+  EXPECT_TRUE(group21->isLevelOverridden());
   EXPECT_TRUE(log3->sink() == sink2);
-  EXPECT_TRUE(log3->level() == Level::CRITICAL);
+  EXPECT_TRUE(log3->level() == Level::INFO);
 
   EXPECT_TRUE(group22->parent() == group11);
   EXPECT_TRUE(group22->sink() == sink1);
-  EXPECT_FALSE(group22->hasSinkOverriden());
+  EXPECT_FALSE(group22->isSinkOverridden());
   EXPECT_TRUE(group22->level() == Level::TRACE);
-  EXPECT_FALSE(group22->hasLevelOverriden());
+  EXPECT_FALSE(group22->isLevelOverridden());
   EXPECT_TRUE(log4->sink() == sink1);
   EXPECT_TRUE(log4->level() == Level::TRACE);
 
   EXPECT_TRUE(group31->parent() == nullptr);
-  EXPECT_TRUE(group31->sink() == sink2);
-  EXPECT_TRUE(group31->hasSinkOverriden());
+  EXPECT_TRUE(group31->sink() == sink3);
+  EXPECT_TRUE(group31->isSinkOverridden());
   EXPECT_TRUE(group31->level() == Level::DEBUG);
-  EXPECT_TRUE(group31->hasLevelOverriden());
-  EXPECT_TRUE(log5->sink() == sink2);
+  EXPECT_FALSE(group31->isLevelOverridden());
+  EXPECT_TRUE(log5->sink() == sink3);
   EXPECT_TRUE(log5->level() == Level::DEBUG);
 
   EXPECT_TRUE(group32->parent() == group21);
   EXPECT_TRUE(group32->sink() == sink2);
-  EXPECT_FALSE(group32->hasSinkOverriden());
+  EXPECT_FALSE(group32->isSinkOverridden());
   EXPECT_TRUE(group32->level() == Level::CRITICAL);
-  EXPECT_FALSE(group32->hasLevelOverriden());
+  EXPECT_TRUE(group32->isLevelOverridden());
   EXPECT_TRUE(log6->sink() == sink2);
   EXPECT_TRUE(log6->level() == Level::CRITICAL);
 
@@ -871,49 +866,49 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
 
   EXPECT_TRUE(group11->parent() == nullptr);
   EXPECT_TRUE(group11->sink() == sink1);
-  EXPECT_TRUE(group11->hasSinkOverriden());
+  EXPECT_FALSE(group11->isSinkOverridden());
   EXPECT_TRUE(group11->level() == Level::TRACE);
-  EXPECT_TRUE(group11->hasLevelOverriden());
+  EXPECT_FALSE(group11->isLevelOverridden());
   EXPECT_TRUE(log1->sink() == sink1);
   EXPECT_TRUE(log1->level() == Level::TRACE);
 
   EXPECT_TRUE(group12->parent() == nullptr);
   EXPECT_TRUE(group12->sink() == sink2);
-  EXPECT_TRUE(group12->hasSinkOverriden());
+  EXPECT_FALSE(group12->isSinkOverridden());
   EXPECT_TRUE(group12->level() == Level::DEBUG);
-  EXPECT_TRUE(group12->hasLevelOverriden());
+  EXPECT_FALSE(group12->isLevelOverridden());
   EXPECT_TRUE(log2->sink() == sink2);
   EXPECT_TRUE(log2->level() == Level::DEBUG);
 
   EXPECT_TRUE(group21->parent() == group22);
   EXPECT_TRUE(group21->sink() == sink1);
-  EXPECT_FALSE(group21->hasSinkOverriden());
-  EXPECT_TRUE(group21->level() == Level::CRITICAL);
-  EXPECT_TRUE(group21->hasLevelOverriden());
+  EXPECT_FALSE(group21->isSinkOverridden());
+  EXPECT_TRUE(group21->level() == Level::INFO);
+  EXPECT_TRUE(group21->isLevelOverridden());
   EXPECT_TRUE(log3->sink() == sink1);
-  EXPECT_TRUE(log3->level() == Level::CRITICAL);
+  EXPECT_TRUE(log3->level() == Level::INFO);
 
   EXPECT_TRUE(group22->parent() == group11);
   EXPECT_TRUE(group22->sink() == sink1);
-  EXPECT_FALSE(group22->hasSinkOverriden());
+  EXPECT_FALSE(group22->isSinkOverridden());
   EXPECT_TRUE(group22->level() == Level::TRACE);
-  EXPECT_FALSE(group22->hasLevelOverriden());
+  EXPECT_FALSE(group22->isLevelOverridden());
   EXPECT_TRUE(log4->sink() == sink1);
   EXPECT_TRUE(log4->level() == Level::TRACE);
 
   EXPECT_TRUE(group31->parent() == nullptr);
-  EXPECT_TRUE(group31->sink() == sink2);
-  EXPECT_TRUE(group31->hasSinkOverriden());
+  EXPECT_TRUE(group31->sink() == sink3);
+  EXPECT_TRUE(group31->isSinkOverridden());
   EXPECT_TRUE(group31->level() == Level::DEBUG);
-  EXPECT_TRUE(group31->hasLevelOverriden());
-  EXPECT_TRUE(log5->sink() == sink2);
+  EXPECT_FALSE(group31->isLevelOverridden());
+  EXPECT_TRUE(log5->sink() == sink3);
   EXPECT_TRUE(log5->level() == Level::DEBUG);
 
   EXPECT_TRUE(group32->parent() == group21);
   EXPECT_TRUE(group32->sink() == sink1);
-  EXPECT_FALSE(group32->hasSinkOverriden());
+  EXPECT_FALSE(group32->isSinkOverridden());
   EXPECT_TRUE(group32->level() == Level::CRITICAL);
-  EXPECT_FALSE(group32->hasLevelOverriden());
+  EXPECT_TRUE(group32->isLevelOverridden());
   EXPECT_TRUE(log6->sink() == sink1);
   EXPECT_TRUE(log6->level() == Level::CRITICAL);
 }
@@ -950,9 +945,9 @@ TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
   //  Level:   @1=I  D
 
   EXPECT_TRUE(log1->level() == Level::INFO);  // g1
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
   EXPECT_TRUE(log2->level() == Level::DEBUG);  // own
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
 
   /// @When change level of loggers
   system_->setLevelOfLogger("Log1", Level::WARN);
@@ -965,9 +960,9 @@ TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
   //           ^     ^
 
   EXPECT_TRUE(log1->level() == Level::WARN);  // *own
-  EXPECT_TRUE(log1->hasLevelOverriden());
+  EXPECT_TRUE(log1->isLevelOverridden());
   EXPECT_TRUE(log2->level() == Level::ERROR);  // *own
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
 
   /// @When change level of loggers
   system_->setLevelOfGroup("group1", Level::CRITICAL);
@@ -989,9 +984,9 @@ TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
   //           ^     ^
 
   EXPECT_TRUE(log1->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
   EXPECT_TRUE(log2->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(log2->hasLevelOverriden());
+  EXPECT_FALSE(log2->isLevelOverridden());
 }
 
 TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
@@ -1041,9 +1036,9 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   //  Level:   @1=S1  S2
 
   EXPECT_TRUE(log1->sink() == sink1);  // g1
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log2->sink() == sink2);  // own
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
 
   /// @When change sink of loggers
   system_->setSinkOfLogger("Log1", "sink3");
@@ -1056,9 +1051,9 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   //           ^     ^
 
   EXPECT_TRUE(log1->sink() == sink3);  // *own
-  EXPECT_TRUE(log1->hasSinkOverriden());
+  EXPECT_TRUE(log1->isSinkOverridden());
   EXPECT_TRUE(log2->sink() == sink4);  // *own
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
 
   /// @When change sink of loggers
   system_->setSinkOfGroup("group1", "sink5");
@@ -1080,9 +1075,9 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   //           ^     ^
 
   EXPECT_TRUE(log1->sink() == sink5);  // *g1
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log2->sink() == sink5);  // *g1
-  EXPECT_FALSE(log2->hasSinkOverriden());
+  EXPECT_FALSE(log2->isSinkOverridden());
 }
 
 TEST_F(LoggingSystemTest, ChangeGroupOfLogger) {
@@ -1132,15 +1127,15 @@ TEST_F(LoggingSystemTest, ChangeGroupOfLogger) {
 
   EXPECT_TRUE(log1->group() == group1);
   EXPECT_TRUE(log1->sink() == sink1);
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log1->level() == Level::TRACE);
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
 
   EXPECT_TRUE(log2->group() == group1);
   EXPECT_TRUE(log2->sink() == sink3);
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
   EXPECT_TRUE(log2->level() == Level::CRITICAL);
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
 
   /// @When change group of loggers
   system_->setGroupOfLogger("Log1", "second");
@@ -1155,13 +1150,13 @@ TEST_F(LoggingSystemTest, ChangeGroupOfLogger) {
 
   EXPECT_TRUE(log1->group() == group2);
   EXPECT_TRUE(log1->sink() == sink2);
-  EXPECT_FALSE(log1->hasSinkOverriden());
+  EXPECT_FALSE(log1->isSinkOverridden());
   EXPECT_TRUE(log1->level() == Level::DEBUG);
-  EXPECT_FALSE(log1->hasLevelOverriden());
+  EXPECT_FALSE(log1->isLevelOverridden());
 
   EXPECT_TRUE(log2->group() == group2);
   EXPECT_TRUE(log2->sink() == sink3);
-  EXPECT_TRUE(log2->hasSinkOverriden());
+  EXPECT_TRUE(log2->isSinkOverridden());
   EXPECT_TRUE(log2->level() == Level::CRITICAL);
-  EXPECT_TRUE(log2->hasLevelOverriden());
+  EXPECT_TRUE(log2->isLevelOverridden());
 }

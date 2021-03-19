@@ -121,6 +121,9 @@ namespace soralog {
                                        const std::shared_ptr<Group> &parent) {
     assert(group != nullptr);
 
+    if (parent && parent->parent() == group) {
+      parent->unsetParentGroup();
+    }
     group->setParentGroup(parent);
 
     std::map<std::shared_ptr<const Group>, int> passed_groups;
@@ -135,7 +138,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasLevelOverriden() && current->hasSinkOverriden()) {
+      if (current->isLevelOverridden() && current->isSinkOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -201,7 +204,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasSinkOverriden()) {
+      if (current->isSinkOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -231,7 +234,7 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (not logger->hasSinkOverriden()) {
+        if (not logger->isSinkOverridden()) {
           if (auto it2 = passed_groups.find(logger->group());
               it2 != passed_groups.end()) {
             if (it2->second != -1) {
@@ -268,7 +271,7 @@ namespace soralog {
       if (current == group) {
         return 0;
       }
-      if (current->hasLevelOverriden()) {
+      if (current->isLevelOverridden()) {
         return -1;
       }
       if (not current->parent()) {
@@ -298,7 +301,7 @@ namespace soralog {
 
     for (auto it = loggers_.begin(); it != loggers_.end();) {
       if (auto logger = it->second.lock()) {
-        if (not logger->hasLevelOverriden()) {
+        if (not logger->isLevelOverridden()) {
           if (auto it2 = passed_groups.find(logger->group());
               it2 != passed_groups.end()) {
             if (it2->second != -1) {
@@ -351,11 +354,13 @@ namespace soralog {
     auto &parent = it2->second;
 
     // Check for recursion
-    for (auto current = parent->parent(); current != nullptr;
-         current = current->parent()) {
-      if (current == group) {
-        // Cyclic parentness is detected
-        return false;
+    if (parent->parent() != group) {
+      for (auto current = parent->parent(); current != nullptr;
+           current = current->parent()) {
+        if (current == group) {
+          // Cyclic parentness is detected
+          return false;
+        }
       }
     }
 
