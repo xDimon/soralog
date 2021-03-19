@@ -33,32 +33,32 @@ namespace soralog::macro {
   }
 }  // namespace soralog::macro
 
-#define _SL_WRAP_0(z)
-#define _SL_WRAP_1(z, x) , [&] { return (x); }
-#define _SL_WRAP_2(z, x, ...) , [&] { return (x); } _SL_WRAP_1(z, __VA_ARGS__)
-#define _SL_WRAP_3(z, x, ...) , [&] { return (x); } _SL_WRAP_2(z, __VA_ARGS__)
-#define _SL_WRAP_4(z, x, ...) , [&] { return (x); } _SL_WRAP_3(z, __VA_ARGS__)
-#define _SL_WRAP_5(z, x, ...) , [&] { return (x); } _SL_WRAP_4(z, __VA_ARGS__)
-#define _SL_WRAP_6(z, x, ...) , [&] { return (x); } _SL_WRAP_5(z, __VA_ARGS__)
-#define _SL_WRAP_7(z, x, ...) , [&] { return (x); } _SL_WRAP_6(z, __VA_ARGS__)
-#define _SL_WRAP_8(z, x, ...) , [&] { return (x); } _SL_WRAP_7(z, __VA_ARGS__)
-#define _SL_WRAP_9(z, x, ...) , [&] { return (x); } _SL_WRAP_8(z, __VA_ARGS__)
-#define _SL_WRAP_10(z, x, ...) , [&] { return (x); } _SL_WRAP_9(z, __VA_ARGS__)
-#define _SL_WRAP_11(z, x, ...) , [&] { return (x); } _SL_WRAP_10(z, __VA_ARGS__)
-#define _SL_WRAP_12(z, x, ...) , [&] { return (x); } _SL_WRAP_11(z, __VA_ARGS__)
-#define _SL_WRAP_13(z, x, ...) , [&] { return (x); } _SL_WRAP_12(z, __VA_ARGS__)
-#define _SL_WRAP_14(z, x, ...) , [&] { return (x); } _SL_WRAP_13(z, __VA_ARGS__)
-#define _SL_WRAP_15(z, x, ...) , [&] { return (x); } _SL_WRAP_14(z, __VA_ARGS__)
-#define _SL_WRAP_16(z, x, ...) , [&] { return (x); } _SL_WRAP_15(z, __VA_ARGS__)
-#define _SL_WRAP_17(z, x, ...) , [&] { return (x); } _SL_WRAP_16(z, __VA_ARGS__)
-#define _SL_WRAP_18(z, x, ...) , [&] { return (x); } _SL_WRAP_17(z, __VA_ARGS__)
-#define _SL_WRAP_19(z, x, ...) , [&] { return (x); } _SL_WRAP_18(z, __VA_ARGS__)
-#define _SL_WRAP_20(z, x, ...) , [&] { return (x); } _SL_WRAP_19(z, __VA_ARGS__)
+#define _SL_WRAP_0(Z, x, ...)
+#define _SL_WRAP_1(Z, x, ...) , [&] { return (x); }
+#define _SL_WRAP_2(Z, x, ...) , [&] { return (x); } _SL_WRAP_1(Z, __VA_ARGS__)
+#define _SL_WRAP_3(Z, x, ...) , [&] { return (x); } _SL_WRAP_2(Z, __VA_ARGS__)
+#define _SL_WRAP_4(Z, x, ...) , [&] { return (x); } _SL_WRAP_3(Z, __VA_ARGS__)
+#define _SL_WRAP_5(Z, x, ...) , [&] { return (x); } _SL_WRAP_4(Z, __VA_ARGS__)
+#define _SL_WRAP_6(Z, x, ...) , [&] { return (x); } _SL_WRAP_5(Z, __VA_ARGS__)
+#define _SL_WRAP_7(Z, x, ...) , [&] { return (x); } _SL_WRAP_6(Z, __VA_ARGS__)
+#define _SL_WRAP_8(Z, x, ...) , [&] { return (x); } _SL_WRAP_7(Z, __VA_ARGS__)
+#define _SL_WRAP_9(Z, x, ...) , [&] { return (x); } _SL_WRAP_8(Z, __VA_ARGS__)
+#define _SL_WRAP_10(Z, x, ...) , [&] { return (x); } _SL_WRAP_9(Z, __VA_ARGS__)
+#define _SL_WRAP_11(Z, x, ...) , [&] { return (x); } _SL_WRAP_10(Z, __VA_ARGS__)
+#define _SL_WRAP_12(Z, x, ...) , [&] { return (x); } _SL_WRAP_11(Z, __VA_ARGS__)
+#define _SL_WRAP_13(Z, x, ...) , [&] { return (x); } _SL_WRAP_12(Z, __VA_ARGS__)
+#define _SL_WRAP_14(Z, x, ...) , [&] { return (x); } _SL_WRAP_13(Z, __VA_ARGS__)
+#define _SL_WRAP_15(Z, x, ...) , [&] { return (x); } _SL_WRAP_14(Z, __VA_ARGS__)
+#define _SL_WRAP_16(Z, x, ...) , [&] { return (x); } _SL_WRAP_15(Z, __VA_ARGS__)
+#define _SL_WRAP_17(Z, x, ...) , [&] { return (x); } _SL_WRAP_16(Z, __VA_ARGS__)
+#define _SL_WRAP_18(Z, x, ...) , [&] { return (x); } _SL_WRAP_17(Z, __VA_ARGS__)
+#define _SL_WRAP_19(Z, x, ...) , [&] { return (x); } _SL_WRAP_18(Z, __VA_ARGS__)
+#define _SL_WRAP_20(Z, x, ...) , [&] { return (x); } _SL_WRAP_19(Z, __VA_ARGS__)
 
 #define _SL_WRAP_NARG(...) _SL_WRAP_NARG_(__VA_ARGS__, _SL_WRAP_RSEQ_N)
 #define _SL_WRAP_NARG_(...) _SL_WRAP_ARG_N(__VA_ARGS__)
 #define _SL_WRAP_ARG_N(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, \
-                       _13, _14, _15, _16, _17, _18, _19, _20, N, ...)        \
+                       _13, _14, _15, _16, _17, _18, _19, _20, Z, N, ...)        \
   N
 #define _SL_WRAP_RSEQ_N \
   20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
@@ -74,31 +74,31 @@ namespace soralog::macro {
 
 #define SL_LOG(LOG, LVL, FMT, ...)    \
   soralog::macro::proxy((LOG), (LVL), \
-                        (FMT)_SL_WRAP(z _SL_WRAP_ARGS(__VA_ARGS__)))
+                        (FMT)_SL_WRAP(Z _SL_WRAP_ARGS(__VA_ARGS__)))
 
 #ifndef NDEBUG
 #define SL_TRACE(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::TRACE, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::TRACE, (FMT), ##__VA_ARGS__, Z)
 #else
 #define SL_TRACE(LOG, FMT, ...)
 #endif
 
 #define SL_DEBUG(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::DEBUG, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::DEBUG, (FMT), ##__VA_ARGS__, Z)
 
 #define SL_VERBOSE(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::VERBOSE, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::VERBOSE, (FMT), ##__VA_ARGS__, Z)
 
 #define SL_INFO(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::INFO, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::INFO, (FMT), ##__VA_ARGS__, Z)
 
 #define SL_WARN(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::WARN, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::WARN, (FMT), ##__VA_ARGS__, Z)
 
 #define SL_ERROR(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::ERROR, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::ERROR, (FMT), ##__VA_ARGS__, Z)
 
 #define SL_CRITICAL(LOG, FMT, ...) \
-  SL_LOG(LOG, soralog::Level::CRITICAL, FMT, __VA_ARGS__)
+  SL_LOG((LOG), soralog::Level::CRITICAL, (FMT), ##__VA_ARGS__, Z)
 
 #endif  // SORALOG_MACROS
