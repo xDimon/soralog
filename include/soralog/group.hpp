@@ -51,11 +51,11 @@ namespace soralog {
     }
 
     /**
-     * @returns true if level is overriden, and true if it is inherited from
+     * @returns true if level is overridden, and true if it is inherited from
      * group
      */
-    [[nodiscard]] bool hasLevelOverriden() const noexcept {
-      return has_level_overriden_;
+    [[nodiscard]] bool isLevelOverridden() const noexcept {
+      return is_level_overridden_;
     }
 
     /**
@@ -64,7 +64,7 @@ namespace soralog {
     void resetLevel();
 
     /**
-     * Set level to {@param level}. Level will be marked as overriden
+     * Set level to {@param level}. Level will be marked as overridden
      */
     void setLevel(Level level);
 
@@ -88,11 +88,11 @@ namespace soralog {
     }
 
     /**
-     * @returns true if sink is overriden, and true if it is inherited from
+     * @returns true if sink is overridden, and true if it is inherited from
      * group
      */
-    [[nodiscard]] bool hasSinkOverriden() const noexcept {
-      return has_sink_overriden_;
+    [[nodiscard]] bool isSinkOverridden() const noexcept {
+      return is_sink_overridden_;
     }
 
     /**
@@ -102,12 +102,12 @@ namespace soralog {
 
     /**
      * Set sink to sink with name {@param sink_name}.
-     * Level will be marked as overriden
+     * Level will be marked as overridden
      */
     void setSink(const std::string &sink_name);
 
     /**
-     * Set sink to sink {@param sink}. Level will be marked as overriden
+     * Set sink to sink {@param sink}. Level will be marked as overridden
      */
     void setSink(std::shared_ptr<const Sink> sink);
 
@@ -132,20 +132,20 @@ namespace soralog {
 
     /**
      * Unset parent group.
-     * All properties will be marked as overriden
+     * All properties will be marked as overridden
      */
 
     void unsetParentGroup();
 
     /**
      * Set parent group to {@param group}.
-     * Non overriden properties will be inherited from new parent
+     * Non overridden properties will be inherited from new parent
      */
     void setParentGroup(std::shared_ptr<const Group> group);
 
     /**
      * Set parent group to group with name {@param group_name}.
-     * Non overriden properties will be inherited from new parent
+     * Non overridden properties will be inherited from new parent
      */
     void setParentGroup(const std::string &group_name);
 
@@ -156,10 +156,10 @@ namespace soralog {
     std::shared_ptr<const Group> parent_group_;
 
     std::shared_ptr<const Sink> sink_;
-    bool has_sink_overriden_{};
+    bool is_sink_overridden_{};
 
     Level level_{};
-    bool has_level_overriden_{};
+    bool is_level_overridden_{};
   };
 
 }  // namespace soralog
