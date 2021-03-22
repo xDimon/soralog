@@ -24,3 +24,10 @@ addtest(logging_system_test
 target_link_libraries(logging_system_test
     logging_system
     )
+
+addtest(macros_test
+    macros_test.cpp
+    )
+target_link_libraries(macros_test
+    fmt::fmt
+    )
