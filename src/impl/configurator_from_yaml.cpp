@@ -19,9 +19,17 @@
 namespace soralog {
 
   namespace {
+
+    constexpr bool is_release_build =
+#ifdef NDEBUG
+        true;
+#else
+        false;
+#endif
+
     template <typename>
     inline constexpr bool always_false_v = false;
-  }
+  }  // namespace
 
   Configurator::Result ConfiguratorFromYAML::applyOn(
       LoggingSystem &system) const {
@@ -446,6 +454,12 @@ namespace soralog {
         level.emplace(Level::DEBUG);
       } else if (level_string == "trace") {
         level.emplace(Level::TRACE);
+        if constexpr (is_release_build) {
+          errors_ << "W: Level 'trace' in group " << tmp_name
+                  << " would not work: it is release build"
+                  << "\n";
+          has_warning_ = true;
+        }
       } else {
         errors_ << "E: Invalid level in group " << tmp_name << ": "
                 << *level_string << "\n";
