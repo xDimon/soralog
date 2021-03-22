@@ -252,9 +252,9 @@ namespace soralog {
     std::shared_ptr<Configurator> configurator_;
     bool is_configured_ = false;
     std::recursive_mutex mutex_;
-    std::map<std::string, std::weak_ptr<Logger>> loggers_;
-    std::map<std::string, std::shared_ptr<Sink>> sinks_;
-    std::map<std::string, std::shared_ptr<Group>> groups_;
+    std::unordered_map<std::string, std::weak_ptr<Logger>> loggers_;
+    std::unordered_map<std::string, std::shared_ptr<Sink>> sinks_;
+    std::unordered_map<std::string, std::shared_ptr<Group>> groups_;
     std::shared_ptr<Group> fallback_group_;
   };
 
