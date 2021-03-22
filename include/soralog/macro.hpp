@@ -75,7 +75,6 @@ namespace soralog::macro {
 #define _SL_LOG(LOG, LVL, FMT, ...)    \
   soralog::macro::proxy((LOG), (LVL), \
                         (FMT)_SL_WRAP(Z _SL_WRAP_ARGS(__VA_ARGS__)))
-
 #define SL_LOG(LOG, LVL, FMT, ...)    \
   _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__, Z)
 
