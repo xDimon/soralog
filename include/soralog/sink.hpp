@@ -108,7 +108,7 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const size_t max_buffer_size_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
-    size_t size_ = 0;
+    std::atomic_size_t size_ = 0;
   };
 
 }  // namespace soralog

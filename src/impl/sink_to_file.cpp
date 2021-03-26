@@ -74,11 +74,12 @@ namespace soralog {
         buffer_size_(buffer_size),
         latency_(latency_ms),
         buff_(buffer_size_) {
-    sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     out_.open(path_, std::ios::app);
     if (not out_.is_open()) {
       std::cerr << "Can't open log file '" << path_ << "': " << strerror(errno)
                 << std::endl;
+    } else {
+      sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     }
   }
 
@@ -129,8 +130,13 @@ namespace soralog {
       }
 
       std::unique_lock lock(mutex_);
-      if (not condvar_.wait_for(lock, std::chrono::milliseconds(100),
-                                [this] { return events_.size() > 0; })) {
+      if (condvar_.wait_until(lock, next_flush) != std::cv_status::no_timeout) {
+        if (not need_to_flush_ and not need_to_finalize_) {
+          continue;
+        }
+      }
+
+      if (events_.size() == 0) {
         continue;
       }
 

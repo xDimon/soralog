@@ -39,7 +39,7 @@ namespace soralog {
    private:
     void run();
 
-    bool with_color_ = false;
+    const bool with_color_ = false;
     const size_t buffer_size_ = 1 << 17;            // 128Kb
     const std::chrono::milliseconds latency_{200};  // 200ms
 
@@ -48,7 +48,7 @@ namespace soralog {
     std::vector<char> buff_;
     std::mutex mutex_;
     std::condition_variable condvar_;
-    bool need_to_finalize_ = false;
+    std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
   };
 
