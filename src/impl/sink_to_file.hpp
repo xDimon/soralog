@@ -40,7 +40,7 @@ namespace soralog {
    private:
     void run();
 
-    std::filesystem::path path_{};
+    const std::filesystem::path path_{};
     const size_t buffer_size_ = 1 << 22;             // 4Mb
     const std::chrono::milliseconds latency_{1000};  // 1sec
 
@@ -50,7 +50,7 @@ namespace soralog {
     std::ofstream out_{};
     std::mutex mutex_{};
     std::condition_variable condvar_{};
-    bool need_to_finalize_ = false;
+    std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
     std::atomic_bool need_to_rotate_ = false;
   };

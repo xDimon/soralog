@@ -167,7 +167,7 @@ namespace soralog {
     }
 
    private:
-    size_t size_ = 0;
+    std::atomic_size_t size_ = 0;
     std::vector<Node> data_;
     std::atomic_size_t push_index_ = 0;
     std::atomic_size_t pop_index_ = 0;

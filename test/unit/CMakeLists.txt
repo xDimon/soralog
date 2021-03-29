@@ -25,6 +25,20 @@ target_link_libraries(logging_system_test
     logging_system
     )
 
+addtest(sink_to_console_test
+    sink_to_console_test.cpp
+    )
+target_link_libraries(sink_to_console_test
+    sink_to_console
+    )
+
+addtest(sink_to_file_test
+    sink_to_file_test.cpp
+    )
+target_link_libraries(sink_to_file_test
+    sink_to_file
+    )
+
 addtest(macros_test
     macros_test.cpp
     )

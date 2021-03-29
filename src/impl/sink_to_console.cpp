@@ -161,8 +161,13 @@ namespace soralog {
       }
 
       std::unique_lock lock(mutex_);
-      if (not condvar_.wait_for(lock, std::chrono::milliseconds(100),
-                                [this] { return events_.size() > 0; })) {
+      if (condvar_.wait_until(lock, next_flush) != std::cv_status::no_timeout) {
+        if (not need_to_flush_ and not need_to_finalize_) {
+          continue;
+        }
+      }
+
+      if (events_.size() == 0) {
         continue;
       }
 
