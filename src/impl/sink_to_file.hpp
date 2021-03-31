@@ -54,7 +54,8 @@ namespace soralog {
     std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
     std::atomic_bool need_to_rotate_ = false;
-    std::atomic<std::chrono::steady_clock::time_point> next_flush_;
+    std::atomic<std::chrono::steady_clock::time_point> next_flush_ =
+        std::chrono::steady_clock::time_point();
     std::atomic_bool flush_in_progress_ = false;
   };
 

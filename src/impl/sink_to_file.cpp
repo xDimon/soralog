@@ -87,7 +87,7 @@ namespace soralog {
 
   SinkToFile::~SinkToFile() {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_finalize_ = true;
+      need_to_finalize_.store(true, std::memory_order_release);
       async_flush();
       sink_worker_->join();
       sink_worker_.reset();
@@ -98,7 +98,7 @@ namespace soralog {
 
   void SinkToFile::async_flush() noexcept {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_flush_ = true;
+      need_to_flush_.store(true, std::memory_order_release);
       condvar_.notify_one();
     } else {
       flush();
@@ -107,7 +107,8 @@ namespace soralog {
 
   void SinkToFile::flush() noexcept {
     bool false_v = false;
-    if (not flush_in_progress_.compare_exchange_strong(false_v, true)) {
+    if (not flush_in_progress_.compare_exchange_strong(
+            false_v, true, std::memory_order_acq_rel)) {
       return;
     }
 
@@ -184,15 +185,15 @@ namespace soralog {
       }
 
       if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now() >= next_flush_.load()) {
-        next_flush_.store(std::chrono::steady_clock::now() + latency_);
+          or std::chrono::steady_clock::now() >= next_flush_.load(std::memory_order_acquire)) {
+        next_flush_.store(std::chrono::steady_clock::now() + latency_, std::memory_order_release);
         out_.write(begin, ptr - begin);
         ptr = begin;
       }
 
       if (not node) {
         bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(true_v, false)) {
+        if (need_to_flush_.compare_exchange_weak(true_v, false, std::memory_order_acq_rel)) {
           out_.flush();
         }
         break;
@@ -200,7 +201,7 @@ namespace soralog {
     }
 
     bool true_v = true;
-    if (need_to_rotate_.compare_exchange_weak(true_v, false)) {
+    if (need_to_rotate_.compare_exchange_weak(true_v, false, std::memory_order_acq_rel)) {
       std::ofstream out;
       out.open(path_, std::ios::app);
       if (not out.is_open()) {
@@ -216,25 +217,28 @@ namespace soralog {
       }
     }
 
-    flush_in_progress_ = false;
+    flush_in_progress_.store(false, std::memory_order_release);
   }
 
   void SinkToFile::rotate() noexcept {
-    need_to_rotate_ = true;
+    need_to_rotate_.store(true, std::memory_order_release);
     async_flush();
   }
 
   void SinkToFile::run() {
     util::setThreadName("log:" + name_);
 
-    next_flush_ = std::chrono::steady_clock::now();
+    next_flush_.store(std::chrono::steady_clock::now(),
+                      std::memory_order_relaxed);
 
     while (true) {
       {
         std::unique_lock lock(mutex_);
-        if (condvar_.wait_until(lock, next_flush_.load())
-            ==std::cv_status::no_timeout) {
-          if (not need_to_flush_ and not need_to_finalize_) {
+        if (condvar_.wait_until(lock,
+                                next_flush_.load(std::memory_order_relaxed))
+            == std::cv_status::no_timeout) {
+          if (not need_to_flush_.load(std::memory_order_relaxed)
+              and not need_to_finalize_.load(std::memory_order_relaxed)) {
             continue;
           }
         }
@@ -242,7 +246,8 @@ namespace soralog {
 
       flush();
 
-      if (need_to_finalize_ && events_.size() == 0) {
+      if (need_to_finalize_.load(std::memory_order_acquire)
+          && events_.size() == 0) {
         return;
       }
     }

@@ -142,7 +142,7 @@ namespace soralog {
 
   SinkToConsole::~SinkToConsole() {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_finalize_ = true;
+      need_to_finalize_.store(true, std::memory_order_release);
       async_flush();
       sink_worker_->join();
       sink_worker_.reset();
@@ -153,7 +153,7 @@ namespace soralog {
 
   void SinkToConsole::async_flush() noexcept {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_flush_ = true;
+      need_to_flush_.store(true, std::memory_order_release);
       condvar_.notify_one();
     } else {
       flush();
@@ -162,7 +162,8 @@ namespace soralog {
 
   void SinkToConsole::flush() noexcept {
     bool false_v = false;
-    if (not flush_in_progress_.compare_exchange_strong(false_v, true)) {
+    if (not flush_in_progress_.compare_exchange_strong(
+            false_v, true, std::memory_order_acq_rel)) {
       return;
     }
 
@@ -274,41 +275,43 @@ namespace soralog {
       }
 
       if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now() >= next_flush_.load()) {
-        next_flush_.store(std::chrono::steady_clock::now() + latency_);
+          or std::chrono::steady_clock::now() >= next_flush_.load(std::memory_order_acquire)) {
+        next_flush_.store(std::chrono::steady_clock::now() + latency_, std::memory_order_release);
         std::cout.write(begin, ptr - begin);
         ptr = begin;
       }
 
       if (not node) {
         bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(true_v, false)) {
+        if (need_to_flush_.compare_exchange_weak(true_v, false, std::memory_order_acq_rel)) {
           std::cout.flush();
         }
         break;
       }
     }
 
-    flush_in_progress_ = false;
+    flush_in_progress_.store(false, std::memory_order_release);
   }
 
   void SinkToConsole::run() {
     util::setThreadName("log:" + name_);
 
-    next_flush_.store(std::chrono::steady_clock::now());
+    next_flush_.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
 
     while (true) {
       std::unique_lock lock(mutex_);
-      if (condvar_.wait_until(lock, next_flush_.load())
+      if (condvar_.wait_until(lock, next_flush_.load(std::memory_order_relaxed))
           == std::cv_status::no_timeout) {
-        if (not need_to_flush_ and not need_to_finalize_) {
+        if (not need_to_flush_.load(std::memory_order_relaxed)
+            and not need_to_finalize_.load(std::memory_order_relaxed)) {
           continue;
         }
       }
 
       flush();
 
-      if (need_to_finalize_ && events_.size() == 0) {
+      if (need_to_finalize_.load(std::memory_order_acquire)
+          && events_.size() == 0) {
         return;
       }
     }
