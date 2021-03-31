@@ -8,7 +8,6 @@
 
 #include <soralog/sink.hpp>
 
-#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -42,16 +41,16 @@ namespace soralog {
    private:
     void run();
 
-    const bool with_color_ = false;
+    const bool with_color_;
 
-    std::unique_ptr<std::thread> sink_worker_;
+    std::unique_ptr<std::thread> sink_worker_{};
 
     std::vector<char> buff_;
     std::mutex mutex_;
     std::condition_variable condvar_;
     std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
-    std::chrono::steady_clock::time_point next_flush_;
+    std::atomic<std::chrono::steady_clock::time_point> next_flush_;
     std::atomic_bool flush_in_progress_ = false;
   };
 

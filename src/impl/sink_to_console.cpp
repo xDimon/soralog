@@ -161,8 +161,8 @@ namespace soralog {
   }
 
   void SinkToConsole::flush() noexcept {
-    bool expected = false;
-    if (not flush_in_progress_.compare_exchange_strong(expected, true)) {
+    bool false_v = false;
+    if (not flush_in_progress_.compare_exchange_strong(false_v, true)) {
       return;
     }
 
@@ -274,8 +274,8 @@ namespace soralog {
       }
 
       if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now() >= next_flush_) {
-        next_flush_ = std::chrono::steady_clock::now() + latency_;
+          or std::chrono::steady_clock::now() >= next_flush_.load()) {
+        next_flush_.store(std::chrono::steady_clock::now() + latency_);
         std::cout.write(begin, ptr - begin);
         ptr = begin;
       }
@@ -284,9 +284,6 @@ namespace soralog {
         bool true_v = true;
         if (need_to_flush_.compare_exchange_weak(true_v, false)) {
           std::cout.flush();
-        }
-        if (need_to_finalize_) {
-          return;
         }
         break;
       }
@@ -298,11 +295,11 @@ namespace soralog {
   void SinkToConsole::run() {
     util::setThreadName("log:" + name_);
 
-    next_flush_ = std::chrono::steady_clock::now();
+    next_flush_.store(std::chrono::steady_clock::now());
 
     while (true) {
       std::unique_lock lock(mutex_);
-      if (condvar_.wait_until(lock, next_flush_)
+      if (condvar_.wait_until(lock, next_flush_.load())
           == std::cv_status::no_timeout) {
         if (not need_to_flush_ and not need_to_finalize_) {
           continue;

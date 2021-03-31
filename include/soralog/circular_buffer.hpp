@@ -63,7 +63,8 @@ namespace soralog {
 
       void release() noexcept(IF_RELEASE) {
         assert(node_opt.has_value());
-        node_opt->get().ready = ready_after_release;
+        node_opt->get().ready.store(ready_after_release,
+                                    std::memory_order_release);
         node_opt.reset();
       }
 
@@ -106,29 +107,30 @@ namespace soralog {
     template <typename... Args>
     [[nodiscard]] NodeRef put(const Args &... args) noexcept(IF_RELEASE) {
       while (true) {
-        auto push_index = push_index_.load();
+        auto push_index = push_index_.load(std::memory_order_acquire);
         auto next_index = (push_index + 1) % data_.size();
 
         // Tail is caught up - queue is full
-        if (pop_index_.load() == next_index) {
+        auto pop_index = pop_index_.load(std::memory_order_acquire);
+        if (pop_index == next_index) {
           return {};
         }
 
         auto &node = data_[push_index];
 
         // Item has not consumed yet
-        if (node.ready.load()) {
+        if (node.ready.load(std::memory_order_acquire)) {
           continue;
         }
 
         // Go to next item place
         if (not push_index_.compare_exchange_weak(push_index, next_index,
-                                                  std::memory_order_relaxed)) {
+                                                  std::memory_order_release)) {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? data_.size() : 0)
-            + (push_index_ - pop_index_);
+        size_ = ((next_index < pop_index) ? data_.size() : 0)
+            + (next_index - pop_index);
 
         // Emplace item
         new (&node) Node(args...);
@@ -138,29 +140,30 @@ namespace soralog {
 
     NodeRef get() noexcept(IF_RELEASE) {
       while (true) {
-        auto pop_index = pop_index_.load();
+        auto pop_index = pop_index_.load(std::memory_order_acquire);
 
         // Head is caught up - queue is empty
-        if (push_index_.load() == pop_index) {
+        auto push_index = push_index_.load(std::memory_order_acquire);
+        if (push_index == pop_index) {
           return {};
         }
 
         auto &node = data_[pop_index];
 
         // Item is already consumed
-        if (not node.ready.load()) {
+        if (not node.ready.load(std::memory_order_acquire)) {
           continue;
         }
 
         // Go to next item
-        if (not pop_index_.compare_exchange_weak(pop_index,
-                                                 (pop_index + 1) % data_.size(),
-                                                 std::memory_order_relaxed)) {
+        auto next_index = (pop_index + 1) % data_.size();
+        if (not pop_index_.compare_exchange_weak(pop_index, next_index,
+                                                 std::memory_order_release)) {
           continue;
         }
 
-        size_ = ((push_index_ < pop_index_) ? data_.size() : 0)
-            + (push_index_ - pop_index_);
+        size_ = ((push_index < next_index) ? data_.size() : 0)
+            + (push_index - next_index);
 
         return NodeRef{node, false};
       }

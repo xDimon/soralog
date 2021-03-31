@@ -143,26 +143,23 @@ namespace soralog {
         ptr = ptr + datetime.size();  // NOLINT
 
         ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
-        ptr = ptr + datetime.size();  // NOLINT
 
         put_separator(ptr);
 
         // Thread
 
         switch (thread_info_type_) {
-          case ThreadInfoType::NAME: {
+          case ThreadInfoType::NAME:
             put_string(ptr, event.thread_name(), 15);
             put_separator(ptr);
             break;
-          }
 
-          case ThreadInfoType::ID: {
+          case ThreadInfoType::ID:
             ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
                                    event.thread_number())
                       .out;
             put_separator(ptr);
             break;
-          }
 
           default:
             break;
@@ -187,7 +184,8 @@ namespace soralog {
       }
 
       if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now() >= next_flush_) {
+          or std::chrono::steady_clock::now() >= next_flush_.load()) {
+        next_flush_.store(std::chrono::steady_clock::now() + latency_);
         out_.write(begin, ptr - begin);
         ptr = begin;
       }
@@ -232,11 +230,13 @@ namespace soralog {
     next_flush_ = std::chrono::steady_clock::now();
 
     while (true) {
-      std::unique_lock lock(mutex_);
-      if (condvar_.wait_until(lock, next_flush_)
-          == std::cv_status::no_timeout) {
-        if (not need_to_flush_ and not need_to_finalize_) {
-          continue;
+      {
+        std::unique_lock lock(mutex_);
+        if (condvar_.wait_until(lock, next_flush_.load())
+            ==std::cv_status::no_timeout) {
+          if (not need_to_flush_ and not need_to_finalize_) {
+            continue;
+          }
         }
       }
 

@@ -33,9 +33,9 @@ namespace soralog {
                std::optional<size_t> latency = {});
     ~SinkToFile() override;
 
-    void flush() noexcept override;
-
     void rotate() noexcept override;
+
+    void flush() noexcept override;
 
    protected:
     void async_flush() noexcept override;
@@ -43,7 +43,7 @@ namespace soralog {
    private:
     void run();
 
-    const std::filesystem::path path_{};
+    const std::filesystem::path path_;
 
     std::unique_ptr<std::thread> sink_worker_{};
 
@@ -54,7 +54,7 @@ namespace soralog {
     std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
     std::atomic_bool need_to_rotate_ = false;
-    std::chrono::steady_clock::time_point next_flush_;
+    std::atomic<std::chrono::steady_clock::time_point> next_flush_;
     std::atomic_bool flush_in_progress_ = false;
   };
 

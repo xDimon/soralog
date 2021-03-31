@@ -100,7 +100,7 @@ namespace soralog {
     virtual void flush() noexcept = 0;
 
     /**
-     * Does writing all events in destination place synchronously
+     * Does writing all events in destination place asynchronously
      */
     virtual void async_flush() noexcept = 0;
 
