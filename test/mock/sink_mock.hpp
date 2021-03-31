@@ -17,7 +17,8 @@ namespace soralog {
 
    public:
     SinkMock(std::string name)
-        : Sink(std::move(name), ThreadInfoType::NONE, 4, sizeof(Event) * 4) {}
+        : Sink(std::move(name), ThreadInfoType::NONE, 4, sizeof(Event) * 4, 0) {
+    }
     ~SinkMock() override = default;
 
     template <typename... Args>
@@ -31,6 +32,11 @@ namespace soralog {
       mocked_flush();
     }
     MOCK_METHOD0(mocked_flush, void());
+
+    void async_flush() noexcept override {
+      mocked_async_flush();
+    }
+    MOCK_METHOD0(mocked_async_flush, void());
 
     void rotate() noexcept override {
       mocked_rotate();

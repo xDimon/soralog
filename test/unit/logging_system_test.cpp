@@ -299,8 +299,7 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   EXPECT_TRUE(group1->level() == Level::CRITICAL);  // *own
   EXPECT_FALSE(group1->isLevelOverridden());
   EXPECT_TRUE(group2->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(
-      group2->isLevelOverridden());  // no overridden because no parent
+  EXPECT_FALSE(group2->isLevelOverridden());  // no overridden because no parent
   EXPECT_TRUE(group3->level() == Level::WARN);  // own
   EXPECT_TRUE(group3->isLevelOverridden());
 

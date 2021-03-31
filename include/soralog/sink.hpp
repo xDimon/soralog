@@ -43,12 +43,16 @@ namespace soralog {
     Sink &operator=(Sink &&) noexcept = delete;
 
     Sink(std::string name, ThreadInfoType thread_info_type, size_t max_events,
-         size_t max_buffer_size)
+         size_t max_buffer_size, size_t latency)
         : name_(std::move(name)),
           thread_info_type_(thread_info_type),
           events_(max_events),
-          max_buffer_size_(max_buffer_size) {
-      assert(max_buffer_size_ >= sizeof(Event));
+          max_buffer_size_(max_buffer_size),
+          latency_(latency) {
+      // Auto-fix buffer size
+      if (max_buffer_size_ < sizeof(Event) * 2) {
+        const_cast<size_t &>(max_buffer_size_) = sizeof(Event) * 2;
+      }
     };
 
     /**
@@ -79,12 +83,14 @@ namespace soralog {
           break;
         }
 
-        // Events queue is full. Flush and try to push again
+        // Events queue is full. Flush immediatelly and try to push again
         flush();
       }
 
-      if (size_ >= max_buffer_size_ - sizeof(Event)) {
+      if (latency_ == std::chrono::milliseconds::zero()) {
         flush();
+      } else if (size_ >= max_buffer_size_ * 4 / 5) {
+        async_flush();
       }
     }
 
@@ -92,6 +98,11 @@ namespace soralog {
      * Does writing all events in destination place immediately
      */
     virtual void flush() noexcept = 0;
+
+    /**
+     * Does writing all events in destination place synchronously
+     */
+    virtual void async_flush() noexcept = 0;
 
     /**
      * Does some actions to rorate log data (e.g. reopen log-file)
@@ -104,9 +115,11 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const ThreadInfoType thread_info_type_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
-    CircularBuffer<Event> events_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const size_t max_buffer_size_;
+    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    const std::chrono::milliseconds latency_;
+    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    CircularBuffer<Event> events_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     std::atomic_size_t size_ = 0;
   };

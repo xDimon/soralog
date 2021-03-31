@@ -179,7 +179,7 @@ namespace soralog {
      * Flushes all events accumulated in sink immediately
      */
     void flush() const {
-      sink_->flush();
+      sink_->async_flush();
     }
 
     // Level

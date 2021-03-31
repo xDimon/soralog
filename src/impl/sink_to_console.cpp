@@ -125,176 +125,194 @@ namespace soralog {
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
-                               ThreadInfoType thread_info_type,
-                               size_t events_capacity, size_t buffer_size,
-                               size_t latency_ms)
-      : Sink(std::move(name), thread_info_type, events_capacity, buffer_size),
+                               std::optional<ThreadInfoType> thread_info_type,
+                               std::optional<size_t> capacity,
+                               std::optional<size_t> buffer_size,
+                               std::optional<size_t> latency)
+      : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
+             capacity.value_or(1u << 6),      // 64 events
+             buffer_size.value_or(1u << 17),  // 128 Kb
+             latency.value_or(200)),          // 200 ms
         with_color_(with_color),
-        buffer_size_(buffer_size),
-        latency_(latency_ms),
-        buff_(buffer_size_) {
-    sink_worker_ = std::make_unique<std::thread>([this] { run(); });
+        buff_(max_buffer_size_) {
+    if (latency_ != std::chrono::milliseconds::zero()) {
+      sink_worker_ = std::make_unique<std::thread>([this] { run(); });
+    }
   }
 
   SinkToConsole::~SinkToConsole() {
-    need_to_finalize_ = true;
-    flush();
-    sink_worker_->join();
-    sink_worker_.reset();
+    if (latency_ != std::chrono::milliseconds::zero()) {
+      need_to_finalize_ = true;
+      async_flush();
+      sink_worker_->join();
+      sink_worker_.reset();
+    } else {
+      flush();
+    }
+  }
+
+  void SinkToConsole::async_flush() noexcept {
+    if (latency_ != std::chrono::milliseconds::zero()) {
+      need_to_flush_ = true;
+      condvar_.notify_one();
+    } else {
+      flush();
+    }
   }
 
   void SinkToConsole::flush() noexcept {
-    need_to_flush_ = true;
-    condvar_.notify_one();
+    bool expected = false;
+    if (not flush_in_progress_.compare_exchange_strong(expected, true)) {
+      return;
+    }
+
+    auto *const begin = buff_.data();
+    auto *const end = buff_.data() + buff_.size();  // NOLINT
+    auto *ptr = begin;
+
+    decltype(1s / 1s) psec = 0;
+    std::tm tm{};
+    std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
+
+    while (true) {
+      auto node = events_.get();
+      if (node) {
+        const auto &event = *node;
+
+        const auto time = event.timestamp().time_since_epoch();
+        const auto sec = time / 1s;
+        const auto usec = time % 1s / 1us;
+
+        if (psec != sec) {
+          tm = fmt::localtime(sec);
+          fmt::format_to_n(datetime.data(), datetime.size(),
+                           "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
+                           tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+                           tm.tm_hour, tm.tm_min, tm.tm_sec);
+          psec = sec;
+        }
+
+        // Timestamp
+
+        std::memcpy(ptr, datetime.data(), datetime.size());
+        ptr = ptr + datetime.size();  // NOLINT
+
+        if (with_color_) {
+          const auto &style =
+              fmt::internal::make_foreground_color<char>(fmt::color::gray);
+
+          auto size = std::end(style) - std::begin(style);
+          std::memcpy(ptr, std::begin(style),
+                      std::end(style) - std::begin(style));
+          ptr = ptr + size;  // NOLINT
+        }
+
+        ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
+
+        if (with_color_) {
+          put_reset_style(ptr);
+        }
+
+        put_separator(ptr);
+
+        // Thread
+
+        switch (thread_info_type_) {
+          case ThreadInfoType::NAME:
+            put_string(ptr, event.thread_name(), 15);
+            put_separator(ptr);
+            break;
+
+          case ThreadInfoType::ID:
+            ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
+                                   event.thread_number())
+                      .out;
+            put_separator(ptr);
+            break;
+
+          default:
+            break;
+        }
+
+        // Level
+
+        if (with_color_) {
+          put_level_style(ptr, event.level());
+        }
+        put_level(ptr, event.level());
+        if (with_color_) {
+          put_reset_style(ptr);
+        }
+
+        put_separator(ptr);
+
+        // Name
+
+        if (with_color_) {
+          put_name_style(ptr);
+        }
+        put_string(ptr, event.name());
+        if (with_color_) {
+          put_reset_style(ptr);
+        }
+
+        put_separator(ptr);
+
+        // Message
+
+        if (with_color_) {
+          put_text_style(ptr, event.level());
+        }
+        put_string(ptr, event.message());
+        if (with_color_) {
+          put_reset_style(ptr);
+        }
+
+        *ptr++ = '\n';  // NOLINT
+
+        size_ -= event.message().size();
+      }
+
+      if ((end - ptr) < sizeof(Event) or not node
+          or std::chrono::steady_clock::now() >= next_flush_) {
+        next_flush_ = std::chrono::steady_clock::now() + latency_;
+        std::cout.write(begin, ptr - begin);
+        ptr = begin;
+      }
+
+      if (not node) {
+        bool true_v = true;
+        if (need_to_flush_.compare_exchange_weak(true_v, false)) {
+          std::cout.flush();
+        }
+        if (need_to_finalize_) {
+          return;
+        }
+        break;
+      }
+    }
+
+    flush_in_progress_ = false;
   }
 
   void SinkToConsole::run() {
     util::setThreadName("log:" + name_);
 
-    auto next_flush = std::chrono::steady_clock::now();
+    next_flush_ = std::chrono::steady_clock::now();
 
     while (true) {
-      if (events_.size() == 0) {
-        if (need_to_finalize_) {
-          return;
-        }
-      }
-
       std::unique_lock lock(mutex_);
-      if (condvar_.wait_until(lock, next_flush) != std::cv_status::no_timeout) {
+      if (condvar_.wait_until(lock, next_flush_)
+          == std::cv_status::no_timeout) {
         if (not need_to_flush_ and not need_to_finalize_) {
           continue;
         }
       }
 
-      if (events_.size() == 0) {
-        continue;
-      }
+      flush();
 
-      auto *const begin = buff_.data();
-      auto *const end = buff_.data() + buff_.size();  // NOLINT
-      auto *ptr = begin;
-
-      decltype(1s / 1s) psec = 0;
-      std::tm tm{};
-      std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
-
-      while (true) {
-        auto node = events_.get();
-        if (node) {
-          const auto &event = *node;
-
-          const auto time = event.timestamp().time_since_epoch();
-          const auto sec = time / 1s;
-          const auto usec = time % 1s / 1us;
-
-          if (psec != sec) {
-            tm = fmt::localtime(sec);
-            fmt::format_to_n(datetime.data(), datetime.size(),
-                             "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
-                             tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-                             tm.tm_hour, tm.tm_min, tm.tm_sec);
-            psec = sec;
-          }
-
-          // Timestamp
-
-          std::memcpy(ptr, datetime.data(), datetime.size());
-          ptr = ptr + datetime.size();  // NOLINT
-
-          if (with_color_) {
-            const auto &style =
-                fmt::internal::make_foreground_color<char>(fmt::color::gray);
-
-            auto size = std::end(style) - std::begin(style);
-            std::memcpy(ptr, std::begin(style),
-                        std::end(style) - std::begin(style));
-            ptr = ptr + size;  // NOLINT
-          }
-
-          ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
-
-          if (with_color_) {
-            put_reset_style(ptr);
-          }
-
-          put_separator(ptr);
-
-          // Thread
-
-          switch (thread_info_type_) {
-            case ThreadInfoType::NAME:
-              put_string(ptr, event.thread_name(), 15);
-              put_separator(ptr);
-              break;
-
-            case ThreadInfoType::ID:
-              ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
-                                     event.thread_number())
-                        .out;
-              put_separator(ptr);
-              break;
-
-            default:
-              break;
-          }
-
-          // Level
-
-          if (with_color_) {
-            put_level_style(ptr, event.level());
-          }
-          put_level(ptr, event.level());
-          if (with_color_) {
-            put_reset_style(ptr);
-          }
-
-          put_separator(ptr);
-
-          // Name
-
-          if (with_color_) {
-            put_name_style(ptr);
-          }
-          put_string(ptr, event.name());
-          if (with_color_) {
-            put_reset_style(ptr);
-          }
-
-          put_separator(ptr);
-
-          // Message
-
-          if (with_color_) {
-            put_text_style(ptr, event.level());
-          }
-          put_string(ptr, event.message());
-          if (with_color_) {
-            put_reset_style(ptr);
-          }
-
-          *ptr++ = '\n';  // NOLINT
-
-          size_ -= event.message().size();
-        }
-
-        if ((end - ptr) < sizeof(Event) or not node
-            or std::chrono::steady_clock::now() >= next_flush) {
-          next_flush = std::chrono::steady_clock::now() + latency_;
-          std::cout.write(begin, ptr - begin);
-          ptr = begin;
-        }
-
-        if (not node) {
-          bool true_v = true;
-          if (need_to_flush_.compare_exchange_weak(true_v, false)) {
-            std::cout.flush();
-          }
-          if (need_to_finalize_) {
-            return;
-          }
-          break;
-        }
+      if (need_to_finalize_ && events_.size() == 0) {
+        return;
       }
     }
   }

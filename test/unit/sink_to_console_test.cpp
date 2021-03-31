@@ -20,6 +20,10 @@ class SinkToConsoleTest : public ::testing::Test {
       sink_->push("logger", Level::DEBUG, format, args...);
     }
 
+    void flush() {
+      sink_->flush();
+    }
+
    private:
     std::shared_ptr<SinkToConsole> sink_;
   };
@@ -29,8 +33,8 @@ class SinkToConsoleTest : public ::testing::Test {
         "console", false,
         Sink::ThreadInfoType::NONE,  // ignore thread info
         4,                           // capacity: 4 events
-        8182,                        // buffers size: 8 Kb
-        10);                         // latency: 200 ms
+        16384,                       // buffers size: 16 Kb
+        latency_.count());
     logger_ = std::make_shared<FakeLogger>(sink_);
   }
   void TearDown() override {}
@@ -41,12 +45,58 @@ class SinkToConsoleTest : public ::testing::Test {
 };
 
 TEST_F(SinkToConsoleTest, Logging) {
-  logger_->debug("Uno: {}", 1);
-  std::this_thread::sleep_for(latency_ * 0);
-  logger_->debug("Dos: {} {}", 1, 2);
-  std::this_thread::sleep_for(latency_ * 1);
-  logger_->debug("Tres: {} {} {}", 1, 2, 3);
-  std::this_thread::sleep_for(latency_ * 2);
-  logger_->debug("Cuatro: {} {} {} {}", 1, 2, 3, 4);
-  std::this_thread::sleep_for(latency_ * 3);
+  auto delay = std::chrono::milliseconds(5);
+  logger_->debug("Uno");
+  std::this_thread::sleep_for(delay * 1);
+  logger_->debug("Dos");
+  std::this_thread::sleep_for(delay * 2);
+  logger_->debug("Tres");
+  std::this_thread::sleep_for(delay * 3);
+  logger_->debug("Cuatro");
+  std::this_thread::sleep_for(delay * 4);
+  logger_->flush();
+}
+
+/**
+ * @given Sink with one second latency
+ * @when Push four message to log every half-second
+ * @then Messages will be written in pairs
+ * @note Test is disabled, because it consume time and should be start manually
+ */
+TEST_F(SinkToConsoleTest, DISABLED_NonZeroLatencyLogging) {
+  latency_ = std::chrono::milliseconds(1000);
+  SetUp();
+
+  auto delay = std::chrono::milliseconds(500);
+  logger_->debug("Uno");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Dos");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Tres");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Cuatro");
+  std::this_thread::sleep_for(delay);
+  logger_->flush();
+}
+
+/**
+ * @given Sink with zero-latency
+ * @when Push four message to log every half-second
+ * @then Messages will be written separately
+ * @note Test is disabled, because it consume time and should be start manually
+ */
+TEST_F(SinkToConsoleTest, DISABLED_ZeroLatencyLogging) {
+  latency_ = std::chrono::milliseconds::zero();
+  SetUp();
+
+  auto delay = std::chrono::milliseconds(500);
+  logger_->debug("Uno");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Dos");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Tres");
+  std::this_thread::sleep_for(delay);
+  logger_->debug("Cuatro");
+  std::this_thread::sleep_for(delay);
+  logger_->flush();
 }
