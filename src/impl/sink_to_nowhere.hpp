@@ -24,6 +24,8 @@ namespace soralog {
 
     void flush() noexcept override;
 
+    void async_flush() noexcept override;
+
     void rotate() noexcept override;
   };
 

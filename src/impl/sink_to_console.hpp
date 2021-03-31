@@ -8,7 +8,6 @@
 
 #include <soralog/sink.hpp>
 
-#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -26,30 +25,34 @@ namespace soralog {
     SinkToConsole &operator=(SinkToConsole const &) = delete;
 
     SinkToConsole(std::string name, bool with_color,
-                  ThreadInfoType thread_info_type = ThreadInfoType::NONE,
-                  size_t events_capacity = 1u << 6,  // 64 events
-                  size_t buffer_size = 1u << 17,     // 128 Kb
-                  size_t latency_ms = 200);          // 200 ms
+                  std::optional<ThreadInfoType> thread_info_type = {},
+                  std::optional<size_t> capacity = {},
+                  std::optional<size_t> buffer_size = {},
+                  std::optional<size_t> latency = {});
     ~SinkToConsole() override;
+
+    void rotate() noexcept override{};
 
     void flush() noexcept override;
 
-    void rotate() noexcept override{};
+   protected:
+    void async_flush() noexcept override;
 
    private:
     void run();
 
-    const bool with_color_ = false;
-    const size_t buffer_size_ = 1 << 17;            // 128Kb
-    const std::chrono::milliseconds latency_{200};  // 200ms
+    const bool with_color_;
 
-    std::unique_ptr<std::thread> sink_worker_;
+    std::unique_ptr<std::thread> sink_worker_{};
 
     std::vector<char> buff_;
     std::mutex mutex_;
     std::condition_variable condvar_;
     std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
+    std::atomic<std::chrono::steady_clock::time_point> next_flush_ =
+        std::chrono::steady_clock::time_point();
+    std::atomic_bool flush_in_progress_ = false;
   };
 
 }  // namespace soralog

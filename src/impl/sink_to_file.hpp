@@ -27,22 +27,23 @@ namespace soralog {
     SinkToFile &operator=(SinkToFile const &) = delete;
 
     SinkToFile(std::string name, std::filesystem::path path,
-               ThreadInfoType thread_info_type = ThreadInfoType::NONE,
-               size_t events_capacity = 1u << 11,  // 2048 events
-               size_t buffer_size = 1u << 22,      // 4 Mb
-               size_t latency_ms = 1000);          // 1 sec
+               std::optional<ThreadInfoType> thread_info_type = {},
+               std::optional<size_t> capacity = {},
+               std::optional<size_t> buffer_size = {},
+               std::optional<size_t> latency = {});
     ~SinkToFile() override;
+
+    void rotate() noexcept override;
 
     void flush() noexcept override;
 
-    void rotate() noexcept override;
+   protected:
+    void async_flush() noexcept override;
 
    private:
     void run();
 
-    const std::filesystem::path path_{};
-    const size_t buffer_size_ = 1 << 22;             // 4Mb
-    const std::chrono::milliseconds latency_{1000};  // 1sec
+    const std::filesystem::path path_;
 
     std::unique_ptr<std::thread> sink_worker_{};
 
@@ -53,6 +54,9 @@ namespace soralog {
     std::atomic_bool need_to_finalize_ = false;
     std::atomic_bool need_to_flush_ = false;
     std::atomic_bool need_to_rotate_ = false;
+    std::atomic<std::chrono::steady_clock::time_point> next_flush_ =
+        std::chrono::steady_clock::time_point();
+    std::atomic_bool flush_in_progress_ = false;
   };
 
 }  // namespace soralog

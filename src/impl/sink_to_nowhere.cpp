@@ -10,7 +10,8 @@ namespace soralog {
   using namespace std::chrono_literals;
 
   SinkToNowhere::SinkToNowhere(std::string name)
-      : Sink(std::move(name), ThreadInfoType::NONE, 32, sizeof(Event) * 32) {}
+      : Sink(std::move(name), ThreadInfoType::NONE, 32, sizeof(Event) * 32, 0) {
+  }
 
   SinkToNowhere::~SinkToNowhere() {
     flush();
@@ -18,8 +19,12 @@ namespace soralog {
 
   void SinkToNowhere::flush() noexcept {
     while (events_.size() > 0) {
-      [[maybe_unused]] auto node = events_.get();
+      std::ignore = events_.get();
     }
+  }
+
+  void SinkToNowhere::async_flush() noexcept {
+    flush();
   }
 
   void SinkToNowhere::rotate() noexcept {

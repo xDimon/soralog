@@ -2,10 +2,18 @@ sinks:
   - name: console
     type: console
     color: true
+    thread: name
+    capacity: 64
+    buffer: 131072
+    latency: 100
   - name: file
     type: file
     directory: .
     filename: example.log
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
 groups:
   - name: main
     sink: console

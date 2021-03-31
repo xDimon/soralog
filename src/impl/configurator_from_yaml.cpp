@@ -198,6 +198,9 @@ namespace soralog {
       const std::string &name, const YAML::Node &sink_node) {
     bool color = false;
     Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
+    std::optional<size_t> capacity;
+    std::optional<size_t> buffer_size;
+    std::optional<size_t> latency;
 
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
@@ -228,6 +231,58 @@ namespace soralog {
       }
     }
 
+    auto capacity_node = sink_node["capacity"];
+    if (capacity_node.IsDefined()) {
+      if (not capacity_node.IsScalar()) {
+        errors_ << "W: Property 'capacity' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto capacity_int = capacity_node.as<int>();
+        if (capacity_int >= 4) {
+          capacity.emplace(capacity_int);
+        } else {
+          errors_ << "W: Wrong property 'capacity' value of sink '" << name
+                  << "': " << capacity_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto buffer_node = sink_node["buffer"];
+    if (buffer_node.IsDefined()) {
+      if (not buffer_node.IsScalar()) {
+        errors_ << "W: Property 'buffer' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto buffer_int = buffer_node.as<int>();
+        if (buffer_int >= sizeof(Event) * 4) {
+          buffer_size.emplace(buffer_int);
+        } else {
+          errors_ << "W: Wrong property 'buffer' value of sink '" << name
+                  << "': " << buffer_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto latency_node = sink_node["latency"];
+    if (latency_node.IsDefined()) {
+      if (not latency_node.IsScalar()) {
+        errors_ << "W: Property 'latency' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto latency_int = latency_node.as<int>();
+        if (std::to_string(latency_int) != latency_node.as<std::string>()
+            or latency_int < 0) {
+          errors_ << "W: Wrong value of property 'latency' value of sink '"
+                  << name << "': " << latency_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        } else {
+          latency.emplace(latency_int);
+        }
+      }
+    }
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       auto val = it.second;
@@ -240,6 +295,12 @@ namespace soralog {
         continue;
       if (key == "thread")
         continue;
+      if (key == "capacity")
+        continue;
+      if (key == "buffer")
+        continue;
+      if (key == "latency")
+        continue;
       errors_ << "W: Unknown property of sink '" << name
               << "' with type 'console': " << key << "\n";
       has_warning_ = true;
@@ -251,13 +312,17 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, color, thread_info_type);
+    system_.makeSink<SinkToConsole>(name, color, thread_info_type, capacity,
+                                    buffer_size, latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
       const std::string &name, const YAML::Node &sink_node) {
     bool fail = false;
     Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
+    std::optional<size_t> capacity;
+    std::optional<size_t> buffer_size;
+    std::optional<size_t> latency;
 
     auto path_node = sink_node["path"];
     if (not path_node.IsDefined()) {
@@ -289,6 +354,58 @@ namespace soralog {
       }
     }
 
+    auto capacity_node = sink_node["capacity"];
+    if (capacity_node.IsDefined()) {
+      if (not capacity_node.IsScalar()) {
+        errors_ << "W: Property 'capacity' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto capacity_int = capacity_node.as<int>();
+        if (capacity_int >= 4) {
+          capacity.emplace(capacity_int);
+        } else {
+          errors_ << "W: Wrong property 'capacity' value of sink '" << name
+                  << "': " << capacity_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto buffer_node = sink_node["buffer"];
+    if (buffer_node.IsDefined()) {
+      if (not buffer_node.IsScalar()) {
+        errors_ << "W: Property 'buffer' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto buffer_int = buffer_node.as<int>();
+        if (buffer_int >= sizeof(Event) * 4) {
+          buffer_size.emplace(buffer_int);
+        } else {
+          errors_ << "W: Wrong property 'buffer' value of sink '" << name
+                  << "': " << buffer_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto latency_node = sink_node["latency"];
+    if (latency_node.IsDefined()) {
+      if (not latency_node.IsScalar()) {
+        errors_ << "W: Property 'latency' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto latency_int = latency_node.as<int>();
+        if (std::to_string(latency_int) != latency_node.as<std::string>()
+            or latency_int < 0) {
+          errors_ << "W: Wrong value of property 'latency' value of sink '"
+                  << name << "': " << latency_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        } else {
+          latency.emplace(latency_int);
+        }
+      }
+    }
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (key == "name")
@@ -298,6 +415,12 @@ namespace soralog {
       if (key == "path")
         continue;
       if (key == "thread")
+        continue;
+      if (key == "capacity")
+        continue;
+      if (key == "buffer")
+        continue;
+      if (key == "latency")
         continue;
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
@@ -316,7 +439,8 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, path, thread_info_type);
+    system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
+                                 buffer_size, latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
