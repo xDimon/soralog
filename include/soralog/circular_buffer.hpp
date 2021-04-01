@@ -30,11 +30,12 @@ namespace soralog {
 
      public:
       const T &item = *reinterpret_cast<T *>(data_.data());  // NOLINT
-      std::atomic_bool ready{false};
+      std::atomic_bool ready;
 
       template <typename... Args>
       explicit Node(const Args &... args) noexcept(IF_RELEASE) {
         new (data_.data()) T(args...);
+        ready.store(false, std::memory_order_release);
       }
     };
 

@@ -275,15 +275,18 @@ namespace soralog {
       }
 
       if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now() >= next_flush_.load(std::memory_order_acquire)) {
-        next_flush_.store(std::chrono::steady_clock::now() + latency_, std::memory_order_release);
+          or std::chrono::steady_clock::now()
+              >= next_flush_.load(std::memory_order_acquire)) {
+        next_flush_.store(std::chrono::steady_clock::now() + latency_,
+                          std::memory_order_release);
         std::cout.write(begin, ptr - begin);
         ptr = begin;
       }
 
       if (not node) {
         bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(true_v, false, std::memory_order_acq_rel)) {
+        if (need_to_flush_.compare_exchange_weak(true_v, false,
+                                                 std::memory_order_acq_rel)) {
           std::cout.flush();
         }
         break;
@@ -296,15 +299,19 @@ namespace soralog {
   void SinkToConsole::run() {
     util::setThreadName("log:" + name_);
 
-    next_flush_.store(std::chrono::steady_clock::now(), std::memory_order_relaxed);
+    next_flush_.store(std::chrono::steady_clock::now(),
+                      std::memory_order_relaxed);
 
     while (true) {
-      std::unique_lock lock(mutex_);
-      if (condvar_.wait_until(lock, next_flush_.load(std::memory_order_relaxed))
-          == std::cv_status::no_timeout) {
-        if (not need_to_flush_.load(std::memory_order_relaxed)
-            and not need_to_finalize_.load(std::memory_order_relaxed)) {
-          continue;
+      {
+        std::unique_lock lock(mutex_);
+        if (condvar_.wait_until(lock,
+                                next_flush_.load(std::memory_order_relaxed))
+            == std::cv_status::no_timeout) {
+          if (not need_to_flush_.load(std::memory_order_relaxed)
+              and not need_to_finalize_.load(std::memory_order_relaxed)) {
+            continue;
+          }
         }
       }
 
