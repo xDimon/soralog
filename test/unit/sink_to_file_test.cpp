@@ -9,11 +9,13 @@
 
 using namespace soralog;
 using namespace testing;
+using namespace std::chrono_literals;
 
 class SinkToFileTest : public ::testing::Test {
  public:
   struct FakeLogger {
-    FakeLogger(std::shared_ptr<SinkToFile> sink) : sink_(std::move(sink)) {}
+    explicit FakeLogger(std::shared_ptr<SinkToFile> sink)
+        : sink_(std::move(sink)) {}
 
     template <typename... Args>
     void debug(std::string_view format, const Args &... args) {
@@ -29,38 +31,39 @@ class SinkToFileTest : public ::testing::Test {
   };
 
   void SetUp() override {
-    char filename[L_tmpnam];
+    std::array<char, L_tmpnam> filename{};
     path_ = std::filesystem::temp_directory_path();
-    ASSERT_TRUE(std::tmpnam(filename) != nullptr);
-    path_ /= std::string(filename) + ".log";
-
-    sink_ = std::make_shared<SinkToFile>(
-        "file", path_,
-        Sink::ThreadInfoType::NONE,  // ignore thread info
-        4,                           // capacity: 4 events
-        16384,                       // buffers size: 16 Kb
-        10);                         // latency: 200 ms
-    logger_ = std::make_shared<FakeLogger>(sink_);
+    ASSERT_TRUE(std::tmpnam(filename.data()) != nullptr);
+    path_ /= std::string(filename.data()) + ".log";
   }
   void TearDown() override {
     std::remove(path_.native().data());
   }
 
-  std::chrono::milliseconds latency_{10};  // latency: 10 ms
+  std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
+    auto sink = std::make_shared<SinkToFile>(
+        "file", path_,
+        Sink::ThreadInfoType::NONE,  // ignore thread info
+        4,                           // capacity: 4 events
+        16384,                       // buffers size: 16 Kb
+        latency.count());
+    return std::make_shared<FakeLogger>(std::move(sink));
+  }
+
+ private:
   std::filesystem::path path_;
-  std::shared_ptr<SinkToFile> sink_;
-  std::shared_ptr<FakeLogger> logger_;
 };
 
 TEST_F(SinkToFileTest, Logging) {
-  auto delay = std::chrono::milliseconds(5);
-  logger_->debug("Uno");
-  std::this_thread::sleep_for(delay * 1);
-  logger_->debug("Dos");
-  std::this_thread::sleep_for(delay * 2);
-  logger_->debug("Tres");
-  std::this_thread::sleep_for(delay * 3);
-  logger_->debug("Cuatro");
-  std::this_thread::sleep_for(delay * 4);
-  logger_->flush();
+  auto logger = createLogger(20ms);
+  auto delay = 1ms;
+  int count = 100;
+  for (int round = 1; round <= 3; ++round) {
+    for (int i = 1; i <= count; ++i) {
+      logger->debug("round: {}, message: {}, delay: {}ms", round, i,
+                    abs(i - count / 2));
+      std::this_thread::sleep_for(delay * abs(i - count / 2));
+    }
+  }
+  logger->flush();
 }
