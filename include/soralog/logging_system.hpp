@@ -105,10 +105,11 @@ namespace soralog {
      * Creates sink with type {@tparam SinkType} using arguments {@param args}
      */
     template <typename SinkType, typename... Args>
-    void makeSink(Args &&... args) {
+    std::shared_ptr<SinkType> makeSink(Args &&... args) {
       std::lock_guard guard(mutex_);
       auto sink = std::make_shared<SinkType>(std::forward<Args>(args)...);
-      sinks_[sink->name()] = std::move(sink);
+      sinks_[sink->name()] = sink;
+      return sink;
     }
 
     /**
@@ -118,9 +119,21 @@ namespace soralog {
      * @param level - overriding level if provided
      * @note Sink and level must be provided if parent is not
      */
-    void makeGroup(std::string name, const std::optional<std::string> &parent,
-                   const std::optional<std::string> &sink,
-                   const std::optional<Level> &level);
+    std::shared_ptr<Group> makeGroup(std::string name,
+                                     const std::optional<std::string> &parent,
+                                     const std::optional<std::string> &sink,
+                                     const std::optional<Level> &level);
+
+    /**
+     * Declares/changes default group to group with name {@param group_name}
+     * @returns true if any
+     */
+    bool setFallbackGroup(const std::string &group_name);
+
+    /**
+     * @returns fallback group
+     */
+    std::shared_ptr<Group> getFallbackGroup() const;
 
     /**
      * Set parent group of group {@param group_name} to {@param parent}.
@@ -255,7 +268,6 @@ namespace soralog {
     std::unordered_map<std::string, std::weak_ptr<Logger>> loggers_;
     std::unordered_map<std::string, std::shared_ptr<Sink>> sinks_;
     std::unordered_map<std::string, std::shared_ptr<Group>> groups_;
-    std::shared_ptr<Group> fallback_group_;
   };
 
 }  // namespace soralog

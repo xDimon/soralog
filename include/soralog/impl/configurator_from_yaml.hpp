@@ -90,7 +90,7 @@ namespace soralog {
       void parseGroups(const YAML::Node &groups,
                        const std::optional<std::string> &parent);
 
-      void parseGroup(int number, const YAML::Node &group,
+      void parseGroup(int number, const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
       LoggingSystem &system_;
