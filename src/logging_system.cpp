@@ -170,8 +170,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
@@ -238,8 +238,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
@@ -307,8 +307,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
