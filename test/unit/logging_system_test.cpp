@@ -26,8 +26,10 @@ class LoggingSystemTest : public ::testing::Test {
     ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
       return &s == system_.get();
     }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-      system.makeSink<SinkMock>("sink");
-      system.makeSink<SinkMock>("other");
+      auto sink1 = system.makeSink<SinkMock>("sink");
+      EXPECT_CALL(*sink1, mocked_flush()).Times(testing::AnyNumber());
+      auto sink2 = system.makeSink<SinkMock>("other");
+      EXPECT_CALL(*sink2, mocked_flush()).Times(testing::AnyNumber());
       system.makeGroup("first", {}, "sink", Level::VERBOSE);
       system.makeGroup("second", "first", "sink", Level::DEBUG);
       system.makeGroup("third", "second", "sink", Level::TRACE);
@@ -56,12 +58,12 @@ TEST_F(LoggingSystemTest, Configure) {
 }
 
 TEST_F(LoggingSystemTest, MakeGroup) {
-  EXPECT_TRUE(system_->getGroup("*") == nullptr);
+  EXPECT_TRUE(system_->getFallbackGroup() == nullptr);
 
   EXPECT_ANY_THROW(system_->makeGroup("first", {}, {}, {}));
   EXPECT_NO_THROW(system_->makeGroup("first", {}, {}, Level::INFO));
 
-  auto defGroup = system_->getGroup("*");
+  auto defGroup = system_->getFallbackGroup();
   auto firstGroup = system_->getGroup("first");
   ASSERT_TRUE(defGroup != nullptr);
   EXPECT_TRUE(firstGroup == defGroup);
@@ -82,7 +84,7 @@ TEST_F(LoggingSystemTest, MakeSink) {
 TEST_F(LoggingSystemTest, GetGroup) {
   configure();
 
-  EXPECT_TRUE(system_->getGroup("*") != nullptr);
+  EXPECT_TRUE(system_->getFallbackGroup() != nullptr);
 
   auto firstGroup = system_->getGroup("first");
   EXPECT_TRUE(firstGroup != nullptr);
@@ -110,15 +112,11 @@ TEST_F(LoggingSystemTest, GetSink) {
 TEST_F(LoggingSystemTest, GetLogger) {
   configure();
 
-  auto rndLog = system_->getLogger("random_named", "*");
-  ASSERT_TRUE(rndLog != nullptr);
-  EXPECT_TRUE(rndLog->group() == system_->getGroup("*"));
-
   // Default group is used instead unexisting one
   {
     auto log0 = system_->getLogger("Log_0", "nonexisting_group");
     ASSERT_TRUE(log0 != nullptr);
-    auto group = system_->getGroup("*");
+    auto group = system_->getFallbackGroup();
     ASSERT_TRUE(group != nullptr);
     EXPECT_TRUE(log0->group() == group);
     EXPECT_TRUE(log0->sink() == group->sink());
@@ -196,6 +194,23 @@ TEST_F(LoggingSystemTest, GetLogger) {
     EXPECT_TRUE(level != group->level());
     EXPECT_TRUE(level == Level::INFO);
   }
+}
+
+TEST_F(LoggingSystemTest, FallbackGroup) {
+  EXPECT_TRUE(system_->getFallbackGroup() == nullptr);
+
+  configure();
+
+  auto group1 = system_->getGroup("first");
+  EXPECT_TRUE(group1 != nullptr);
+
+  auto group2 = system_->getGroup("second");
+  EXPECT_TRUE(group2 != nullptr);
+
+  EXPECT_TRUE(system_->getFallbackGroup() == group1);
+
+  system_->setFallbackGroup("second");
+  EXPECT_TRUE(system_->getFallbackGroup() == group2);
 }
 
 TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {

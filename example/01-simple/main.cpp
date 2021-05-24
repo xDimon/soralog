@@ -39,6 +39,7 @@ sinks:
     color: true
 groups:
   - name: main_
+    is_fallback: true
     sink: console
     level: trace
   - name: azaza
@@ -49,6 +50,7 @@ std::shared_ptr<soralog::Configurator> cascade_configurator = [] {
   auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
   - name: 3rd_party
+    is_fallback: true
     level: info
     children:
       - name: first-1
@@ -74,7 +76,8 @@ sinks:
     color: true
     thread: name
 groups:
-  - name: main
+  - name: example_group
+    is_fallback: true
     sink: console
     level: trace
     children:
@@ -108,7 +111,7 @@ int main() {
 
   soralog::util::setThreadName("MainThread");
 
-  auto main_log = log_system.getLogger("main", "*");
+  auto main_log = log_system.getLogger("main", "example_group");
 
   main_log->info("Bad logging (one arg for two placeholders): {} {}", 1);
   main_log->info("Bad logging (unclosed placeholders): {", 1);

@@ -6,7 +6,7 @@
 #include "logging_object.hpp"
 
 LoggingObject::LoggingObject(soralog::LoggerFactory &logger_factory)
-    : log_(logger_factory.getLogger("ObjectTag", "*")) {}
+    : log_(logger_factory.getLogger("ObjectTag", "example")) {}
 
 void LoggingObject::method() const {
   log_->trace("Example of trace log message");

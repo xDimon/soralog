@@ -5,6 +5,8 @@
 
 #include <soralog/logging_system.hpp>
 
+#include <cassert>
+#include <iostream>
 #include <set>
 
 #include <soralog/group.hpp>
@@ -18,18 +20,36 @@ namespace soralog {
     makeSink<SinkToNowhere>("*");
   }
 
-  void LoggingSystem::makeGroup(std::string name,
-                                const std::optional<std::string> &parent,
-                                const std::optional<std::string> &sink,
-                                const std::optional<Level> &level) {
+  std::shared_ptr<Group> LoggingSystem::makeGroup(
+      std::string name, const std::optional<std::string> &parent,
+      const std::optional<std::string> &sink,
+      const std::optional<Level> &level) {
     auto group =
         std::make_shared<Group>(*this, std::move(name), parent, sink, level);
     std::lock_guard guard(mutex_);
-    if (not fallback_group_) {
-      fallback_group_ = group;
+    if (groups_.find("*") == groups_.end()) {
       groups_["*"] = group;
     }
-    groups_[group->name()] = std::move(group);
+    groups_[group->name()] = group;
+    return group;
+  }
+
+  bool LoggingSystem::setFallbackGroup(const std::string &group_name) {
+    std::lock_guard guard(mutex_);
+    auto it = groups_.find(group_name);
+    if (it == groups_.end()) {
+      return false;
+    }
+    groups_["*"] = it->second;
+    return true;
+  }
+
+  std::shared_ptr<Group> LoggingSystem::getFallbackGroup() const {
+    auto it = groups_.find("*");
+    if (it == groups_.end()) {
+      return {};
+    }
+    return it->second;
   }
 
   Configurator::Result LoggingSystem::configure() {
@@ -46,14 +66,15 @@ namespace soralog {
           "E: No one group is defined; "
           "Logging system is unworkable\n";
       result.has_error = true;
+      return result;
     }
-    for (auto &item : groups_) {
-      if (item.first == "*") {
+    for (auto &[name, group] : groups_) {
+      if (name == "*") {
         continue;
       }
-      if (item.second->sink()->name() == "*") {
+      if (group->sink()->name() == "*") {
         result.message +=
-            "W: Group '" + item.first + "' has undefined sink; "
+            "W: Group '" + name + "' has undefined sink; "
             "Sink to nowhere will be used\n";
         result.has_warning = true;
       }
@@ -78,15 +99,27 @@ namespace soralog {
       }
     }
 
+    if (group_name == "*") {
+      std::string warn_msg =
+          "Default group (calling with name '*') is deprecated and should not "
+          "used anymore; Define existing group explicitly";
+#ifndef NDEBUG
+      throw std::runtime_error(warn_msg);
+#endif
+      auto group = getFallbackGroup();
+      auto logger = std::make_shared<Logger>(*this, "Soralog", group);
+      logger->warn(warn_msg);
+    }
+
     auto group = getGroup(group_name);
     if (group == nullptr) {
-      group = fallback_group_;
+      group = getFallbackGroup();
       assert(group != nullptr);  // At least fallback group must be existing
       auto logger = std::make_shared<Logger>(*this, "Soralog", group);
       logger->warn(
           "Group '{}' for logger '{}' is not found. "
-          "Fallback group will be used. Use '*' group for using default one",
-          group_name, logger_name);
+          "Fallback group will be used (it is group '{}' right now).",
+          group_name, logger_name, group->name());
     }
 
     auto logger = std::make_shared<Logger>(*this, std::move(logger_name),
@@ -137,8 +170,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
@@ -205,8 +238,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }
@@ -274,8 +307,8 @@ namespace soralog {
 
     std::vector<std::set<std::shared_ptr<Group>>> affecting_groups;
 
-    std::function<size_t(const std::shared_ptr<const Group> &)> fn =
-        [&](const std::shared_ptr<const Group> &current) mutable -> size_t {
+    std::function<int(const std::shared_ptr<const Group> &)> fn =
+        [&](const std::shared_ptr<const Group> &current) mutable -> int {
       if (auto it = passed_groups.find(current); it != passed_groups.end()) {
         return it->second;
       }

@@ -25,6 +25,7 @@ namespace soralog {
    public:
     using element_type = T;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     class Node {
       std::array<std::byte, sizeof(T)> data_;
 
@@ -33,6 +34,7 @@ namespace soralog {
       std::atomic_bool ready;
 
       template <typename... Args>
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
       explicit Node(const Args &... args) noexcept(IF_RELEASE) {
         new (data_.data()) T(args...);
         ready.store(false, std::memory_order_release);

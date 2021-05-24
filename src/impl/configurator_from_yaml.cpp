@@ -469,11 +469,13 @@ namespace soralog {
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroup(
-      int number, const YAML::Node &group,
+      int number, const YAML::Node &group_node,
       const std::optional<std::string> &parent) {
     bool fail = false;
 
-    auto name_node = group["name"];
+    bool is_fallback = false;
+
+    auto name_node = group_node["name"];
     std::string tmp_name = "node #" + std::to_string(number);
     if (not name_node.IsDefined()) {
       fail = true;
@@ -488,8 +490,20 @@ namespace soralog {
       tmp_name = "'" + name_node.as<std::string>() + "'";
     }
 
+    auto fallback_node = group_node["is_fallback"];
+    if (fallback_node.IsDefined()) {
+      if (not fallback_node.IsScalar()) {
+        fail = true;
+        errors_ << "E: Property 'is_fallback' of group " << tmp_name
+                << " is not scalar\n";
+        has_error_ = true;
+      } else {
+        is_fallback = fallback_node.as<bool>();
+      }
+    }
+
     std::optional<std::string> sink{};
-    auto sink_node = group["sink"];
+    auto sink_node = group_node["sink"];
     if (sink_node.IsDefined()) {
       if (not sink_node.IsScalar()) {
         fail = true;
@@ -510,7 +524,7 @@ namespace soralog {
     }
 
     std::optional<std::string> level_string{};
-    auto level_node = group["level"];
+    auto level_node = group_node["level"];
     if (level_node.IsDefined()) {
       if (not level_node.IsScalar()) {
         fail = true;
@@ -526,7 +540,7 @@ namespace soralog {
       has_error_ = true;
     }
 
-    auto children_node = group["children"];
+    auto children_node = group_node["children"];
     if (children_node.IsDefined()) {
       if (not children_node.IsNull() and not children_node.IsSequence()) {
         fail = true;
@@ -536,10 +550,12 @@ namespace soralog {
       }
     }
 
-    for (const auto &it : group) {
+    for (const auto &it : group_node) {
       auto key = it.first.as<std::string>();
 
       if (key == "name")
+        continue;
+      if (key == "is_fallback")
         continue;
       if (key == "sink")
         continue;
@@ -580,7 +596,7 @@ namespace soralog {
         level.emplace(Level::TRACE);
         if constexpr (is_release_build) {
           errors_ << "W: Level 'trace' in group " << tmp_name
-                  << " would not work: it is release build"
+                  << " woun't work: it is release build"
                   << "\n";
           has_warning_ = true;
         }
@@ -619,6 +635,10 @@ namespace soralog {
       }
     } else {
       system_.makeGroup(name, parent, sink, level);
+    }
+
+    if (is_fallback) {
+      system_.setFallbackGroup(name);
     }
 
     if (children_node.IsDefined() and children_node.IsSequence()) {

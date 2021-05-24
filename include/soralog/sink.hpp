@@ -51,7 +51,7 @@ namespace soralog {
           latency_(latency) {
       // Auto-fix buffer size
       if (max_buffer_size_ < sizeof(Event) * 2) {
-        const_cast<size_t &>(max_buffer_size_) = sizeof(Event) * 2;
+        const_cast<size_t &>(max_buffer_size_) = sizeof(Event) * 2;  // NOLINT
       }
     };
 
