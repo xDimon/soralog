@@ -47,16 +47,12 @@ target_link_libraries(sink_to_file
 add_library(group
     group.cpp
     )
-target_link_libraries(group
-    sink
-    )
 
 add_library(logger
     logger.cpp
     )
 target_link_libraries(logger
     sink
-    logging_system
     )
 
 add_library(configurator INTERFACE)
@@ -85,9 +81,7 @@ add_library(logging_system
     logging_system.cpp
     )
 target_link_libraries(logging_system
-    group
-    sink_to_nowhere
-    logger
+    sink
     )
 
 add_library(soralog soralog.cpp)
@@ -95,6 +89,7 @@ target_link_libraries(soralog
     logging_system
     sink
     group
+    configurator
     logger
     )
 
@@ -106,20 +101,21 @@ add_library(soralog::yaml ALIAS configurator_yaml)
 add_library(soralog::fallback ALIAS fallback_configurator)
 
 set(INSTALL_TARGETS
-    soralog
-
-    logging_system
-    group
-    logger
-
     sink
     sink_to_nowhere
     sink_to_console
     sink_to_file
 
+    group
+
     configurator
     fallback_configurator
     configurator_yaml
+
+    logger
+    logging_system
+
+    soralog
     )
 
 include(GNUInstallDirs)
@@ -132,9 +128,13 @@ install(
 install(
     TARGETS ${INSTALL_TARGETS}
     EXPORT soralogConfig
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
+    ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
+    RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}/soralog
+    INCLUDES      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FRAMEWORK     DESTINATION ${CMAKE_INSTALL_PREFIX}
+)
 
 install(
     EXPORT soralogConfig
@@ -144,5 +144,6 @@ install(
 
 export(
     EXPORT soralogConfig
+    FILE ${PROJECT_BINARY_DIR}/soralogConfig.cmake
     NAMESPACE soralog::
-    FILE ${PROJECT_BINARY_DIR}/soralogConfig.cmake)
+)

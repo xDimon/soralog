@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#include "impl/sink_to_console.hpp"
+#include "soralog/impl/sink_to_console.hpp"
 
 using namespace soralog;
 using namespace testing;

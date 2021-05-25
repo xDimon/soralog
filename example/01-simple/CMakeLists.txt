@@ -14,4 +14,5 @@ target_link_libraries(example_simple
     soralog::soralog
     soralog::yaml
     soralog::fallback
+    pthread
     )

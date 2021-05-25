@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "sink_to_file.hpp"
+#include <soralog/impl/sink_to_file.hpp>
 
 #include <chrono>
 #include <iomanip>
