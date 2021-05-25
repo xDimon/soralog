@@ -7,7 +7,7 @@
 
 #include <soralog/level.hpp>
 
-#include "sink_to_console.hpp"
+#include <soralog/impl/sink_to_console.hpp>
 
 namespace soralog {
 

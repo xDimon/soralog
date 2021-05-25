@@ -10,8 +10,8 @@
 #include <set>
 
 #include <soralog/group.hpp>
+#include <soralog/impl/sink_to_nowhere.hpp>
 #include <soralog/logger.hpp>
-#include "impl/sink_to_nowhere.hpp"
 
 namespace soralog {
 

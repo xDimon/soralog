@@ -14,7 +14,7 @@ set(CMAKE_TOOLCHAIN_FILE
 include("cmake/Hunter/init.cmake")
 
 cmake_policy(SET CMP0048 NEW)
-project(soralog VERSION 0.0.6 LANGUAGES CXX)
+project(soralog VERSION 0.0.7 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

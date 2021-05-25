@@ -12,9 +12,9 @@
 #include <soralog/group.hpp>
 #include <soralog/level.hpp>
 
-#include "sink_to_console.hpp"
-#include "sink_to_file.hpp"
-#include "sink_to_nowhere.hpp"
+#include <soralog/impl/sink_to_console.hpp>
+#include <soralog/impl/sink_to_file.hpp>
+#include <soralog/impl/sink_to_nowhere.hpp>
 
 namespace soralog {
 
