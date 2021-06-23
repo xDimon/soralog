@@ -32,3 +32,13 @@ set(
     "C++ compiler"
     FORCE
 )
+
+string(REGEX MATCH "([0-9]+).([0-9]+).([0-9]+)" v ${CMAKE_CXX_COMPILER_VERSION})
+if (${CMAKE_MATCH_1} LESS 8)
+    message(FATAL "Requires GNU compiler at least version 8")
+endif()
+if ((${CMAKE_MATCH_1} LESS 9) OR ((${CMAKE_MATCH_1} EQUAL 9) AND (${CMAKE_MATCH_2} LESS 2)))
+    add_cache_flag(CMAKE_EXE_LINKER_FLAGS "-lstdc++fs")
+    add_cache_flag(CMAKE_SHARED_LINKER_FLAGS "-lstdc++fs")
+endif()
+
