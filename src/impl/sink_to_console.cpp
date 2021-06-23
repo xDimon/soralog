@@ -19,6 +19,14 @@ namespace soralog {
 
     using namespace std::chrono_literals;
 
+    namespace fmt_internal {
+#if FMT_VERSION >= 70000
+  using namespace fmt::detail; // NOLINT
+#else
+  using namespace fmt::internal; // NOLINT
+#endif
+    }  // namespace fmt_internal
+
     // Separator is using between logical parts of log record.
     // Might be any substring or symbol: space, tab, etc.
     // Couple of space is selected to differ of single space
@@ -54,7 +62,7 @@ namespace soralog {
     };
 
     void put_reset_style(char *&ptr) {
-      const auto &style = fmt::internal::data::reset_color;
+      const auto &style = fmt_internal::data::reset_color;
       auto size = std::end(style) - std::begin(style) - 1;
       std::memcpy(ptr, std::begin(style), size);
       ptr = ptr + size;  // NOLINT
@@ -63,21 +71,21 @@ namespace soralog {
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
-      put_style(ptr, fmt::internal::make_foreground_color<char>(color),
-                fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt_internal::make_foreground_color<char>(color),
+                fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_name_style(char *&ptr) {
-      put_style(ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_text_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       if (level <= Level::ERROR) {
-        put_style(ptr, fmt::internal::make_emphasis<char>(fmt::emphasis::bold));
+        put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
       } else if (level >= Level::DEBUG) {
         put_style(ptr,
-                  fmt::internal::make_emphasis<char>(fmt::emphasis::italic));
+                  fmt_internal::make_emphasis<char>(fmt::emphasis::italic));
       }
     }
 
@@ -200,7 +208,7 @@ namespace soralog {
 
         if (with_color_) {
           const auto &style =
-              fmt::internal::make_foreground_color<char>(fmt::color::gray);
+              fmt_internal::make_foreground_color<char>(fmt::color::gray);
 
           auto size = std::end(style) - std::begin(style);
           std::memcpy(ptr, std::begin(style),

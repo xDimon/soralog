@@ -123,39 +123,39 @@ TEST_F(MacrosTest, OneArg) {
 
 TEST_F(MacrosTest, TwoArg) {
   std::string fmt = "Trace: two args: {} and {}";
-  SL_TRACE(logger(), fmt, 1, 2.0);
+  SL_TRACE(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::TRACE);
-  EXPECT_TRUE(logger_->last_message == "Trace: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Trace: two args: 1 and 2.3");
 
   fmt = "Debug: two args: {} and {}";
-  SL_DEBUG(logger(), fmt, 1, 2.0);
+  SL_DEBUG(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::DEBUG);
-  EXPECT_TRUE(logger_->last_message == "Debug: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Debug: two args: 1 and 2.3");
 
   fmt = "Verbose: two args: {} and {}";
-  SL_VERBOSE(logger(), fmt, 1, 2.0);
+  SL_VERBOSE(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::VERBOSE);
-  EXPECT_TRUE(logger_->last_message == "Verbose: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Verbose: two args: 1 and 2.3");
 
   fmt = "Info: two args: {} and {}";
-  SL_INFO(logger(), fmt, 1, 2.0);
+  SL_INFO(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::INFO);
-  EXPECT_TRUE(logger_->last_message == "Info: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Info: two args: 1 and 2.3");
 
   fmt = "Warning: two args: {} and {}";
-  SL_WARN(logger(), fmt, 1, 2.0);
+  SL_WARN(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::WARN);
-  EXPECT_TRUE(logger_->last_message == "Warning: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Warning: two args: 1 and 2.3");
 
   fmt = "Error: two args: {} and {}";
-  SL_ERROR(logger(), fmt, 1, 2.0);
+  SL_ERROR(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::ERROR);
-  EXPECT_TRUE(logger_->last_message == "Error: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Error: two args: 1 and 2.3");
 
   fmt = "Critical: two args: {} and {}";
-  SL_CRITICAL(logger(), fmt, 1, 2.0);
+  SL_CRITICAL(logger(), fmt, 1, 2.3);
   EXPECT_TRUE(logger_->last_level == Level::CRITICAL);
-  EXPECT_TRUE(logger_->last_message == "Critical: two args: 1 and 2.0");
+  EXPECT_TRUE(logger_->last_message == "Critical: two args: 1 and 2.3");
 }
 
 TEST_F(MacrosTest, TwentyArg) {
