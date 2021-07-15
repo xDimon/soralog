@@ -78,15 +78,41 @@ namespace soralog::macro {
 #define SL_LOG(LOG, LVL, FMT, ...) \
   _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__, Z)
 
-#ifndef NDEBUG
+/* You can use cmake options WITHOUT_TRACE_LOG_LEVEL and WITHOUT_DEBUG_LOG_LEVEL
+   to remove (or not) debug and trace messages. See next cmake code for example:
+
+option(WITHOUT_TRACE_LOG_LEVEL "Build without trace macro"        OFF)
+option(WITHOUT_DEBUG_LOG_LEVEL "Build without debug macro"        OFF)
+if (WITHOUT_TRACE_LOG_LEVEL AND NOT WITHOUT_DEBUG_LOG_LEVEL)
+    set(WITHOUT_TRACE_LOG_LEVEL OFF)
+    message(STATUS "Trace level have switched off, because bebug level is off")
+endif() if (WITHOUT_TRACE_LOG_LEVEL)
+    add_compile_definitions(WITHOUT_TRACE_LOG_LEVEL)
+endif()
+if (WITHOUT_DEBUG_LOG_LEVEL)
+    add_compile_definitions(WITHOUT_DEBUG_LOG_LEVEL)
+endif()
+
+*/
+
+#if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
+#warning "Trace log level have switched off, because bebug log level is off"
+#undef WITHOUT_DEBUG_LOG_LEVEL
+#endif
+
+#ifndef WITHOUT_TRACE_LOG_LEVEL
 #define SL_TRACE(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::TRACE, (FMT), ##__VA_ARGS__, Z)
 #else
 #define SL_TRACE(LOG, FMT, ...)
 #endif
 
+#ifndef WITHOUT_DEBUG_LOG_LEVEL
 #define SL_DEBUG(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::DEBUG, (FMT), ##__VA_ARGS__, Z)
+#else
+#define SL_DEBUG(LOG, FMT, ...)
+#endif
 
 #define SL_VERBOSE(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::VERBOSE, (FMT), ##__VA_ARGS__, Z)
