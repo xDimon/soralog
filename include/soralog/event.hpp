@@ -69,6 +69,7 @@ namespace soralog {
         level_ = Level::ERROR;
       }
 
+      message_size_ = std::min(message_.size(), message_size_);
       name_size_ = std::min(name.size(), name_.size());
       std::copy_n(name.begin(), name_size_, name_.begin());
     }

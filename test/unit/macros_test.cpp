@@ -5,17 +5,7 @@
 
 #include <gtest/gtest.h>
 
-#ifdef NDEBUG
-#define _NDEBUG_OFF NDEBUG
-#undef NDEBUG
-#endif
-
 #include <soralog/macro.hpp>
-
-#ifdef _NDEBUG_OFF
-#define NDEBUG _NDEBUG_OFF
-#undef _NDEBUG_OFF
-#endif
 
 using namespace soralog;
 using namespace testing;
