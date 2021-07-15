@@ -20,8 +20,20 @@ namespace soralog {
 
   namespace {
 
-    constexpr bool is_release_build =
-#ifdef NDEBUG
+#if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
+#warning "Trace log level have switched off, because bebug log level is off"
+#undef WITHOUT_DEBUG_LOG_LEVEL
+#endif
+
+    constexpr bool debug_level_disable =
+#ifdef WITHOUT_DEBUG_LOG_LEVEL
+        true;
+#else
+        false;
+#endif
+
+    constexpr bool trace_level_disabled =
+#ifdef WITHOUT_TRACE_LOG_LEVEL
         true;
 #else
         false;
@@ -592,11 +604,17 @@ namespace soralog {
         level.emplace(Level::VERBOSE);
       } else if (level_string == "debug" || level_string == "deb") {
         level.emplace(Level::DEBUG);
+        if constexpr (debug_level_disable) {
+          errors_ << "W: Level 'trace' in group " << tmp_name
+                  << " woun't work: it has disabled with compile option"
+                  << "\n";
+          has_warning_ = true;
+        }
       } else if (level_string == "trace") {
         level.emplace(Level::TRACE);
-        if constexpr (is_release_build) {
+        if constexpr (trace_level_disabled) {
           errors_ << "W: Level 'trace' in group " << tmp_name
-                  << " woun't work: it is release build"
+                  << " woun't work: it has disabled with compile option"
                   << "\n";
           has_warning_ = true;
         }
