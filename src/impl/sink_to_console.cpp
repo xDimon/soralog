@@ -132,7 +132,8 @@ namespace soralog {
 
   }  // namespace
 
-  SinkToConsole::SinkToConsole(std::string name, bool with_color,
+  SinkToConsole::SinkToConsole(std::string name, Stream stream_type,
+                               bool with_color,
                                std::optional<ThreadInfoType> thread_info_type,
                                std::optional<size_t> capacity,
                                std::optional<size_t> max_message_length,
@@ -143,6 +144,7 @@ namespace soralog {
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 17),         // 128 Kb
              latency.value_or(200)),                 // 200 ms
+        stream_(stream_type == Stream::STDERR ? std::cerr : std::cout),
         with_color_(with_color),
         buff_(max_buffer_size_) {
     if (latency_ != std::chrono::milliseconds::zero()) {
@@ -291,7 +293,7 @@ namespace soralog {
               >= next_flush_.load(std::memory_order_acquire)) {
         next_flush_.store(std::chrono::steady_clock::now() + latency_,
                           std::memory_order_release);
-        std::cout.write(begin, ptr - begin);
+        stream_.write(begin, ptr - begin);
         ptr = begin;
       }
 
@@ -299,7 +301,7 @@ namespace soralog {
         bool true_v = true;
         if (need_to_flush_.compare_exchange_weak(true_v, false,
                                                  std::memory_order_acq_rel)) {
-          std::cout.flush();
+          stream_.flush();
         }
         break;
       }

@@ -210,6 +210,7 @@ namespace soralog {
       const std::string &name, const YAML::Node &sink_node) {
     bool color = false;
     Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
+    SinkToConsole::Stream stream_type = SinkToConsole::Stream::STDOUT;
     std::optional<size_t> capacity;
     std::optional<size_t> buffer_size;
     std::optional<size_t> max_message_length;
@@ -222,6 +223,26 @@ namespace soralog {
         has_warning_ = true;
       } else {
         color = color_node.as<bool>();
+      }
+    }
+
+    auto stream_node = sink_node["stream"];
+    if (stream_node.IsDefined()) {
+      if (not stream_node.IsScalar()) {
+        errors_
+            << "W: Property 'stream' of sink node is not stdout or stderr\n";
+        has_warning_ = true;
+      } else {
+        auto stream_str = stream_node.as<std::string>();
+        if (stream_str == "stdout") {
+          stream_type = SinkToConsole::Stream::STDOUT;
+        } else if (stream_str == "stderr") {
+          stream_type = SinkToConsole::Stream::STDERR;
+        } else {
+          errors_
+              << "W: Property 'stream' of sink node is not stdout or stderr\n";
+          has_warning_ = true;
+        }
       }
     }
 
@@ -323,6 +344,8 @@ namespace soralog {
         continue;
       if (key == "type")
         continue;
+      if (key == "stream")
+        continue;
       if (key == "color")
         continue;
       if (key == "thread")
@@ -346,8 +369,9 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, color, thread_info_type, capacity,
-                                    max_message_length, buffer_size, latency);
+    system_.makeSink<SinkToConsole>(name, stream_type, color, thread_info_type,
+                                    capacity, max_message_length, buffer_size,
+                                    latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(

@@ -1,6 +1,7 @@
 sinks:
   - name: console
     type: console
+    stream: stdout
     color: true
     thread: name
     capacity: 64
