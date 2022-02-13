@@ -212,6 +212,7 @@ namespace soralog {
     Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
     std::optional<size_t> capacity;
     std::optional<size_t> buffer_size;
+    std::optional<size_t> max_message_length;
     std::optional<size_t> latency;
 
     auto color_node = sink_node["color"];
@@ -277,6 +278,25 @@ namespace soralog {
       }
     }
 
+    auto max_message_length_node = sink_node["max_message_length"];
+    if (max_message_length_node.IsDefined()) {
+      if (not max_message_length_node.IsScalar()) {
+        errors_
+            << "W: Property 'max_message_length' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto max_message_length_int = max_message_length_node.as<int>();
+        if (max_message_length_int > 64) {
+          max_message_length.emplace(max_message_length_int);
+        } else {
+          errors_ << "W: Wrong property 'max_message_length' value of sink '"
+                  << name << "': " << max_message_length_node.as<std::string>()
+                  << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
     auto latency_node = sink_node["latency"];
     if (latency_node.IsDefined()) {
       if (not latency_node.IsScalar()) {
@@ -311,6 +331,8 @@ namespace soralog {
         continue;
       if (key == "buffer")
         continue;
+      if (key == "max_message_length")
+        continue;
       if (key == "latency")
         continue;
       errors_ << "W: Unknown property of sink '" << name
@@ -325,7 +347,7 @@ namespace soralog {
     }
 
     system_.makeSink<SinkToConsole>(name, color, thread_info_type, capacity,
-                                    buffer_size, latency);
+                                    max_message_length, buffer_size, latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
@@ -334,6 +356,7 @@ namespace soralog {
     Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
     std::optional<size_t> capacity;
     std::optional<size_t> buffer_size;
+    std::optional<size_t> max_message_length;
     std::optional<size_t> latency;
 
     auto path_node = sink_node["path"];
@@ -400,6 +423,25 @@ namespace soralog {
       }
     }
 
+    auto max_message_length_node = sink_node["max_message_length"];
+    if (max_message_length_node.IsDefined()) {
+      if (not max_message_length_node.IsScalar()) {
+        errors_
+            << "W: Property 'max_message_length' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto max_message_length_int = max_message_length_node.as<int>();
+        if (max_message_length_int >= 64) {
+          max_message_length.emplace(max_message_length_int);
+        } else {
+          errors_ << "W: Wrong property 'max_message_length' value of sink '"
+                  << name << "': " << max_message_length_node.as<std::string>()
+                  << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
     auto latency_node = sink_node["latency"];
     if (latency_node.IsDefined()) {
       if (not latency_node.IsScalar()) {
@@ -432,6 +474,8 @@ namespace soralog {
         continue;
       if (key == "buffer")
         continue;
+      if (key == "max_message_length")
+        continue;
       if (key == "latency")
         continue;
       errors_ << "W: Unknown property of sink '" << name << "': " << key
@@ -452,7 +496,7 @@ namespace soralog {
     }
 
     system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
-                                 buffer_size, latency);
+                                 max_message_length, buffer_size, latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(

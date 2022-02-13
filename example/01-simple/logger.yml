@@ -4,12 +4,12 @@ sinks:
     color: true
     thread: name
     capacity: 64
+    max_message_length: 120
     buffer: 131072
     latency: 100
   - name: file
     type: file
-    directory: .
-    filename: example.log
+    path: /var/log/example.log
     thread: name
     capacity: 2048
     buffer: 4194304

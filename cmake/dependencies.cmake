@@ -6,7 +6,6 @@
 if (TESTING OR COVERAGE)
   hunter_add_package(GTest)
   find_package(GTest CONFIG REQUIRED)
-  find_package(GMock CONFIG REQUIRED)
 endif()
 
 hunter_add_package(yaml-cpp)

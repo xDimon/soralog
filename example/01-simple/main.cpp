@@ -86,8 +86,9 @@ groups:
 }();
 
 int main() {
-  ConfiguratorType cfg_type = ConfiguratorType::Cascade;
+  ConfiguratorType cfg_type = ConfiguratorType::YamlByPath;
 
+  // clang-format off
   std::shared_ptr<soralog::Configurator> configurator =
       cfg_type == ConfiguratorType::Cascade
       ? cascade_configurator
@@ -98,6 +99,7 @@ int main() {
               : cfg_type == ConfiguratorType::Customized
                   ? customized_configurator
                   : std::make_shared<soralog::FallbackConfigurator>();
+  // clang-format on
 
   soralog::LoggingSystem log_system(configurator);
 
@@ -141,6 +143,10 @@ int main() {
       object.method();
     })));
   }
+
+  main_log->info(
+      "Very long message  |.....30->|.....40->|.....50->|.....60->|.....70->|"
+      ".....80->|.....90->|....100->|....110->|....120->|....130->|....140->|");
 
   LoggingObject object(log_system);
   object.method();

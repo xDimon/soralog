@@ -21,9 +21,9 @@ namespace soralog {
 
     namespace fmt_internal {
 #if FMT_VERSION >= 70000
-  using namespace fmt::detail; // NOLINT
+      using namespace fmt::detail;  // NOLINT
 #else
-  using namespace fmt::internal; // NOLINT
+      using namespace fmt::internal;  // NOLINT
 #endif
     }  // namespace fmt_internal
 
@@ -45,7 +45,7 @@ namespace soralog {
         };
 
     template <typename... Args>
-    inline void pass(Args &&... styles) {}
+    inline void pass(Args &&...styles) {}
 
     enum V {};
     template <typename T>
@@ -57,7 +57,7 @@ namespace soralog {
     }
 
     template <typename... Args>
-    void put_style(char *&ptr, Args &&... styles) {
+    void put_style(char *&ptr, Args &&...styles) {
       pass(put_style(ptr, std::forward<Args>(styles))...);
     };
 
@@ -135,12 +135,14 @@ namespace soralog {
   SinkToConsole::SinkToConsole(std::string name, bool with_color,
                                std::optional<ThreadInfoType> thread_info_type,
                                std::optional<size_t> capacity,
+                               std::optional<size_t> max_message_length,
                                std::optional<size_t> buffer_size,
                                std::optional<size_t> latency)
       : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
-             capacity.value_or(1u << 6),      // 64 events
-             buffer_size.value_or(1u << 17),  // 128 Kb
-             latency.value_or(200)),          // 200 ms
+             capacity.value_or(1u << 6),             // 64 events
+             max_message_length.value_or(1u << 10),  // 1024 bytes
+             buffer_size.value_or(1u << 17),         // 128 Kb
+             latency.value_or(200)),                 // 200 ms
         with_color_(with_color),
         buff_(max_buffer_size_) {
     if (latency_ != std::chrono::milliseconds::zero()) {

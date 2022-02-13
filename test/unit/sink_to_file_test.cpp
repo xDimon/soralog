@@ -18,7 +18,7 @@ class SinkToFileTest : public ::testing::Test {
         : sink_(std::move(sink)) {}
 
     template <typename... Args>
-    void debug(std::string_view format, const Args &... args) {
+    void debug(std::string_view format, const Args &...args) {
       sink_->push("logger", Level::DEBUG, format, args...);
     }
 
@@ -45,6 +45,7 @@ class SinkToFileTest : public ::testing::Test {
         "file", path_,
         Sink::ThreadInfoType::NONE,  // ignore thread info
         4,                           // capacity: 4 events
+        64,                          // max message length: 64 byte
         16384,                       // buffers size: 16 Kb
         latency.count());
     return std::make_shared<FakeLogger>(std::move(sink));

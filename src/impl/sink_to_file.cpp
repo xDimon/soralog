@@ -68,12 +68,14 @@ namespace soralog {
   SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
                          std::optional<ThreadInfoType> thread_info_type,
                          std::optional<size_t> capacity,
+                         std::optional<size_t> max_message_length,
                          std::optional<size_t> buffer_size,
                          std::optional<size_t> latency)
       : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
-             capacity.value_or(1u << 11),     // 2048 events
-             buffer_size.value_or(1u << 22),  // 4 Mb
-             latency.value_or(1000)),         // 1 sec
+             capacity.value_or(1u << 11),            // 2048 events
+             max_message_length.value_or(1u << 10),  // 1024 bytes
+             buffer_size.value_or(1u << 22),         // 4 Mb
+             latency.value_or(1000)),                // 1 sec
         path_(std::move(path)),
         buff_(max_buffer_size_) {
     out_.open(path_, std::ios::app);

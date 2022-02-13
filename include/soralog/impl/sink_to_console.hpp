@@ -27,6 +27,7 @@ namespace soralog {
     SinkToConsole(std::string name, bool with_color,
                   std::optional<ThreadInfoType> thread_info_type = {},
                   std::optional<size_t> capacity = {},
+                  std::optional<size_t> max_message_length = {},
                   std::optional<size_t> buffer_size = {},
                   std::optional<size_t> latency = {});
     ~SinkToConsole() override;
