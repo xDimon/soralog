@@ -42,6 +42,9 @@ namespace soralog {
     void push(Level level, std::string_view format, const Args &... args) {
       if (level_ >= level) {
         sink_->push(name_, level, format, args...);
+        if (level_ >= Level::CRITICAL) {
+          sink_->flush();
+        }
       }
     }
 
@@ -179,7 +182,7 @@ namespace soralog {
      * Flushes all events accumulated in sink immediately
      */
     void flush() const {
-      sink_->async_flush();
+      sink_->flush();
     }
 
     // Level
