@@ -154,8 +154,10 @@ namespace soralog {
     if (latency_ != std::chrono::milliseconds::zero()) {
       need_to_finalize_.store(true, std::memory_order_release);
       async_flush();
-      sink_worker_->join();
-      sink_worker_.reset();
+      if (sink_worker_ and sink_worker_->joinable()) {
+        sink_worker_->join();
+        sink_worker_.reset();
+      }
     } else {
       flush();
     }
