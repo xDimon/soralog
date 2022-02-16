@@ -6,6 +6,6 @@
 namespace soralog {
 
   // to suppress warning about no symbols in cpp
-  const char *__library_name = "soralog";
+  const char *const __library_name = "soralog";
 
 }  // namespace soralog

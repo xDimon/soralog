@@ -10,7 +10,7 @@ sinks:
     latency: 100
   - name: file
     type: file
-    path: /var/log/example.log
+    path: /tmp/solalog_example.log
     thread: name
     capacity: 2048
     buffer: 4194304
