@@ -23,11 +23,11 @@
  */
 
 namespace soralog::macro {
-  template <typename Logger, typename... Args>
+  template <typename Logger, typename Format, typename... Args>
   inline void proxy(const std::shared_ptr<Logger> &log, soralog::Level level,
-                    std::string_view fmt, Args &&... args) {
+                    Format &&fmt, Args &&...args) {
     if (log->level() >= level) {
-      log->log(level, fmt, std::move(args)()...);
+      log->log(level, std::forward<Format>(fmt), std::move(args)()...);
     }
   }
 }  // namespace soralog::macro
@@ -71,9 +71,9 @@ namespace soralog::macro {
 
 #define _SL_WRAP_ARGS(...) , ##__VA_ARGS__
 
-#define _SL_LOG(LOG, LVL, FMT, ...)   \
-  soralog::macro::proxy((LOG), (LVL), \
-                        (FMT)_SL_WRAP(Z _SL_WRAP_ARGS(__VA_ARGS__)))
+#define _SL_LOG(LOG, LVL, FMT, ...) \
+  soralog::macro::proxy(            \
+      (LOG), (LVL), FMT_STRING(FMT) _SL_WRAP(Z _SL_WRAP_ARGS(__VA_ARGS__)))
 
 #define SL_LOG(LOG, LVL, FMT, ...) \
   _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__, Z)

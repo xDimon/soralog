@@ -133,6 +133,12 @@ int main() {
   main_log->debug("{}", lambda("logger: debug msg for info level"));
   SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
+  std::string generated_format = "<{}>";
+  main_log->debug(generated_format, "works!");
+
+  // Invalid format in macros causes error in compile time
+  // SL_DEBUG(main_log, "{} {}", lambda("one value for two placeholder"));
+
   std::vector<std::shared_ptr<std::thread>> threads;
 
   for (const auto &name :

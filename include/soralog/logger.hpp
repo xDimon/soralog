@@ -38,8 +38,8 @@ namespace soralog {
      * Checks if {@param level} of event is enough to logging and push logger
      * name and event's data ({@param format} and {@param args}) to sink
      */
-    template <typename... Args>
-    void push(Level level, std::string_view format, const Args &... args) {
+    template <typename Format, typename... Args>
+    void push(Level level, const Format &format, const Args &...args) {
       if (level_ >= level) {
         sink_->push(name_, level, format, args...);
         if (level_ >= Level::CRITICAL) {
@@ -60,16 +60,16 @@ namespace soralog {
      * Logs event ({@param format} and {@param args})
      * with provoded {@param level}
      */
-    template <typename... Args>
-    void log(Level level, std::string_view format, const Args &... args) {
-      push(level, format, args...);
+    template <typename Format, typename... Args>
+    void log(Level level, Format &&format, const Args &...args) {
+      push(level, std::forward<Format>(format), args...);
     }
 
     /**
      * Logs event ({@param format} and {@param args}) with trace level
      */
     template <typename... Args>
-    void trace(std::string_view format, const Args &... args) {
+    void trace(std::string_view format, const Args &...args) {
       push(Level::TRACE, format, args...);
     }
 
@@ -85,7 +85,7 @@ namespace soralog {
      * Logs event ({@param format} and {@param args}) with debug level
      */
     template <typename... Args>
-    void debug(std::string_view format, const Args &... args) {
+    void debug(std::string_view format, const Args &...args) {
       push(Level::DEBUG, format, args...);
     }
 
@@ -101,7 +101,7 @@ namespace soralog {
      * Logs event ({@param format} and {@param args}) with verbose level
      */
     template <typename... Args>
-    void verbose(std::string_view format, const Args &... args) {
+    void verbose(std::string_view format, const Args &...args) {
       push(Level::VERBOSE, format, args...);
     }
 
@@ -117,7 +117,7 @@ namespace soralog {
      * Logs event ({@param format} and {@param args}) with info level
      */
     template <typename... Args>
-    void info(std::string_view format, const Args &... args) {
+    void info(std::string_view format, const Args &...args) {
       push(Level::INFO, format, args...);
     }
 
@@ -133,7 +133,7 @@ namespace soralog {
      * Logs event ({@param format} and {@param args}) with warning level
      */
     template <typename... Args>
-    void warn(std::string_view format, const Args &... args) {
+    void warn(std::string_view format, const Args &...args) {
       push(Level::WARN, format, args...);
     }
 
@@ -149,7 +149,7 @@ namespace soralog {
      * Logs event ({@param format} and {@param args}) with error level
      */
     template <typename... Args>
-    void error(std::string_view format, const Args &... args) {
+    void error(std::string_view format, const Args &...args) {
       push(Level::ERROR, format, args...);
     }
 
@@ -166,7 +166,7 @@ namespace soralog {
      * situation
      */
     template <typename... Args>
-    void critical(std::string_view format, const Args &... args) {
+    void critical(std::string_view format, const Args &...args) {
       push(Level::CRITICAL, format, args...);
     }
 

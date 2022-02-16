@@ -71,8 +71,8 @@ namespace soralog {
      * @param format is format of message
      * @param args arguments is of log message
      */
-    template <typename... Args>
-    void push(std::string_view name, Level level, std::string_view format,
+    template <typename Format, typename... Args>
+    void push(std::string_view name, Level level, const Format &format,
               const Args &...args) noexcept(IF_RELEASE) {
       while (true) {
         auto node = events_.put(name, thread_info_type_, level, format,
