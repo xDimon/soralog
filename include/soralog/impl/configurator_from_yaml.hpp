@@ -87,6 +87,8 @@ namespace soralog {
       void parseSinkToFile(const std::string &name,
                            const YAML::Node &sink_node);
 
+      void parseMultisink(const std::string &name, const YAML::Node &sink_node);
+
       void parseGroups(const YAML::Node &groups,
                        const std::optional<std::string> &parent);
 

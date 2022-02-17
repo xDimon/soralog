@@ -12,6 +12,7 @@
 #include <soralog/group.hpp>
 #include <soralog/level.hpp>
 
+#include <soralog/impl/multisink.hpp>
 #include <soralog/impl/sink_to_console.hpp>
 #include <soralog/impl/sink_to_file.hpp>
 #include <soralog/impl/sink_to_nowhere.hpp>
@@ -199,6 +200,8 @@ namespace soralog {
       parseSinkToConsole(name, sink);
     } else if (type == "file") {
       parseSinkToFile(name, sink);
+    } else if (type == "multisink") {
+      parseMultisink(name, sink);
     } else {
       errors_ << "E: Unknown 'type' of sink node '" << name << "': " << type
               << "\n";
@@ -521,6 +524,55 @@ namespace soralog {
 
     system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
                                  max_message_length, buffer_size, latency);
+  }
+
+  void ConfiguratorFromYAML::Applicator::parseMultisink(
+      const std::string &name, const YAML::Node &sink_node) {
+    bool fail = false;
+
+    auto sinks_node = sink_node["sinks"];
+    if (not sinks_node.IsDefined()) {
+      fail = true;
+      errors_ << "E: Not found 'sinks' of sink '" << name << "'\n";
+      has_error_ = true;
+    } else if (not sinks_node.IsSequence()) {
+      fail = true;
+      errors_ << "E: Property 'sinks' of sink '" << name << "' is not list\n";
+      has_error_ = true;
+    }
+
+    for (const auto &it : sink_node) {
+      auto key = it.first.as<std::string>();
+      if (key == "name")
+        continue;
+      if (key == "type")
+        continue;
+      if (key == "sinks")
+        continue;
+      errors_ << "W: Unknown property of sink '" << name << "': " << key
+              << "\n";
+      has_warning_ = true;
+    }
+
+    if (fail) {
+      return;
+    }
+
+    auto sink_names = sinks_node.as<std::vector<std::string>>();
+
+    std::vector<std::shared_ptr<Sink>> sinks;
+    for (auto &sink_name : sink_names) {
+      auto sink = system_.getSink(sink_name);
+      if (not sink) {
+        errors_ << "E: Sink '" << sink_name << "' must be defined before sink '"
+                << name << "'\n";
+        has_warning_ = true;
+      } else {
+        sinks.emplace_back(std::move(sink));
+      }
+    }
+
+    system_.makeSink<Multisink>(name, std::move(sinks));
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
