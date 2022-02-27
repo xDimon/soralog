@@ -24,12 +24,20 @@ sinks:
     capacity: 2048
     buffer: 4194304
     latency: 1000
+  - name: syslog
+    type: syslog
+    ident: solalog_example
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
   - name: sink_to_everywhere
     type: multisink
     sinks:
       - file
       - colored_stdout
       - simple_stderr
+      - syslog
 groups:
   - name: main
     sink: sink_to_everywhere

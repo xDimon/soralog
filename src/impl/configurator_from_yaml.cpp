@@ -16,6 +16,7 @@
 #include <soralog/impl/sink_to_console.hpp>
 #include <soralog/impl/sink_to_file.hpp>
 #include <soralog/impl/sink_to_nowhere.hpp>
+#include <soralog/impl/sink_to_syslog.hpp>
 
 namespace soralog {
 
@@ -200,6 +201,8 @@ namespace soralog {
       parseSinkToConsole(name, sink);
     } else if (type == "file") {
       parseSinkToFile(name, sink);
+    } else if (type == "syslog") {
+      parseSinkToSyslog(name, sink);
     } else if (type == "multisink") {
       parseMultisink(name, sink);
     } else {
@@ -524,6 +527,155 @@ namespace soralog {
 
     system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
                                  max_message_length, buffer_size, latency);
+  }
+
+  void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
+      const std::string &name, const YAML::Node &sink_node) {
+    bool fail = false;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
+    std::optional<size_t> capacity;
+    std::optional<size_t> buffer_size;
+    std::optional<size_t> max_message_length;
+    std::optional<size_t> latency;
+
+    auto ident_node = sink_node["ident"];
+    if (not ident_node.IsDefined()) {
+      fail = true;
+      errors_ << "E: Not found 'ident' of sink '" << name << "'\n";
+      has_error_ = true;
+    } else if (not ident_node.IsScalar()) {
+      fail = true;
+      errors_ << "E: Property 'ident' of sink '" << name << "' is not scalar\n";
+      has_error_ = true;
+    }
+
+    auto thread_node = sink_node["thread"];
+    if (thread_node.IsDefined()) {
+      if (not thread_node.IsScalar()) {
+        errors_ << "W: Property 'thread' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto thread_str = thread_node.as<std::string>();
+        if (thread_str == "name") {
+          thread_info_type = Sink::ThreadInfoType::NAME;
+        } else if (thread_str == "id") {
+          thread_info_type = Sink::ThreadInfoType::ID;
+        } else if (thread_str != "none") {
+          errors_ << "W: Wrong property 'thread' value of sink '" << name
+                  << "': " << thread_str << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto capacity_node = sink_node["capacity"];
+    if (capacity_node.IsDefined()) {
+      if (not capacity_node.IsScalar()) {
+        errors_ << "W: Property 'capacity' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto capacity_int = capacity_node.as<int>();
+        if (capacity_int >= 4) {
+          capacity.emplace(capacity_int);
+        } else {
+          errors_ << "W: Wrong property 'capacity' value of sink '" << name
+                  << "': " << capacity_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto buffer_node = sink_node["buffer"];
+    if (buffer_node.IsDefined()) {
+      if (not buffer_node.IsScalar()) {
+        errors_ << "W: Property 'buffer' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto buffer_int = buffer_node.as<int>();
+        if (buffer_int >= sizeof(Event) * 4) {
+          buffer_size.emplace(buffer_int);
+        } else {
+          errors_ << "W: Wrong property 'buffer' value of sink '" << name
+                  << "': " << buffer_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto max_message_length_node = sink_node["max_message_length"];
+    if (max_message_length_node.IsDefined()) {
+      if (not max_message_length_node.IsScalar()) {
+        errors_
+            << "W: Property 'max_message_length' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto max_message_length_int = max_message_length_node.as<int>();
+        if (max_message_length_int >= 64) {
+          max_message_length.emplace(max_message_length_int);
+        } else {
+          errors_ << "W: Wrong property 'max_message_length' value of sink '"
+                  << name << "': " << max_message_length_node.as<std::string>()
+                  << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
+    auto latency_node = sink_node["latency"];
+    if (latency_node.IsDefined()) {
+      if (not latency_node.IsScalar()) {
+        errors_ << "W: Property 'latency' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto latency_int = latency_node.as<int>();
+        if (std::to_string(latency_int) != latency_node.as<std::string>()
+            or latency_int < 0) {
+          errors_ << "W: Wrong value of property 'latency' value of sink '"
+                  << name << "': " << latency_node.as<std::string>() << "\n";
+          has_warning_ = true;
+        } else {
+          latency.emplace(latency_int);
+        }
+      }
+    }
+
+    for (const auto &it : sink_node) {
+      auto key = it.first.as<std::string>();
+      if (key == "name")
+        continue;
+      if (key == "type")
+        continue;
+      if (key == "ident")
+        continue;
+      if (key == "thread")
+        continue;
+      if (key == "capacity")
+        continue;
+      if (key == "buffer")
+        continue;
+      if (key == "max_message_length")
+        continue;
+      if (key == "latency")
+        continue;
+      errors_ << "W: Unknown property of sink '" << name << "': " << key
+              << "\n";
+      has_warning_ = true;
+    }
+
+    if (fail) {
+      return;
+    }
+
+    auto ident = ident_node.as<std::string>();
+
+    if (system_.getSink(name)) {
+      errors_ << "W: Already exists sink with name '" << name
+              << "'; Previous version will be overridden\n";
+      has_warning_ = true;
+    }
+
+    system_.makeSink<SinkToSyslog>(name, ident, thread_info_type, capacity,
+                                   max_message_length, buffer_size, latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
