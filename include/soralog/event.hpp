@@ -124,6 +124,7 @@ namespace soralog {
     std::array<char, 32> name_;
     size_t name_size_;
     Level level_ = Level::OFF;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic)
     char *const message_data_ = reinterpret_cast<char *>(this) + sizeof(*this);
     size_t message_size_;
   };

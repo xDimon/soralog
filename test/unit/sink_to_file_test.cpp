@@ -31,10 +31,13 @@ class SinkToFileTest : public ::testing::Test {
   };
 
   void SetUp() override {
-    std::array<char, L_tmpnam> filename{};
-    path_ = std::filesystem::temp_directory_path();
-    ASSERT_TRUE(std::tmpnam(filename.data()) != nullptr);
-    path_ /= std::string(filename.data()) + ".log";
+    std::string path(
+        (std::filesystem::temp_directory_path() / "soralog_test_XXXXXX")
+            .c_str());
+    if (mkstemp(path.data()) == -1) {
+      FAIL() << "Can't create output file for test";
+    }
+    path_ = std::filesystem::path(path);
   }
   void TearDown() override {
     std::remove(path_.native().data());

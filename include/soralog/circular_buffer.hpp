@@ -30,7 +30,8 @@ namespace soralog {
      public:
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuninitialized"
-      const T &item = *reinterpret_cast<T *>(data_.data()); // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      const T &item = *reinterpret_cast<T *>(data_.data());
 #pragma GCC diagnostic pop
       std::atomic_bool ready;
 
@@ -137,8 +138,10 @@ namespace soralog {
           return {};
         }
 
-        auto &node = *reinterpret_cast<Node *>(raw_data_.data()
-                                               + element_size_ * push_index);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto &node = *reinterpret_cast<Node *>(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            raw_data_.data() + element_size_ * push_index);
 
         // Item has not consumed yet
         if (node.ready.load(std::memory_order_acquire)) {
@@ -170,8 +173,10 @@ namespace soralog {
           return {};
         }
 
-        auto &node = *reinterpret_cast<Node *>(raw_data_.data()
-                                               + element_size_ * pop_index);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto &node = *reinterpret_cast<Node *>(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            raw_data_.data() + element_size_ * pop_index);
 
         // Item is already consumed
         if (not node.ready.load(std::memory_order_acquire)) {

@@ -63,6 +63,7 @@ namespace soralog {
 
   }  // namespace
 
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   std::atomic_bool SinkToSyslog::syslog_is_opened_{false};
 
   SinkToSyslog::SinkToSyslog(std::string name, std::string ident,
@@ -216,14 +217,14 @@ namespace soralog {
             priority = LOG_DEBUG;
             break;
           case Level::TRACE:  // trace messages must not be logged by syslog
-            must_log = false;
-            break;
+            [[fallthrough]];
           default:
             must_log = false;
             break;
         }
 
         if (must_log) {
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
           syslog(priority, "%s", begin);
         }
 

@@ -6,6 +6,8 @@
 namespace soralog {
 
   // to suppress warning about no symbols in cpp
+
+  // NOLINTNEXTLINE(bugprone-reserved-identifier)
   const char *const __library_name = "soralog";
 
 }  // namespace soralog

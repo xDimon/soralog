@@ -52,8 +52,8 @@ namespace soralog {
           events_(max_events, max_message_length) {
       // Auto-fix buffer size
       if (max_buffer_size_ < max_message_length * 2) {
-        const_cast<size_t &>(max_buffer_size_) =
-            max_message_length * 2;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast,-warnings-as-errors)
+        const_cast<size_t &>(max_buffer_size_) = max_message_length * 2;
       }
     }
 
