@@ -46,6 +46,11 @@ function(addtest test_name)
         LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
     )
     disable_clang_tidy(${test_name})
+
+    if(NOT TARGET all_tests)
+        add_custom_target(all_tests)
+    endif()
+    add_dependencies(all_tests ${test_name})
 endfunction()
 
 function(addtest_part test_name)
