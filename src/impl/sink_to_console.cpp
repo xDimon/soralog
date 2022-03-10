@@ -32,6 +32,9 @@ namespace soralog {
     // Couple of space is selected to differ of single space
     constexpr std::string_view separator = "  ";
 
+    // Escape-sequence for resetting current colors
+    constexpr std::string_view reset_color = "\x1b[0m";
+
     constexpr std::array<fmt::color, static_cast<size_t>(Level::TRACE) + 1>
         level_to_color_map{
             fmt::color::brown,         // OFF
@@ -62,8 +65,8 @@ namespace soralog {
     };
 
     void put_reset_style(char *&ptr) {
-      const auto &style = fmt_internal::data::reset_color;
-      auto size = std::end(style) - std::begin(style) - 1;
+      const auto &style = reset_color;
+      auto size = std::end(style) - std::begin(style);
       std::memcpy(ptr, std::begin(style), size);
       ptr = ptr + size;  // NOLINT
     }

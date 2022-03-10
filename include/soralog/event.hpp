@@ -6,6 +6,7 @@
 #ifndef SORALOG_EVENT
 #define SORALOG_EVENT
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <string_view>
