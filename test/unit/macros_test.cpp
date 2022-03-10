@@ -207,6 +207,25 @@ TEST_F(MacrosTest, CustomLevel) {
   // clang-format on
 }
 
+TEST_F(MacrosTest, CalculatedFormat) {
+  // String literal
+  SL_DEBUG(logger(), "ping => {}", "pong");
+  EXPECT_TRUE(logger_->last_message == "ping => pong");
+
+  // C-string
+  static const char *c_string = "ping => {}";
+  SL_DEBUG_DF(logger(), c_string, "pong");
+  EXPECT_TRUE(logger_->last_message == "ping => pong");
+
+  std::string_view string_view("ping => {}");
+  SL_DEBUG_DF(logger(), string_view, "pong");
+  EXPECT_TRUE(logger_->last_message == "ping => pong");
+
+  std::string string("ping => {}");
+  SL_DEBUG_DF(logger(), string, "pong");
+  EXPECT_TRUE(logger_->last_message == "ping => pong");
+}
+
 TEST_F(MacrosTest, CalculatedArgs) {
   // clang-format off
   auto number = [](int i) { return "#" + std::to_string(i); };

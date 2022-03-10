@@ -154,6 +154,10 @@ int main() {
       "Very long message  |.....30->|.....40->|.....50->|.....60->|.....70->|"
       ".....80->|.....90->|....100->|....110->|....120->|....130->|....140->|");
 
+  auto dynamic_format = std::string("Custom made format: {} ==>") + "<== {}";
+  main_log->info(dynamic_format, 1, 2);
+  SL_INFO_DF(main_log, dynamic_format, 3, 4);
+
   LoggingObject object(log_system);
   object.method();
 
