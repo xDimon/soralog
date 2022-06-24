@@ -43,17 +43,28 @@ namespace soralog {
     Sink &operator=(Sink &&) noexcept = delete;
 
     Sink(std::string name, ThreadInfoType thread_info_type, size_t max_events,
-         size_t max_buffer_size, size_t latency)
+         size_t max_message_length, size_t max_buffer_size, size_t latency)
         : name_(std::move(name)),
           thread_info_type_(thread_info_type),
-          events_(max_events),
+          max_message_length_(max_message_length),
           max_buffer_size_(max_buffer_size),
-          latency_(latency) {
+          latency_(latency),
+          events_(max_events, max_message_length) {
       // Auto-fix buffer size
-      if (max_buffer_size_ < sizeof(Event) * 2) {
-        const_cast<size_t &>(max_buffer_size_) = sizeof(Event) * 2;  // NOLINT
+      if (max_buffer_size_ < max_message_length * 2) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast,-warnings-as-errors)
+        const_cast<size_t &>(max_buffer_size_) = max_message_length * 2;
       }
-    };
+    }
+
+    Sink(std::string name, std::vector<std::shared_ptr<Sink>> sinks)
+        : name_(std::move(name)),
+          thread_info_type_(),
+          max_message_length_(),
+          max_buffer_size_(),
+          latency_(),
+          events_(0, 0),
+          underlying_sinks_(std::move(sinks)){};
 
     /**
      * @returns name of sink
@@ -69,28 +80,34 @@ namespace soralog {
      * @param format is format of message
      * @param args arguments is of log message
      */
-    template <typename... Args>
-    void push(std::string_view name, Level level, std::string_view format,
-              const Args &... args) noexcept(IF_RELEASE) {
-      while (true) {
-        auto node =
-            events_.put(name, thread_info_type_, level, format, args...);
+    template <typename Format, typename... Args>
+    void push(std::string_view name, Level level, const Format &format,
+              const Args &...args) noexcept(IF_RELEASE) {
+      if (underlying_sinks_.empty()) {
+        while (true) {
+          auto node = events_.put(name, thread_info_type_, level, format,
+                                  max_message_length_, args...);
 
-        // Event is queued successfully
-        if (node) {
-          size_ += node->message().size();
-          node.release();
-          break;
+          // Event is queued successfully
+          if (node) {
+            size_ += node->message().size();
+            node.release();
+            break;
+          }
+
+          // Events queue is full. Flush immediately and try to push again
+          flush();
         }
 
-        // Events queue is full. Flush immediatelly and try to push again
-        flush();
-      }
-
-      if (latency_ == std::chrono::milliseconds::zero()) {
-        flush();
-      } else if (size_ >= max_buffer_size_ * 4 / 5) {
-        async_flush();
+        if (latency_ == std::chrono::milliseconds::zero()) {
+          flush();
+        } else if (size_ >= max_buffer_size_ * 4 / 5) {
+          async_flush();
+        }
+      } else {
+        for (const auto &sink : underlying_sinks_) {
+          sink->push(name, level, format, args...);
+        }
       }
     }
 
@@ -119,9 +136,13 @@ namespace soralog {
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::chrono::milliseconds latency_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    const size_t max_message_length_;
+    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     CircularBuffer<Event> events_;
     // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     std::atomic_size_t size_ = 0;
+    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};
   };
 
 }  // namespace soralog

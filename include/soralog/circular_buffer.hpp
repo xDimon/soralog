@@ -26,19 +26,24 @@ namespace soralog {
     using element_type = T;
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    class Node {
-      std::array<std::byte, sizeof(T)> data_;
-
+    class Node final {
      public:
-      const T &item = *reinterpret_cast<T *>(data_.data());  // NOLINT
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+      const T &item = *reinterpret_cast<T *>(data_.data());
+#pragma GCC diagnostic pop
       std::atomic_bool ready;
 
       template <typename... Args>
       // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-      explicit Node(const Args &... args) noexcept(IF_RELEASE) {
+      explicit Node(const Args &...args) noexcept(IF_RELEASE) {
         new (data_.data()) T(args...);
         ready.store(false, std::memory_order_release);
       }
+
+     private:
+      std::array<std::byte, sizeof(T)> data_;
     };
 
     class NodeRef {
@@ -93,10 +98,24 @@ namespace soralog {
     CircularBuffer &operator=(CircularBuffer &&) noexcept = delete;
     CircularBuffer &operator=(CircularBuffer const &) = delete;
 
-    explicit CircularBuffer(size_t capacity) : data_(capacity){};
+    explicit CircularBuffer(size_t capacity)
+        : capacity_(capacity),
+          element_size_(sizeof(Node)),
+          raw_data_(capacity_ * element_size_){};
+
+    CircularBuffer(size_t capacity, size_t padding)
+        : capacity_(capacity),
+          element_size_([&] {
+            const auto alignment = std::alignment_of_v<Node>;
+            if (padding % alignment) {
+              padding += alignment - padding % alignment;
+            }
+            return sizeof(Node) + padding;
+          }()),
+          raw_data_(capacity_ * element_size_){};
 
     size_t capacity() const noexcept {
-      return data_.size();
+      return capacity_;
     }
 
     size_t size() const noexcept {
@@ -104,14 +123,14 @@ namespace soralog {
     }
 
     size_t avail() const noexcept {
-      return data_.size() - size_;
+      return capacity_ - size_;
     }
 
     template <typename... Args>
-    [[nodiscard]] NodeRef put(const Args &... args) noexcept(IF_RELEASE) {
+    [[nodiscard]] NodeRef put(const Args &...args) noexcept(IF_RELEASE) {
       while (true) {
         auto push_index = push_index_.load(std::memory_order_acquire);
-        auto next_index = (push_index + 1) % data_.size();
+        auto next_index = (push_index + 1) % capacity_;
 
         // Tail is caught up - queue is full
         auto pop_index = pop_index_.load(std::memory_order_acquire);
@@ -119,7 +138,10 @@ namespace soralog {
           return {};
         }
 
-        auto &node = data_[push_index];
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto &node = *reinterpret_cast<Node *>(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            raw_data_.data() + element_size_ * push_index);
 
         // Item has not consumed yet
         if (node.ready.load(std::memory_order_acquire)) {
@@ -132,7 +154,7 @@ namespace soralog {
           continue;
         }
 
-        size_ = ((next_index < pop_index) ? data_.size() : 0)
+        size_ = ((next_index < pop_index) ? capacity_ : 0)
             + (next_index - pop_index);
 
         // Emplace item
@@ -151,7 +173,10 @@ namespace soralog {
           return {};
         }
 
-        auto &node = data_[pop_index];
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto &node = *reinterpret_cast<Node *>(
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            raw_data_.data() + element_size_ * pop_index);
 
         // Item is already consumed
         if (not node.ready.load(std::memory_order_acquire)) {
@@ -159,13 +184,13 @@ namespace soralog {
         }
 
         // Go to next item
-        auto next_index = (pop_index + 1) % data_.size();
+        auto next_index = (pop_index + 1) % capacity_;
         if (not pop_index_.compare_exchange_weak(pop_index, next_index,
                                                  std::memory_order_release)) {
           continue;
         }
 
-        size_ = ((push_index < next_index) ? data_.size() : 0)
+        size_ = ((push_index < next_index) ? capacity_ : 0)
             + (push_index - next_index);
 
         return NodeRef{node, false};
@@ -173,8 +198,10 @@ namespace soralog {
     }
 
    private:
+    const size_t capacity_;
+    const size_t element_size_;
+    std::vector<std::byte> raw_data_;
     std::atomic_size_t size_ = 0;
-    std::vector<Node> data_;
     std::atomic_size_t push_index_ = 0;
     std::atomic_size_t pop_index_ = 0;
   };

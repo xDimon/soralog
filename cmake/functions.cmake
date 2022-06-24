@@ -32,12 +32,13 @@ function(addtest test_name)
     add_executable(${test_name} ${ARGN})
     addtest_part(${test_name} ${ARGN})
     target_link_libraries(${test_name}
-        GTest::main
-        GMock::main
+        GTest::gmock_main
     )
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/xunit)
+    set(xml_output "--gtest_output=xml:${CMAKE_BINARY_DIR}/xunit/xunit-${test_name}.xml")
     add_test(
         NAME ${test_name}
-        COMMAND $<TARGET_FILE:${test_name}>
+        COMMAND $<TARGET_FILE:${test_name}> ${xml_output}
     )
     set_target_properties(${test_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin
@@ -45,7 +46,11 @@ function(addtest test_name)
         LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
     )
     disable_clang_tidy(${test_name})
-    set_property(GLOBAL APPEND PROPERTY TEST_TARGETS ${test_name})
+
+    if(NOT TARGET all_tests)
+        add_custom_target(all_tests)
+    endif()
+    add_dependencies(all_tests ${test_name})
 endfunction()
 
 function(addtest_part test_name)

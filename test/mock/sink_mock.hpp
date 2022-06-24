@@ -17,13 +17,13 @@ namespace soralog {
 
    public:
     SinkMock(std::string name)
-        : Sink(std::move(name), ThreadInfoType::NONE, 4, sizeof(Event) * 4, 0) {
-    }
+        : Sink(std::move(name), ThreadInfoType::NONE, 4, 1024, 4096, 0) {}
     ~SinkMock() override = default;
 
     template <typename... Args>
     void push(std::string_view name, Level level, std::string_view format,
-              const Args &... args) noexcept(IF_RELEASE) {
+              size_t max_message_length,
+              const Args &...args) noexcept(IF_RELEASE) {
       mocked_push(name, level, format);
     }
     MOCK_METHOD3(mocked_push, void(std::string_view, Level, std::string_view));

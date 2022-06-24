@@ -23,7 +23,7 @@ jobs:
       run: |
         set -e
         sudo apt-get update || true
-        sudo apt-get install -y ninja-build
+        sudo apt-get install -y ninja-build gcovr
         sudo python3 -m pip install --upgrade pip
         sudo pip3 install scikit-build
         sudo pip3 install cmake requests gitpython gcovr pyyaml
@@ -31,7 +31,9 @@ jobs:
       env:
         CC: clang
         CXX: clang++
-      run: cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
+      run: |
+        cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
+        cmake --build build-coverage
     - name: "build report"
       env:
         CTEST_OUTPUT_ON_FAILURE: 1

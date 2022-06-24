@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <soralog/impl/sink_to_file.hpp>
+#include <soralog/impl/sink_to_syslog.hpp>
 
 #include <chrono>
 #include <iomanip>
 #include <iostream>
 
 #include <fmt/chrono.h>
+#include <syslog.h>
 
 namespace soralog {
 
@@ -34,9 +35,6 @@ namespace soralog {
       do {
         *ptr++ = *str++;  // NOLINT
       } while (*str != '\0');
-      while (ptr < end) {
-        *ptr++ = ' ';  // NOLINT
-      }
     }
 
     void put_level_short(char *&ptr, Level level) {
@@ -65,29 +63,36 @@ namespace soralog {
 
   }  // namespace
 
-  SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
-                         std::optional<ThreadInfoType> thread_info_type,
-                         std::optional<size_t> capacity,
-                         std::optional<size_t> max_message_length,
-                         std::optional<size_t> buffer_size,
-                         std::optional<size_t> latency)
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+  std::atomic_bool SinkToSyslog::syslog_is_opened_{false};
+
+  SinkToSyslog::SinkToSyslog(std::string name, std::string ident,
+                             std::optional<ThreadInfoType> thread_info_type,
+                             std::optional<size_t> capacity,
+                             std::optional<size_t> max_message_length,
+                             std::optional<size_t> buffer_size,
+                             std::optional<size_t> latency)
       : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 11),            // 2048 events
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 22),         // 4 Mb
              latency.value_or(1000)),                // 1 sec
-        path_(std::move(path)),
+        ident_(std::move(ident)),
         buff_(max_buffer_size_) {
-    out_.open(path_, std::ios::app);
-    if (not out_.is_open()) {
-      std::cerr << "Can't open log file '" << path_ << "': " << strerror(errno)
-                << std::endl;
-    } else if (latency_ != std::chrono::milliseconds::zero()) {
+    bool false_v = false;
+    if (not syslog_is_opened_.compare_exchange_strong(
+            false_v, true, std::memory_order_acq_rel)) {
+      throw std::runtime_error(
+          "SinkToSyslog has not created: Syslog already opened");
+    }
+    openlog(ident_.c_str(), LOG_PID | LOG_NDELAY, LOG_USER);
+
+    if (latency_ != std::chrono::milliseconds::zero()) {
       sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     }
   }
 
-  SinkToFile::~SinkToFile() {
+  SinkToSyslog::~SinkToSyslog() {
     if (latency_ != std::chrono::milliseconds::zero()) {
       need_to_finalize_.store(true, std::memory_order_release);
       async_flush();
@@ -98,9 +103,11 @@ namespace soralog {
     } else {
       flush();
     }
+    closelog();
+    syslog_is_opened_.store(true, std::memory_order_release);
   }
 
-  void SinkToFile::async_flush() noexcept {
+  void SinkToSyslog::async_flush() noexcept {
     if (latency_ != std::chrono::milliseconds::zero()) {
       need_to_flush_.store(true, std::memory_order_release);
       condvar_.notify_one();
@@ -109,7 +116,7 @@ namespace soralog {
     }
   }
 
-  void SinkToFile::flush() noexcept {
+  void SinkToSyslog::flush() noexcept {
     bool false_v = false;
     if (not flush_in_progress_.compare_exchange_strong(
             false_v, true, std::memory_order_acq_rel)) {
@@ -155,14 +162,14 @@ namespace soralog {
 
         switch (thread_info_type_) {
           case ThreadInfoType::NAME:
-            put_string(ptr, event.thread_name(), 15);
+            put_string(ptr, event.thread_name());
             put_separator(ptr);
             break;
 
           case ThreadInfoType::ID:
-            ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
-                                   event.thread_number())
-                      .out;
+            ptr =
+                fmt::format_to_n(ptr, end - ptr, "T:{}", event.thread_number())
+                    .out;
             put_separator(ptr);
             break;
 
@@ -183,57 +190,57 @@ namespace soralog {
         // Message
 
         put_string(ptr, event.message());
-        *ptr++ = '\n';  // NOLINT
+        *ptr++ = '\0';  // NOLINT
+
+        bool must_log = true;
+        int priority = 8;
+        switch (event.level()) {
+          case Level::OFF:
+            must_log = false;
+            break;
+          case Level::CRITICAL:
+            priority = LOG_EMERG;  // system is unusable
+            break;
+          case Level::ERROR:  // error conditions
+            priority = LOG_ALERT;
+            break;
+          case Level::WARN:  // warning conditions
+            priority = LOG_WARNING;
+            break;
+          case Level::INFO:  // normal but significant condition
+            priority = LOG_NOTICE;
+            break;
+          case Level::VERBOSE:  // informational
+            priority = LOG_INFO;
+            break;
+          case Level::DEBUG:  // debug-level messages
+            priority = LOG_DEBUG;
+            break;
+          case Level::TRACE:  // trace messages must not be logged by syslog
+            [[fallthrough]];
+          default:
+            must_log = false;
+            break;
+        }
+
+        if (must_log) {
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+          syslog(priority, "%s", begin);
+        }
 
         size_ -= event.message().size();
       }
 
-      if ((end - ptr) < sizeof(Event) or not node
-          or std::chrono::steady_clock::now()
-              >= next_flush_.load(std::memory_order_acquire)) {
-        next_flush_.store(std::chrono::steady_clock::now() + latency_,
-                          std::memory_order_release);
-        out_.write(begin, ptr - begin);
-        ptr = begin;
-      }
-
       if (not node) {
-        bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(true_v, false,
-                                                 std::memory_order_acq_rel)) {
-          out_.flush();
-        }
+        need_to_flush_.store(false, std::memory_order_release);
         break;
-      }
-    }
-
-    bool true_v = true;
-    if (need_to_rotate_.compare_exchange_weak(true_v, false,
-                                              std::memory_order_acq_rel)) {
-      std::ofstream out;
-      out.open(path_, std::ios::app);
-      if (not out.is_open()) {
-        if (out_.is_open()) {
-          std::cerr << "Can't re-open log file '" << path_
-                    << "': " << strerror(errno) << std::endl;
-        } else {
-          std::cerr << "Can't open log file '" << path_
-                    << "': " << strerror(errno) << std::endl;
-        }
-      } else {
-        std::swap(out_, out);
       }
     }
 
     flush_in_progress_.store(false, std::memory_order_release);
   }
 
-  void SinkToFile::rotate() noexcept {
-    need_to_rotate_.store(true, std::memory_order_release);
-    async_flush();
-  }
-
-  void SinkToFile::run() {
+  void SinkToSyslog::run() {
     util::setThreadName("log:" + name_);
 
     next_flush_.store(std::chrono::steady_clock::now(),

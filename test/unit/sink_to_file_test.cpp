@@ -18,7 +18,7 @@ class SinkToFileTest : public ::testing::Test {
         : sink_(std::move(sink)) {}
 
     template <typename... Args>
-    void debug(std::string_view format, const Args &... args) {
+    void debug(std::string_view format, const Args &...args) {
       sink_->push("logger", Level::DEBUG, format, args...);
     }
 
@@ -31,10 +31,13 @@ class SinkToFileTest : public ::testing::Test {
   };
 
   void SetUp() override {
-    std::array<char, L_tmpnam> filename{};
-    path_ = std::filesystem::temp_directory_path();
-    ASSERT_TRUE(std::tmpnam(filename.data()) != nullptr);
-    path_ /= std::string(filename.data()) + ".log";
+    std::string path(
+        (std::filesystem::temp_directory_path() / "soralog_test_XXXXXX")
+            .c_str());
+    if (mkstemp(path.data()) == -1) {
+      FAIL() << "Can't create output file for test";
+    }
+    path_ = std::filesystem::path(path);
   }
   void TearDown() override {
     std::remove(path_.native().data());
@@ -45,6 +48,7 @@ class SinkToFileTest : public ::testing::Test {
         "file", path_,
         Sink::ThreadInfoType::NONE,  // ignore thread info
         4,                           // capacity: 4 events
+        64,                          // max message length: 64 byte
         16384,                       // buffers size: 16 Kb
         latency.count());
     return std::make_shared<FakeLogger>(std::move(sink));

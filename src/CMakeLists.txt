@@ -44,6 +44,21 @@ target_link_libraries(sink_to_file
     pthread
     )
 
+add_library(sink_to_syslog
+    impl/sink_to_syslog.cpp
+    )
+target_link_libraries(sink_to_syslog
+    sink
+    pthread
+    )
+
+add_library(multisink
+    impl/multisink.cpp
+    )
+target_link_libraries(multisink
+    sink
+    )
+
 add_library(group
     group.cpp
     )
@@ -60,6 +75,8 @@ target_link_libraries(configurator INTERFACE
     sink_to_nowhere
     sink_to_console
     sink_to_file
+    sink_to_syslog
+    multisink
     )
 
 add_library(configurator_yaml
@@ -105,6 +122,8 @@ set(INSTALL_TARGETS
     sink_to_nowhere
     sink_to_console
     sink_to_file
+    sink_to_syslog
+    multisink
 
     group
 

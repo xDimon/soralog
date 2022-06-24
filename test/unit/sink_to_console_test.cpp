@@ -14,10 +14,11 @@ using namespace std::chrono_literals;
 class SinkToConsoleTest : public ::testing::Test {
  public:
   struct FakeLogger {
-    explicit FakeLogger(std::shared_ptr<SinkToConsole> sink) : sink_(std::move(sink)) {}
+    explicit FakeLogger(std::shared_ptr<SinkToConsole> sink)
+        : sink_(std::move(sink)) {}
 
     template <typename... Args>
-    void debug(std::string_view format, const Args &... args) {
+    void debug(std::string_view format, const Args &...args) {
       sink_->push("logger", Level::DEBUG, format, args...);
     }
 
@@ -31,10 +32,13 @@ class SinkToConsoleTest : public ::testing::Test {
 
   std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
     auto sink = std::make_shared<SinkToConsole>(
-        "console", false,
-        Sink::ThreadInfoType::NONE,  // ignore thread info
-        4,                           // capacity: 4 events
-        16384,                       // buffers size: 16 Kb
+        "console",
+        SinkToConsole::Stream::STDOUT,  // standard output stream
+        false,                          // no color
+        Sink::ThreadInfoType::NONE,     // ignore thread info
+        4,                              // capacity: 4 events
+        64,                             // max message length: 64 byte
+        16384,                          // buffers size: 16 Kb
         latency.count());
     return std::make_shared<FakeLogger>(std::move(sink));
   }

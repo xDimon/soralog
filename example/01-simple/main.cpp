@@ -86,8 +86,9 @@ groups:
 }();
 
 int main() {
-  ConfiguratorType cfg_type = ConfiguratorType::Cascade;
+  ConfiguratorType cfg_type = ConfiguratorType::YamlByPath;
 
+  // clang-format off
   std::shared_ptr<soralog::Configurator> configurator =
       cfg_type == ConfiguratorType::Cascade
       ? cascade_configurator
@@ -98,6 +99,7 @@ int main() {
               : cfg_type == ConfiguratorType::Customized
                   ? customized_configurator
                   : std::make_shared<soralog::FallbackConfigurator>();
+  // clang-format on
 
   soralog::LoggingSystem log_system(configurator);
 
@@ -131,6 +133,12 @@ int main() {
   main_log->debug("{}", lambda("logger: debug msg for info level"));
   SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
+  std::string generated_format = "<{}>";
+  main_log->debug(generated_format, "works!");
+
+  // Invalid format in macros causes error in compile time
+  // SL_DEBUG(main_log, "{} {}", lambda("one value for two placeholder"));
+
   std::vector<std::shared_ptr<std::thread>> threads;
 
   for (const auto &name :
@@ -141,6 +149,14 @@ int main() {
       object.method();
     })));
   }
+
+  main_log->info(
+      "Very long message  |.....30->|.....40->|.....50->|.....60->|.....70->|"
+      ".....80->|.....90->|....100->|....110->|....120->|....130->|....140->|");
+
+  auto dynamic_format = std::string("Custom made format: {} ==>") + "<== {}";
+  main_log->info(dynamic_format, 1, 2);
+  SL_INFO_DF(main_log, dynamic_format, 3, 4);
 
   LoggingObject object(log_system);
   object.method();

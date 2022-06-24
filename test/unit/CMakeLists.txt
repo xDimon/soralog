@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_library(libs4test INTERFACE EXCLUDE_FROM_ALL)
+add_library(libs4test INTERFACE)
 target_link_libraries(libs4test INTERFACE
     logging_system
     sink_to_nowhere

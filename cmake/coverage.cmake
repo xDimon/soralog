@@ -23,13 +23,15 @@ endif()
 if(CTEST_BIN)
     setup_target_for_coverage_gcovr_xml(
         NAME coverage
-        DEPENDENCIES ${tests}
-        EXECUTABLE ${CTEST_BIN}
+        EXECUTABLE ${CTEST_BIN} -j ${PROCESSOR_COUNT}
+        DEPENDENCIES all_tests
+        EXCLUDE ${COVERAGE_EXCLUDES}
     )
 
     setup_target_for_coverage_gcovr_html(
         NAME coverage_html
-        DEPENDENCIES ${tests}
-        EXECUTABLE ${CTEST_BIN}
+        EXECUTABLE ${CTEST_BIN} -j ${PROCESSOR_COUNT}
+        DEPENDENCIES all_tests
+        EXCLUDE ${COVERAGE_EXCLUDES}
     )
 endif()

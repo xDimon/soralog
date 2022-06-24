@@ -1,22 +1,46 @@
 sinks:
-  - name: console
+  - name: colored_stdout
     type: console
+    stream: stdout
     color: true
     thread: name
     capacity: 64
+    max_message_length: 120
+    buffer: 131072
+    latency: 100
+  - name: simple_stderr
+    type: console
+    stream: stderr
+    color: false
+    thread: name
+    capacity: 64
+    max_message_length: 120
     buffer: 131072
     latency: 100
   - name: file
     type: file
-    directory: .
-    filename: example.log
+    path: /tmp/solalog_example.log
     thread: name
     capacity: 2048
     buffer: 4194304
     latency: 1000
+  - name: syslog
+    type: syslog
+    ident: solalog_example
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
+  - name: sink_to_everywhere
+    type: multisink
+    sinks:
+      - file
+      - colored_stdout
+      - simple_stderr
+      - syslog
 groups:
   - name: main
-    sink: console
+    sink: sink_to_everywhere
     level: trace
     children:
       - name: blockchain

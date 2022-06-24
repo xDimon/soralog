@@ -6,6 +6,7 @@
 #ifndef SORALOG_EVENT
 #define SORALOG_EVENT
 
+#include <algorithm>
 #include <chrono>
 #include <cstring>
 #include <string_view>
@@ -39,10 +40,10 @@ namespace soralog {
      * @param level of event
      * @param format and @param args defines message of event
      */
-    template <typename ThreadInfoType, typename... Args>
+    template <typename ThreadInfoType, typename Format, typename... Args>
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     Event(std::string_view name, ThreadInfoType thread_info_type, Level level,
-          std::string_view format, const Args &... args)
+          const Format &format, size_t max_message_length, const Args &...args)
         : timestamp_(std::chrono::system_clock::now()), level_(level) {
       switch (thread_info_type) {
         case ThreadInfoType::NAME:
@@ -58,10 +59,10 @@ namespace soralog {
 
       try {
         message_size_ =
-            fmt::format_to_n(message_.begin(), message_.size(), format, args...)
+            fmt::format_to_n(message_data_, max_message_length, format, args...)
                 .size;
       } catch (const std::exception &exception) {
-        message_size_ = fmt::format_to_n(message_.begin(), message_.size(),
+        message_size_ = fmt::format_to_n(message_data_, max_message_length,
                                          "Format error: {}; Format: {}",
                                          exception.what(), format)
                             .size;
@@ -69,7 +70,7 @@ namespace soralog {
         level_ = Level::ERROR;
       }
 
-      message_size_ = std::min(message_.size(), message_size_);
+      message_size_ = std::min(max_message_length, message_size_);
       name_size_ = std::min(name.size(), name_.size());
       std::copy_n(name.begin(), name_size_, name_.begin());
     }
@@ -113,7 +114,7 @@ namespace soralog {
      * @returns message of event
      */
     std::string_view message() const noexcept {
-      return {message_.data(), message_size_};
+      return {message_data_, message_size_};
     }
 
    private:
@@ -124,7 +125,8 @@ namespace soralog {
     std::array<char, 32> name_;
     size_t name_size_;
     Level level_ = Level::OFF;
-    std::array<char, 4096> message_;
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    char *const message_data_ = reinterpret_cast<char *>(this) + sizeof(*this);
     size_t message_size_;
   };
 }  // namespace soralog

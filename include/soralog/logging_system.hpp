@@ -105,7 +105,7 @@ namespace soralog {
      * Creates sink with type {@tparam SinkType} using arguments {@param args}
      */
     template <typename SinkType, typename... Args>
-    std::shared_ptr<SinkType> makeSink(Args &&... args) {
+    std::shared_ptr<SinkType> makeSink(Args &&...args) {
       std::lock_guard guard(mutex_);
       auto sink = std::make_shared<SinkType>(std::forward<Args>(args)...);
       sinks_[sink->name()] = sink;

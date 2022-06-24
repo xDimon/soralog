@@ -1,6 +1,12 @@
 if(NOT CLANG_TIDY_BIN)
     find_program(CLANG_TIDY_BIN
-        NAMES clang-tidy clang-tidy-9 clang-tidy-8 clang-tidy-7
+        NAMES clang-tidy
+              clang-tidy-12
+              clang-tidy-11
+              clang-tidy-10
+              clang-tidy-9
+              clang-tidy-8
+              clang-tidy-7
         DOC "Path to clang-tidy executable"
     )
 endif()
