@@ -99,6 +99,7 @@ add_library(logging_system
     )
 target_link_libraries(logging_system
     sink
+    sink_to_nowhere
     )
 
 add_library(soralog soralog.cpp)
