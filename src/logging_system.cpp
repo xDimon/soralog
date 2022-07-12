@@ -6,6 +6,7 @@
 #include <soralog/logging_system.hpp>
 
 #include <cassert>
+#include <functional>
 #include <iostream>
 #include <set>
 
