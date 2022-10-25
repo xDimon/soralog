@@ -238,3 +238,17 @@ TEST_F(MacrosTest, CalculatedArgs) {
   EXPECT_TRUE(logger_->last_message == "Lengths: 1, 2, 3");
   // clang-format on
 }
+
+TEST_F(MacrosTest, StructuredBinding) {
+  struct {
+    int x = 1;
+  } a;
+  auto &[x] = a;
+
+  SL_DEBUG(logger(), "x: {}", x);
+  EXPECT_TRUE(logger_->last_message == "x: 1");
+
+  static const char *df = "x: {}";
+  SL_DEBUG_DF(logger(), df, x);
+  EXPECT_TRUE(logger_->last_message == "x: 1");
+}
