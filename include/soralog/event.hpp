@@ -57,12 +57,33 @@ namespace soralog {
           break;
       }
 
+      struct {
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = char;
+        using reference = value_type &;
+        using pointer = value_type *;
+        using difference_type = ptrdiff_t;
+
+        value_type *pos;
+
+        value_type &operator*() const {
+          return *pos;
+        }
+        constexpr auto &operator++() {
+          pos++;
+          return *this;
+        }
+        constexpr auto &operator++(int n) {
+          pos += n;
+          return *this;
+        }
+      } it{message_data_};
+
       try {
         message_size_ =
-            fmt::format_to_n(message_data_, max_message_length, format, args...)
-                .size;
+            fmt::format_to_n(it, max_message_length, format, args...).size;
       } catch (const std::exception &exception) {
-        message_size_ = fmt::format_to_n(message_data_, max_message_length,
+        message_size_ = fmt::format_to_n(it, max_message_length,
                                          "Format error: {}; Format: {}",
                                          exception.what(), format)
                             .size;
