@@ -70,12 +70,13 @@ namespace soralog {
           return *pos;
         }
         constexpr auto &operator++() {
-          pos++;
+          ++pos;
           return *this;
         }
-        constexpr auto &operator++(int n) {
-          pos += n;
-          return *this;
+        constexpr auto operator++(int) {
+          auto origin = *this;
+          ++pos;
+          return origin;
         }
       } it{message_data_};
 
