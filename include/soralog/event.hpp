@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_EVENT
-#define SORALOG_EVENT
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -152,5 +151,3 @@ namespace soralog {
     size_t message_size_;
   };
 }  // namespace soralog
-
-#endif  // SORALOG_EVENT

@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_MACROS
-#define SORALOG_MACROS
+#pragma once
 
 #include <soralog/logger.hpp>
 
@@ -125,5 +124,3 @@ endif()
 
 #define SL_CRITICAL_DF(LOG, FMT, ...) \
   _SL_LOG_DF((LOG), soralog::Level::CRITICAL, (FMT), ##__VA_ARGS__)
-
-#endif  // SORALOG_MACROS

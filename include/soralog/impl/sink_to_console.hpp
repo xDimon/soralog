@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_SINKTOCONSOLE
-#define SORALOG_SINKTOCONSOLE
+#pragma once
 
 #include <soralog/sink.hpp>
 
@@ -60,5 +59,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_SINKTOCONSOLE

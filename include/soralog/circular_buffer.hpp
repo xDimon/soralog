@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_CIRCULARBUFFER
-#define SORALOG_CIRCULARBUFFER
+#pragma once
 
 #include <atomic>
 #include <cassert>
@@ -207,5 +206,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_CIRCULARBUFFER

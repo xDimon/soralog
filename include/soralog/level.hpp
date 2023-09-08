@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_LEVEL
-#define SORALOG_LEVEL
+#pragma once
 
 #include <array>
 #include <cstddef>
@@ -61,5 +60,3 @@ namespace soralog {
   }
 
 }  // namespace soralog
-
-#endif  // SORALOG_LEVEL

@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_GROUP
-#define SORALOG_GROUP
+#pragma once
 
 #include <memory>
 #include <string>
@@ -163,5 +162,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_GROUP

@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_FALLBACKCONFIGURATOR
-#define SORALOG_FALLBACKCONFIGURATOR
+#pragma once
 
 #include <soralog/configurator.hpp>
 
@@ -34,5 +33,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_FALLBACKCONFIGURATOR

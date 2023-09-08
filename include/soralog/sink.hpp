@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_SINK
-#define SORALOG_SINK
+#pragma once
 
 #include <memory>
 #include <string>
@@ -146,5 +145,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_SINK
