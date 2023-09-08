@@ -11,8 +11,24 @@ if(XCODE_VERSION)
     fatal_error(${_err})
 endif()
 
-find_program(CMAKE_C_COMPILER clang clang-9 clang-8)
-find_program(CMAKE_CXX_COMPILER clang++ clang++-9 clang++-9)
+find_program(CMAKE_C_COMPILER
+    clang
+    clang-17
+    clang-16
+    clang-15
+    clang-14
+    clang-13
+    clang-12
+    clang-11)
+find_program(CMAKE_CXX_COMPILER
+    clang++
+    clang++-17
+    clang++-16
+    clang++-15
+    clang++-14
+    clang++-13
+    clang++-12
+    clang++-11)
 
 if(NOT CMAKE_C_COMPILER)
     fatal_error("clang not found")
@@ -39,3 +55,17 @@ set(
     "C++ compiler"
     FORCE
 )
+
+string(REGEX MATCH "([0-9]+).([0-9]+).([0-9]+)" v ${CMAKE_CXX_COMPILER_VERSION})
+if (${CMAKE_MATCH_1} LESS 11)
+    print("Requires Clang compiler at least version 11")
+endif()
+
+if (${CMAKE_MATCH_1} GREATER_EQUAL 10)
+#    print("GNU compiler version ${CMAKE_CXX_COMPILER_VERSION} - C++20 standard is supported")
+    set(
+        MAX_SUPPORTED_CXX_STANDARD 20
+        CACHE STRING "Max supported C++ standard"
+        FORCE
+    )
+endif()
