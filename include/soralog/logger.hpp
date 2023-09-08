@@ -41,9 +41,11 @@ namespace soralog {
     template <typename Format, typename... Args>
     void push(Level level, const Format &format, const Args &...args) {
       if (level_ >= level) {
-        sink_->push(name_, level, format, args...);
-        if (level_ >= Level::CRITICAL) {
-          sink_->flush();
+        if(level != Level::OFF and level != Level::IGNORE) {
+          sink_->push(name_, level, format, args...);
+          if (level_ >= Level::CRITICAL) {
+            sink_->flush();
+          }
         }
       }
     }
