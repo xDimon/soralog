@@ -10,6 +10,7 @@
 #include <string_view>
 
 #include <soralog/circular_buffer.hpp>
+#include <soralog/common.hpp>
 #include <soralog/event.hpp>
 
 #ifdef NDEBUG
@@ -88,7 +89,7 @@ namespace soralog {
                                   max_message_length_, args...);
 
           // Event is queued successfully
-          if (node) {
+          likely_if(node) {
             size_ += node->message().size();
             node.release();
             break;

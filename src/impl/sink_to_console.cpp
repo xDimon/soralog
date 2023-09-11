@@ -13,19 +13,13 @@
 #include <fmt/chrono.h>
 #include <fmt/color.h>
 
+#include <soralog/common.hpp>
+
 namespace soralog {
 
   namespace {
 
     using namespace std::chrono_literals;
-
-    namespace fmt_internal {
-#if FMT_VERSION >= 70000
-      using namespace fmt::detail;  // NOLINT
-#else
-      using namespace fmt::internal;  // NOLINT
-#endif
-    }  // namespace fmt_internal
 
     // Separator is using between logical parts of log record.
     // Might be any substring or symbol: space, tab, etc.
@@ -74,21 +68,20 @@ namespace soralog {
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
-      put_style(ptr, fmt_internal::make_foreground_color<char>(color),
-                fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt::detail::make_foreground_color<char>(color),
+                fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_name_style(char *&ptr) {
-      put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_text_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       if (level <= Level::ERROR) {
-        put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+        put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
       } else if (level >= Level::DEBUG) {
-        put_style(ptr,
-                  fmt_internal::make_emphasis<char>(fmt::emphasis::italic));
+        put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::italic));
       }
     }
 
@@ -217,7 +210,7 @@ namespace soralog {
 
         if (with_color_) {
           const auto &style =
-              fmt_internal::make_foreground_color<char>(fmt::color::gray);
+              fmt::detail::make_foreground_color<char>(fmt::color::gray);
 
           auto size = std::end(style) - std::begin(style);
           std::memcpy(ptr, std::begin(style),

@@ -28,7 +28,7 @@
   } while (false)
 
 #define _SL_LOG(LOG, LVL, FMT, ...) \
-  _SL_LOG_IF_LEVEL((LOG), (LVL), FMT_STRING(FMT), ##__VA_ARGS__)
+  _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
 #define SL_LOG(LOG, LVL, FMT, ...) _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
