@@ -31,9 +31,9 @@ namespace soralog {
     void put_level(char *&ptr, Level level) {
       const char *const end = ptr + 8;  // NOLINT
       const char *str = levelToStr(level);
-      do {
-        *ptr++ = *str++;  // NOLINT
-      } while (*str != '\0');
+      while (auto c = *str++) {  // NOLINT
+        *ptr++ = c;              // NOLINT
+      }
       while (ptr < end) {
         *ptr++ = ' ';  // NOLINT
       }
