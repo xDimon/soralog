@@ -80,21 +80,16 @@ namespace soralog {
         }
       } it{message_data_};
 
-      if constexpr (sizeof...(args) == 0) {
-        message_size_ = std::min(max_message_length, format.size());
-        std::copy_n(format.begin(), message_size_, it);
-      } else {
-        try {
-          message_size_ =
-              fmt::format_to_n(it, max_message_length, format, args...).size;
-        } catch (const std::exception &exception) {
-          message_size_ = fmt::format_to_n(it, max_message_length,
-                                           "Format error: {}; Format: {}",
-                                           exception.what(), format)
-                              .size;
-          name = "Soralog";
-          level_ = Level::ERROR;
-        }
+      try {
+        message_size_ =
+            fmt::format_to_n(it, max_message_length, format, args...).size;
+      } catch (const std::exception &exception) {
+        message_size_ = fmt::format_to_n(it, max_message_length,
+                                         "Format error: {}; Format: {}",
+                                         exception.what(), format)
+                            .size;
+        name = "Soralog";
+        level_ = Level::ERROR;
       }
 
       message_size_ = std::min(max_message_length, message_size_);
