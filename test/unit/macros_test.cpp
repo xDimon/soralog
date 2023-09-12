@@ -16,9 +16,10 @@ class MacrosTest : public ::testing::Test {
     template <typename Format, typename... Args>
     void log(Level lvl, const Format &format, Args &&...args) {
       last_level = lvl;
-      size_t len = fmt::format_to_n(message_buf.begin(), message_buf.size(),
-                                    format, args...)
-                       .size;
+      size_t len =
+          soralog::fmt::format_to_n(message_buf.begin(), message_buf.size(),
+                                    format, std::forward<Args>(args)...)
+              .size;
       last_message = std::string_view(message_buf.data(),
                                       std::min(len, message_buf.size()));
     }
@@ -237,4 +238,18 @@ TEST_F(MacrosTest, CalculatedArgs) {
   SL_DEBUG(logger(), "Lengths: {}, {}, {}", length("*"), length("**"), length("***"));
   EXPECT_TRUE(logger_->last_message == "Lengths: 1, 2, 3");
   // clang-format on
+}
+
+TEST_F(MacrosTest, StructuredBinding) {
+  struct {
+    int x = 1;
+  } a;
+  auto &[x] = a;
+
+  SL_DEBUG(logger(), "x: {}", x);
+  EXPECT_TRUE(logger_->last_message == "x: 1");
+
+  static const char *df = "x: {}";
+  SL_DEBUG_DF(logger(), df, x);
+  EXPECT_TRUE(logger_->last_message == "x: 1");
 }

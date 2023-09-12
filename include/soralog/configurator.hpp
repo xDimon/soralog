@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_CONFIGURATOR
-#define SORALOG_CONFIGURATOR
+#pragma once
 
 #include <string>
 
@@ -41,5 +40,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_CONFIGURATOR

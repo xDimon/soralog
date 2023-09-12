@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_EVENT
-#define SORALOG_EVENT
+#pragma once
 
 #include <algorithm>
 #include <chrono>
@@ -14,6 +13,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
+#include <soralog/common.hpp>
 #include <soralog/level.hpp>
 #include <soralog/sink.hpp>
 #include <soralog/util.hpp>
@@ -57,17 +57,44 @@ namespace soralog {
           break;
       }
 
-      try {
-        message_size_ =
-            fmt::format_to_n(message_data_, max_message_length, format, args...)
-                .size;
-      } catch (const std::exception &exception) {
-        message_size_ = fmt::format_to_n(message_data_, max_message_length,
-                                         "Format error: {}; Format: {}",
-                                         exception.what(), format)
-                            .size;
-        name = "Soralog";
-        level_ = Level::ERROR;
+      struct {
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = char;
+        using reference = value_type &;
+        using pointer = value_type *;
+        using difference_type = ptrdiff_t;
+
+        value_type *pos;
+
+        value_type &operator*() const {
+          return *pos;
+        }
+        constexpr auto &operator++() {
+          ++pos;
+          return *this;
+        }
+        constexpr auto operator++(int) {
+          auto origin = *this;
+          ++pos;
+          return origin;
+        }
+      } it{message_data_};
+
+      if constexpr (sizeof...(args) == 0) {
+        message_size_ = std::min(max_message_length, format.size());
+        std::copy_n(format.begin(), message_size_, it);
+      } else {
+        try {
+          message_size_ =
+              fmt::format_to_n(it, max_message_length, format, args...).size;
+        } catch (const std::exception &exception) {
+          message_size_ = fmt::format_to_n(it, max_message_length,
+                                           "Format error: {}; Format: {}",
+                                           exception.what(), format)
+                              .size;
+          name = "Soralog";
+          level_ = Level::ERROR;
+        }
       }
 
       message_size_ = std::min(max_message_length, message_size_);
@@ -130,5 +157,3 @@ namespace soralog {
     size_t message_size_;
   };
 }  // namespace soralog
-
-#endif  // SORALOG_EVENT

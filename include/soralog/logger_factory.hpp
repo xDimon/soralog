@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_LOGGERFACTORY
-#define SORALOG_LOGGERFACTORY
+#pragma once
 
 #include <memory>
 #include <string>
@@ -57,5 +56,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_LOGGERFACTORY

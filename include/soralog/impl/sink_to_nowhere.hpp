@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_SINKTONOWHERE
-#define SORALOG_SINKTONOWHERE
+#pragma once
 
 #include <soralog/sink.hpp>
 
@@ -30,5 +29,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_SINKTONOWHERE
