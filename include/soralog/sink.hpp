@@ -85,14 +85,15 @@ namespace soralog {
               const Args &...args) noexcept(IF_RELEASE) {
       if (underlying_sinks_.empty()) {
         while (true) {
-          auto node = events_.put(name, thread_info_type_, level, format,
-                                  max_message_length_, args...);
+          {
+            auto node = events_.put(name, thread_info_type_, level, format,
+                                    max_message_length_, args...);
 
-          // Event is queued successfully
-          likely_if(node) {
-            size_ += node->message().size();
-            node.release();
-            break;
+            // Event is queued successfully
+            likely_if(node) {
+              size_ += node->message().size();
+              break;
+            }
           }
 
           // Events queue is full. Flush immediately and try to push again
