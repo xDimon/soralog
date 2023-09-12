@@ -6,7 +6,6 @@
 #include <soralog/impl/sink_to_console.hpp>
 
 #include <chrono>
-#include <iomanip>
 #include <iostream>
 #include <string_view>
 
@@ -186,8 +185,8 @@ namespace soralog {
     std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
 
     while (true) {
-      auto node = events_.get();
-      if (node) {
+      bool appended = false;
+      if (auto node = events_.get()) {
         const auto &event = *node;
 
         const auto time = event.timestamp().time_since_epoch();
@@ -282,9 +281,10 @@ namespace soralog {
         *ptr++ = '\n';  // NOLINT
 
         size_ -= event.message().size();
+        appended = true;
       }
 
-      if ((end - ptr) < sizeof(Event) or not node
+      if ((end - ptr) < sizeof(Event) or appended
           or std::chrono::steady_clock::now()
               >= next_flush_.load(std::memory_order_acquire)) {
         next_flush_.store(std::chrono::steady_clock::now() + latency_,
@@ -293,14 +293,15 @@ namespace soralog {
         ptr = begin;
       }
 
-      if (not node) {
+      if (appended) {
         bool true_v = true;
         if (need_to_flush_.compare_exchange_weak(true_v, false,
                                                  std::memory_order_acq_rel)) {
           stream_.flush();
         }
-        break;
       }
+
+      break;
     }
 
     flush_in_progress_.store(false, std::memory_order_release);
