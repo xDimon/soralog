@@ -7,8 +7,8 @@
 
 hunter_config(
     fmt
-    URL  https://github.com/fmtlib/fmt/archive/refs/tags/8.1.1.tar.gz
-    SHA1 9577d6de8f4e268690b099976810ade9ebef5fb5
+    URL  https://github.com/fmtlib/fmt/archive/refs/tags/10.1.1.tar.gz
+    SHA1 e94b38a9efe0d696373a3cb1300dd24f12e2dd9c
     CMAKE_ARGS
         FMT_DOC=OFF
         FMT_TEST=OFF

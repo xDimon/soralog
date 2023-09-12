@@ -16,9 +16,10 @@ class MacrosTest : public ::testing::Test {
     template <typename Format, typename... Args>
     void log(Level lvl, const Format &format, Args &&...args) {
       last_level = lvl;
-      size_t len = fmt::format_to_n(message_buf.begin(), message_buf.size(),
-                                    format, args...)
-                       .size;
+      size_t len =
+          soralog::fmt::format_to_n(message_buf.begin(), message_buf.size(),
+                                    format, std::forward<Args>(args)...)
+              .size;
       last_message = std::string_view(message_buf.data(),
                                       std::min(len, message_buf.size()));
     }

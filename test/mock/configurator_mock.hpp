@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_CONFIGURATORMOCK
-#define SORALOG_CONFIGURATORMOCK
+#pragma once
 
 #include <gmock/gmock.h>
 
@@ -20,5 +19,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_CONFIGURATORMOCK

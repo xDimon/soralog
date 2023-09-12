@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_SINKMOCK
-#define SORALOG_SINKMOCK
+#pragma once
 
 #include <gmock/gmock.h>
 
@@ -45,5 +44,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_SINKMOCK

@@ -11,6 +11,13 @@ target_link_libraries(libs4test INTERFACE
     logger
     )
 
+addtest(circular_buffer_test
+    circular_buffer_test.cpp
+    )
+target_link_libraries(circular_buffer_test
+    libs4test
+    )
+
 addtest(group_test
     group_test.cpp
     )

@@ -6,26 +6,19 @@
 #include <soralog/impl/sink_to_console.hpp>
 
 #include <chrono>
-#include <iomanip>
 #include <iostream>
 #include <string_view>
 
 #include <fmt/chrono.h>
 #include <fmt/color.h>
 
+#include <soralog/common.hpp>
+
 namespace soralog {
 
   namespace {
 
     using namespace std::chrono_literals;
-
-    namespace fmt_internal {
-#if FMT_VERSION >= 70000
-      using namespace fmt::detail;  // NOLINT
-#else
-      using namespace fmt::internal;  // NOLINT
-#endif
-    }  // namespace fmt_internal
 
     // Separator is using between logical parts of log record.
     // Might be any substring or symbol: space, tab, etc.
@@ -74,21 +67,20 @@ namespace soralog {
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
-      put_style(ptr, fmt_internal::make_foreground_color<char>(color),
-                fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt::detail::make_foreground_color<char>(color),
+                fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_name_style(char *&ptr) {
-      put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+      put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
     }
 
     void put_text_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
       if (level <= Level::ERROR) {
-        put_style(ptr, fmt_internal::make_emphasis<char>(fmt::emphasis::bold));
+        put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
       } else if (level >= Level::DEBUG) {
-        put_style(ptr,
-                  fmt_internal::make_emphasis<char>(fmt::emphasis::italic));
+        put_style(ptr, fmt::detail::make_emphasis<char>(fmt::emphasis::italic));
       }
     }
 
@@ -101,9 +93,9 @@ namespace soralog {
     void put_level(char *&ptr, Level level) {
       const char *const end = ptr + 8;  // NOLINT
       const char *str = levelToStr(level);
-      do {
-        *ptr++ = *str++;  // NOLINT
-      } while (*str != '\0');
+      while (auto c = *str++) {  // NOLINT
+        *ptr++ = c;              // NOLINT
+      }
       while (ptr < end) {
         *ptr++ = ' ';  // NOLINT
       }
@@ -193,8 +185,8 @@ namespace soralog {
     std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
 
     while (true) {
-      auto node = events_.get();
-      if (node) {
+      bool appended = false;
+      if (auto node = events_.get()) {
         const auto &event = *node;
 
         const auto time = event.timestamp().time_since_epoch();
@@ -217,7 +209,7 @@ namespace soralog {
 
         if (with_color_) {
           const auto &style =
-              fmt_internal::make_foreground_color<char>(fmt::color::gray);
+              fmt::detail::make_foreground_color<char>(fmt::color::gray);
 
           auto size = std::end(style) - std::begin(style);
           std::memcpy(ptr, std::begin(style),
@@ -289,9 +281,10 @@ namespace soralog {
         *ptr++ = '\n';  // NOLINT
 
         size_ -= event.message().size();
+        appended = true;
       }
 
-      if ((end - ptr) < sizeof(Event) or not node
+      if ((end - ptr) < sizeof(Event) or appended
           or std::chrono::steady_clock::now()
               >= next_flush_.load(std::memory_order_acquire)) {
         next_flush_.store(std::chrono::steady_clock::now() + latency_,
@@ -300,14 +293,15 @@ namespace soralog {
         ptr = begin;
       }
 
-      if (not node) {
+      if (appended) {
         bool true_v = true;
         if (need_to_flush_.compare_exchange_weak(true_v, false,
                                                  std::memory_order_acq_rel)) {
           stream_.flush();
         }
-        break;
       }
+
+      break;
     }
 
     flush_in_progress_.store(false, std::memory_order_release);

@@ -1,20 +1,35 @@
 cmake_minimum_required(VERSION 3.12)
 
+include("cmake/Hunter/init.cmake")
+
+cmake_policy(SET CMP0048 NEW)
+project(soralog VERSION 0.0.7 LANGUAGES CXX)
+
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif (CCACHE_FOUND)
 
-set(CMAKE_TOOLCHAIN_FILE
-    "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake"
-    CACHE FILEPATH "Default toolchain"
-    )
+include(cmake/functions.cmake)
 
-include("cmake/Hunter/init.cmake")
+include(cmake/toolchain/compiler.cmake)
 
-cmake_policy(SET CMP0048 NEW)
-project(soralog VERSION 0.0.7 LANGUAGES CXX)
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+    if (MAX_SUPPORTED_CXX_STANDARD GREATER_EQUAL 20)
+        set(CMAKE_TOOLCHAIN_FILE
+            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx20.cmake"
+            CACHE FILEPATH "Default toolchain"
+        )
+    else ()
+        set(CMAKE_TOOLCHAIN_FILE
+            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake"
+            CACHE FILEPATH "Default toolchain"
+        )
+    endif ()
+endif ()
+print("Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+include(${CMAKE_TOOLCHAIN_FILE})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -34,9 +49,6 @@ option(UBSAN        "Enable UB sanitizer"                         OFF)
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
 
-include(cmake/functions.cmake)
-include(cmake/toolchain/compiler.cmake)
-include(cmake/toolchain/cxx17.cmake)
 include(cmake/dependencies.cmake)
 include(cmake/sanitizers.cmake)
 

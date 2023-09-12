@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_LOGGINGSYSTEM
-#define SORALOG_LOGGINGSYSTEM
+#pragma once
 
 #include <soralog/logger_factory.hpp>
 
@@ -271,5 +270,3 @@ namespace soralog {
   };
 
 }  // namespace soralog
-
-#endif  // SORALOG_LOGGINGSYSTEM
