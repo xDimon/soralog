@@ -33,5 +33,6 @@
 
 # JetBrains artifacts
 /build/
+/build-*/
 /cmake-build-*/
 /.idea/

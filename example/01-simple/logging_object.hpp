@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_EXAMPLE_LOGGINGOBJECT
-#define SORALOG_EXAMPLE_LOGGINGOBJECT
+#pragma once
 
 #include <iostream>
 #include <thread>
@@ -29,5 +28,3 @@ class LoggingObject final {
  private:
   std::shared_ptr<soralog::Logger> log_;
 };
-
-#endif  // SORALOG_EXAMPLE_LOGGINGOBJECT

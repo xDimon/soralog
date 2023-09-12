@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_UTIL
-#define SORALOG_UTIL
+#pragma once
 
 #include <pthread.h>
 #include <array>
@@ -55,5 +54,3 @@ namespace soralog::util {
   }
 
 }  // namespace soralog::util
-
-#endif  // SORALOG_UTIL

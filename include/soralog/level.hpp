@@ -3,8 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef SORALOG_LEVEL
-#define SORALOG_LEVEL
+#pragma once
 
 #include <array>
 #include <cstddef>
@@ -16,7 +15,7 @@ namespace soralog {
    * Level detalization of logging or event
    */
   enum class Level : uint8_t {
-    OFF = 0,   /// No log
+    OFF = 0,   /// No log (for logger)
     CRITICAL,  /// Log only critical
     ERROR,     /// Error
     WARN,      /// Warning
@@ -24,12 +23,13 @@ namespace soralog {
     VERBOSE,   /// All information
     DEBUG,     /// Message for debug
     TRACE,     /// Trace event
+    IGNORE,    /// No log (for message)
   };
 
   namespace detail {
-    constexpr std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1>
+    constexpr std::array<const char *, static_cast<uint8_t>(Level::IGNORE) + 1>
         level_to_str_map = [] {
-          std::array<const char *, static_cast<uint8_t>(Level::TRACE) + 1> r{};
+          std::array<const char *, static_cast<uint8_t>(Level::IGNORE) + 1> r{};
           r[static_cast<uint8_t>(Level::OFF)] = "?Off";
           r[static_cast<uint8_t>(Level::CRITICAL)] = "Critical";
           r[static_cast<uint8_t>(Level::ERROR)] = "Error";
@@ -38,6 +38,7 @@ namespace soralog {
           r[static_cast<uint8_t>(Level::VERBOSE)] = "Verbose";
           r[static_cast<uint8_t>(Level::DEBUG)] = "Debug";
           r[static_cast<uint8_t>(Level::TRACE)] = "Trace";
+          r[static_cast<uint8_t>(Level::IGNORE)] = "?Ignore";
           return r;
         }();
   }
@@ -59,5 +60,3 @@ namespace soralog {
   }
 
 }  // namespace soralog
-
-#endif  // SORALOG_LEVEL
