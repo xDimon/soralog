@@ -1,3 +1,10 @@
+#
+# Copyright Soramitsu Co., 2021-2023
+# Copyright Quadrivium Co., 2023
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
 if(ASAN)
   print("Address Sanitizer is enabled")
   include(${CMAKE_CURRENT_LIST_DIR}/toolchain/flags/sanitize_address.cmake)

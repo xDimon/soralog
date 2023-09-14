@@ -1,5 +1,7 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Soramitsu Co., 2021-2023
+ * Copyright Quadrivium Co., 2023
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,14 +11,29 @@
 #include <string>
 #include <string_view>
 
+#include <fmt/format.h>
+
 #include <soralog/circular_buffer.hpp>
-#include <soralog/common.hpp>
 #include <soralog/event.hpp>
 
 #ifdef NDEBUG
 #define IF_RELEASE true
 #else
 #define IF_RELEASE false
+#endif
+
+#if not defined(likely_if)
+#if __cplusplus > 201703L
+#define likely_if(x) [[likely]] if (x)
+#elif defined(__has_builtin)
+#if __has_builtin(__builtin_expect)
+#define likely_if(x) if (__builtin_expect((x), 1))
+#else
+#define likely_if(x) if (x)
+#endif
+#else
+#define likely_if(x) if (x)
+#endif
 #endif
 
 namespace soralog {
@@ -90,7 +107,7 @@ namespace soralog {
                                     max_message_length_, args...);
 
             // Event is queued successfully
-            likely_if(node) {
+            likely_if((bool)node) {
               size_ += node->message().size();
               break;
             }
@@ -147,3 +164,5 @@ namespace soralog {
   };
 
 }  // namespace soralog
+
+#undef likely_if

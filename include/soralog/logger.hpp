@@ -1,5 +1,7 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Soramitsu Co., 2021-2023
+ * Copyright Quadrivium Co., 2023
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,7 +42,7 @@ namespace soralog {
     template <typename Format, typename... Args>
     void push(Level level, const Format &format, const Args &...args) {
       if (level_ >= level) {
-        if(level != Level::OFF and level != Level::IGNORE) {
+        if (level != Level::OFF and level != Level::IGNORE) {
           sink_->push(name_, level, format, args...);
           if (level_ >= Level::CRITICAL) {
             sink_->flush();
