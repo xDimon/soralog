@@ -171,9 +171,7 @@ namespace soralog {
   }
 
   void SinkToConsole::flush() noexcept {
-    bool false_v = false;
-    if (not flush_in_progress_.compare_exchange_strong(
-            false_v, true, std::memory_order_acq_rel)) {
+    if (flush_in_progress_.test_and_set()) {
       return;
     }
 
@@ -305,7 +303,7 @@ namespace soralog {
       break;
     }
 
-    flush_in_progress_.store(false, std::memory_order_release);
+    flush_in_progress_.clear();
   }
 
   void SinkToConsole::run() {
