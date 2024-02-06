@@ -15,8 +15,6 @@
 #include <fmt/color.h>
 #include <fmt/format.h>
 
-#include <soralog/common.hpp>
-
 namespace soralog {
 
   namespace {

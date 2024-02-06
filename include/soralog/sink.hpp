@@ -14,7 +14,6 @@
 #include <fmt/format.h>
 
 #include <soralog/circular_buffer.hpp>
-#include <soralog/common.hpp>
 #include <soralog/event.hpp>
 
 #ifdef NDEBUG
@@ -24,7 +23,7 @@
 #endif
 
 #if not defined(likely_if)
-#if __cplusplus > 201703L
+#if __cplusplus >= 202002L
 #define likely_if(x) [[likely]] if (x)
 #elif defined(__has_builtin)
 #if __has_builtin(__builtin_expect)

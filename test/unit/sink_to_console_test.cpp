@@ -9,7 +9,9 @@
 
 #include "soralog/impl/sink_to_console.hpp"
 
+#if __cplusplus >= 202002L
 #include <latch>
+#endif
 
 using namespace soralog;
 using namespace testing;
@@ -116,10 +118,14 @@ TEST_F(SinkToConsoleTest, MultithreadLogging) {
   size_t treads_n = 10;
   size_t iters_n = 100;
 
+#if __cplusplus >= 202002L
   std::latch latch(treads_n);
+#endif
 
   auto task = [&] {
+#if __cplusplus >= 202002L
     latch.arrive_and_wait();
+#endif
     std::mutex m;
     for (auto i = 0; i < iters_n; ++i) {
       logger->debug("iteration {}.1", i);
