@@ -71,11 +71,13 @@ namespace soralog {
           return *pos;
         }
         constexpr auto &operator++() {
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           ++pos;
           return *this;
         }
         constexpr auto operator++(int) {
           auto origin = *this;
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
           ++pos;
           return origin;
         }

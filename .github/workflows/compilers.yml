@@ -21,16 +21,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-22.04, macOS-14]
         compiler: [{
           "cc": "gcc",
           "cxx": "g++"
          }, {
           "cc": "clang",
           "cxx": "clang++"
-        }]
+         }]
         exclude:
-          - os: macOS-latest
+          - os: macOS-14
             compiler:
               cc: gcc
     steps:
@@ -49,11 +49,20 @@ jobs:
           brew install ninja
         else
           sudo apt-get update || true
-          sudo apt-get install -y ninja-build
+          sudo apt-get install -y ninja-build gcc-13 g++-13 clang-15 clang++-15
+          sudo update-alternatives --install /usr/bin/python       python       /usr/bin/python3               90
+          sudo update-alternatives --install /usr/bin/clang-tidy   clang-tidy   /usr/bin/clang-tidy-15         999 
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-15       999 
+          sudo update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-15/bin/clang-15  999
+          sudo update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-15            999
+          sudo update-alternatives --install /usr/bin/gcc          gcc          /usr/bin/gcc-13                90
+          sudo update-alternatives --install /usr/bin/g++          g++          /usr/bin/g++-13                90
+          sudo update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-13               90
         fi
 
         sudo python3 -m pip install --upgrade pip
-        sudo pip3 install cmake requests gitpython gcovr pyyaml
+        sudo python3 -m pip install scikit-build
+        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
 
     - name: cmake
       env:
@@ -62,7 +71,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
-      run: cmake . -GNinja -Bbuild
+      run: cmake . -Bbuild
 
     - name: build
       run: cmake --build build -- -j4
