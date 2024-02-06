@@ -15,6 +15,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
+#include <soralog/common.hpp>
 #include <soralog/level.hpp>
 #include <soralog/sink.hpp>
 #include <soralog/util.hpp>

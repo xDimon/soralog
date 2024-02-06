@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 
 #include <soralog/circular_buffer.hpp>
+#include <soralog/common.hpp>
 #include <soralog/event.hpp>
 
 #ifdef NDEBUG

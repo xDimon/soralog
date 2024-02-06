@@ -27,14 +27,14 @@ set(
 
 set(
     HUNTER_CACHE_SERVERS
-    "https://github.com/qdrvm/hunter-binary-cache;https://github.com/soramitsu/hunter-binary-cache"
+    "https://github.com/qdrvm/hunter-binary-cache"
     CACHE STRING "Binary cache server"
 )
 
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.23.257-qdrvm3.zip
-    SHA1 6bfad5e6ec7b6821814b1bd0c9d3c4fef72c6731
+    URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.25.3-qdrvm3.zip
+    SHA1 8989599eaa462f367805e2d36a30150c93b1d660
     LOCAL
 )
