@@ -40,7 +40,8 @@ namespace soralog {
      * name and event's data ({@param format} and {@param args}) to sink
      */
     template <typename Format, typename... Args>
-    void push(Level level, const Format &format, const Args &...args) {
+    void __attribute__((no_sanitize("thread")))
+    push(Level level, const Format &format, const Args &...args) {
       if (level_ >= level) {
         if (level != Level::OFF and level != Level::IGNORE) {
           sink_->push(name_, level, format, args...);

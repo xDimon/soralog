@@ -26,6 +26,7 @@ namespace soralog {
    public:
     using element_type = T;
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     struct Node final {
       template <typename... Args>
       void init(Args &&...args) {
@@ -36,9 +37,11 @@ namespace soralog {
         return *reinterpret_cast<const T *>(item_);
       }
 
+      // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
       std::atomic_flag busy = ATOMIC_VAR_INIT(false);
 
      private:
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
       alignas(std::alignment_of_v<T>) char item_[sizeof(T)];
     };
 
@@ -98,6 +101,7 @@ namespace soralog {
       }
     };
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     explicit CircularBuffer(size_t capacity) : CircularBuffer(capacity, 0){};
 
     size_t capacity() const noexcept {

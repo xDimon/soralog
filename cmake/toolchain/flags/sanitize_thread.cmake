@@ -14,6 +14,7 @@ endif ()
 set(FLAGS
     -fsanitize=thread
     -g
+    -O1
     )
 
 foreach(FLAG IN LISTS FLAGS)

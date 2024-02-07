@@ -18,7 +18,7 @@ on:
 jobs:
   coverage:
     name: "codecov"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: checkout
       uses: actions/checkout@v1
@@ -30,16 +30,27 @@ jobs:
       run: |
         set -e
         sudo apt-get update || true
-        sudo apt-get install -y ninja-build gcovr
+        sudo apt-get install -y ninja-build gcovr gcc-13 g++-13 clang-15 clang++-15
+
+        sudo update-alternatives --install /usr/bin/python       python       /usr/bin/python3               90
+        sudo update-alternatives --install /usr/bin/clang-tidy   clang-tidy   /usr/bin/clang-tidy-15         999 
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-15       999 
+        sudo update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-15/bin/clang-15  999
+        sudo update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-15            999
+        sudo update-alternatives --install /usr/bin/gcc          gcc          /usr/bin/gcc-13                90
+        sudo update-alternatives --install /usr/bin/g++          g++          /usr/bin/g++-13                90
+        sudo update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-13               90
+
         sudo python3 -m pip install --upgrade pip
-        sudo pip3 install scikit-build
-        sudo pip3 install cmake requests gitpython gcovr pyyaml
+        sudo python3 -m pip install scikit-build
+        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
+
     - name: "cmake"
       env:
         CC: clang
         CXX: clang++
       run: |
-        cmake . -GNinja -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
+        cmake . -Bbuild-coverage -DCOVERAGE=ON -DEXAMPLES=OFF
         cmake --build build-coverage
     - name: "build report"
       env:

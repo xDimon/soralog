@@ -10,7 +10,7 @@ cmake_minimum_required(VERSION 3.12)
 include("cmake/Hunter/init.cmake")
 
 cmake_policy(SET CMP0048 NEW)
-project(soralog VERSION 0.2.1 LANGUAGES CXX)
+project(soralog VERSION 0.2.2 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)

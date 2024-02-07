@@ -9,6 +9,10 @@
 
 #include "soralog/impl/sink_to_console.hpp"
 
+#if __cplusplus >= 202002L
+#include <latch>
+#endif
+
 using namespace soralog;
 using namespace testing;
 using namespace std::chrono_literals;
@@ -37,7 +41,7 @@ class SinkToConsoleTest : public ::testing::Test {
         "console",
         SinkToConsole::Stream::STDOUT,  // standard output stream
         false,                          // no color
-        Sink::ThreadInfoType::NONE,     // ignore thread info
+        Sink::ThreadInfoType::ID,       // ignore thread info
         4,                              // capacity: 4 events
         64,                             // max message length: 64 byte
         16384,                          // buffers size: 16 Kb
@@ -100,4 +104,53 @@ TEST_F(SinkToConsoleTest, ZeroLatencyLogging) {
   logger->debug("Cuatro");
   std::this_thread::sleep_for(delay);
   logger->flush();
+}
+
+/**
+ * @given Sink with zero-latency
+ * @when Push four message to log every half-second
+ * @then Messages will be written separately
+ * @note Test is disabled, because it should be started and watched manually
+ */
+TEST_F(SinkToConsoleTest, MultithreadLogging) {
+  auto logger = createLogger(40ms);
+
+  size_t treads_n = 10;
+  size_t iters_n = 100;
+
+#if __cplusplus >= 202002L
+  std::latch latch(treads_n);
+#endif
+
+  auto task = [&] {
+#if __cplusplus >= 202002L
+    latch.arrive_and_wait();
+#endif
+    std::mutex m;
+    for (auto i = 0; i < iters_n; ++i) {
+      logger->debug("iteration {}.1", i);
+      logger->debug("iteration {}.2", i);
+      logger->debug("iteration {}.3", i);
+      logger->debug("iteration {}.4", i);
+      logger->debug("iteration {}.5", i);
+      logger->debug("iteration {}.6", i);
+      logger->debug("iteration {}.7", i);
+      std::unique_lock l(m);
+      logger->debug("iteration {}.8", i);
+      logger->debug("iteration {}.9", i);
+      logger->debug("iteration {}.0", i);
+    }
+  };
+
+  std::vector<std::thread> threads;
+  for (auto i = 0; i < treads_n; ++i) {
+    threads.emplace_back([&] {
+      //      soralog::util::setThreadName(fmt::format("{}", i));
+      task();
+    });
+  }
+
+  for (auto &t : threads) {
+    t.join();
+  }
 }

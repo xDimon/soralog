@@ -22,17 +22,17 @@
 #define IF_RELEASE false
 #endif
 
-#if not defined(likely_if)
-#if __cplusplus > 201703L
-#define likely_if(x) [[likely]] if (x)
+#if not defined(LIKELY_IF)
+#if __cplusplus >= 202002L
+#define LIKELY_IF(x) [[likely]] if (x)
 #elif defined(__has_builtin)
 #if __has_builtin(__builtin_expect)
-#define likely_if(x) if (__builtin_expect((x), 1))
+#define LIKELY_IF(x) if (__builtin_expect((x), 1))
 #else
-#define likely_if(x) if (x)
+#define LIKELY_IF(x) if (x)
 #endif
 #else
-#define likely_if(x) if (x)
+#define LIKELY_IF(x) if (x)
 #endif
 #endif
 
@@ -107,7 +107,7 @@ namespace soralog {
                                     max_message_length_, args...);
 
             // Event is queued successfully
-            likely_if((bool)node) {
+            LIKELY_IF((bool)node) {
               size_ += node->message().size();
               break;
             }
@@ -165,4 +165,4 @@ namespace soralog {
 
 }  // namespace soralog
 
-#undef likely_if
+#undef LIKELY_IF

@@ -7,8 +7,8 @@
 
 #include <gtest/gtest.h>
 
-#if __cplusplus > 201703L
-#include <barrier>
+#if __cplusplus >= 202002L
+#include <latch>
 #endif
 
 #include "soralog/impl/sink_to_file.hpp"
@@ -159,13 +159,13 @@ TEST_F(CircularBufferTest, PutGetMt) {
   std::atomic_size_t i = 0;
   std::atomic_size_t n = 100;
 
-#if __cplusplus > 201703L
-  std::barrier barrier(3);
+#if __cplusplus >= 202002L
+  std::latch latch(3);
 #endif
 
   std::thread prod([&] {
-#if __cplusplus > 201703L
-    barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+    latch.arrive_and_wait();
 #endif
     while (i < n) {
       std::cout << "w" << i << std::endl;
@@ -181,8 +181,8 @@ TEST_F(CircularBufferTest, PutGetMt) {
   });
 
   std::thread cons([&] {
-#if __cplusplus > 201703L
-    barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+    latch.arrive_and_wait();
 #endif
     while (i < n) {
       std::cout << "r" << std::endl;
@@ -195,8 +195,8 @@ TEST_F(CircularBufferTest, PutGetMt) {
     }
   });
 
-#if __cplusplus > 201703L
-  barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+  latch.arrive_and_wait();
 #endif
   prod.join();
   cons.join();
@@ -207,13 +207,13 @@ TEST_F(CircularBufferTest, Mutual) {
 
   CircularBuffer<Data> testee(capacity);
 
-#if __cplusplus > 201703L
-  std::barrier barrier(3);
+#if __cplusplus >= 202002L
+  std::latch latch(3);
 #endif
 
   std::thread prod([&] {
-#if __cplusplus > 201703L
-    barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+    latch.arrive_and_wait();
 #endif
     if (auto ref = testee.put('*')) {
       std::cout << "put " << ref->c()  //
@@ -224,8 +224,8 @@ TEST_F(CircularBufferTest, Mutual) {
   });
 
   std::thread cons([&] {
-#if __cplusplus > 201703L
-    barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+    latch.arrive_and_wait();
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     if (auto ref = testee.get()) {
@@ -235,8 +235,8 @@ TEST_F(CircularBufferTest, Mutual) {
     }
   });
 
-#if __cplusplus > 201703L
-  barrier.arrive_and_wait();
+#if __cplusplus >= 202002L
+  latch.arrive_and_wait();
 #endif
   prod.join();
   cons.join();

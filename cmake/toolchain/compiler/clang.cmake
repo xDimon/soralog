@@ -64,8 +64,8 @@ set(
 )
 
 string(REGEX MATCH "([0-9]+).([0-9]+).([0-9]+)" v ${CMAKE_CXX_COMPILER_VERSION})
-if (${CMAKE_MATCH_1} LESS 11)
-    print("Requires Clang compiler at least version 11")
+if (${CMAKE_MATCH_1} LESS 15)
+    print("Requires Clang compiler at least version 15")
 endif()
 
 if (${CMAKE_MATCH_1} GREATER_EQUAL 10)
