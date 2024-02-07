@@ -1,5 +1,7 @@
 /**
- * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * Copyright Soramitsu Co., 2021-2023
+ * Copyright Quadrivium Co., 2023
+ * All Rights Reserved
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -55,7 +57,7 @@ namespace soralog {
     std::atomic_bool need_to_flush_ = false;
     std::atomic<std::chrono::steady_clock::time_point> next_flush_ =
         std::chrono::steady_clock::time_point();
-    std::atomic_bool flush_in_progress_ = false;
+    std::atomic_flag flush_in_progress_ = false;
   };
 
 }  // namespace soralog

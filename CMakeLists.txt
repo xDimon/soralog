@@ -1,9 +1,16 @@
+#
+# Copyright Soramitsu Co., 2021-2023
+# Copyright Quadrivium Co., 2023
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
 cmake_minimum_required(VERSION 3.12)
 
 include("cmake/Hunter/init.cmake")
 
 cmake_policy(SET CMP0048 NEW)
-project(soralog VERSION 0.0.7 LANGUAGES CXX)
+project(soralog VERSION 0.2.2 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)

@@ -1,3 +1,10 @@
+#
+# Copyright Soramitsu Co., 2021-2023
+# Copyright Quadrivium Co., 2023
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
 # specify GITHUB_HUNTER_TOKEN and GITHUB_HUNTER_USERNAME to automatically upload binary cache to github.com/soramitsu/hunter-binary-cache
 # https://docs.hunter.sh/en/latest/user-guides/hunter-user/github-cache-server.html
 string(COMPARE EQUAL "$ENV{GITHUB_HUNTER_TOKEN}" "" password_is_empty)
@@ -20,14 +27,14 @@ set(
 
 set(
     HUNTER_CACHE_SERVERS
-    "https://github.com/qdrvm/hunter-binary-cache;https://github.com/soramitsu/hunter-binary-cache"
+    "https://github.com/qdrvm/hunter-binary-cache"
     CACHE STRING "Binary cache server"
 )
 
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
-    URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.23.257-qdrvm2.zip
-    SHA1 0b6628eb60053c91c025c9024fe6528bb19c094d
+    URL  https://github.com/qdrvm/hunter/archive/refs/tags/v0.25.3-qdrvm3.zip
+    SHA1 8989599eaa462f367805e2d36a30150c93b1d660
     LOCAL
 )
