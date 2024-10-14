@@ -60,12 +60,14 @@ namespace soralog {
     Sink &operator=(Sink &&) noexcept = delete;
 
     Sink(std::string name,
+         Level level,
          ThreadInfoType thread_info_type,
          size_t max_events,
          size_t max_message_length,
          size_t max_buffer_size,
          size_t latency)
         : name_(std::move(name)),
+          level_(level),
           thread_info_type_(thread_info_type),
           max_message_length_(max_message_length),
           max_buffer_size_(max_buffer_size),
@@ -78,8 +80,11 @@ namespace soralog {
       }
     }
 
-    Sink(std::string name, std::vector<std::shared_ptr<Sink>> sinks)
+    Sink(std::string name,
+         Level level,
+         std::vector<std::shared_ptr<Sink>> sinks)
         : name_(std::move(name)),
+          level_(level),
           thread_info_type_(),
           max_message_length_(),
           max_buffer_size_(),
@@ -95,6 +100,13 @@ namespace soralog {
     }
 
     /**
+     * @returns minimal level which sink will accept
+     */
+    Level level() const noexcept {
+      return level_;
+    }
+
+    /**
      * Emplaces new log event
      * @param name is name of logger
      * @param level is level log event
@@ -106,6 +118,9 @@ namespace soralog {
               Level level,
               const Format &format,
               const Args &...args) noexcept(IF_RELEASE) {
+      if (level_ < level or level == Level::OFF or level == Level::IGNORE) {
+        return;
+      }
       if (underlying_sinks_.empty()) {
         while (true) {
           {
@@ -155,22 +170,17 @@ namespace soralog {
     virtual void rotate() noexcept = 0;
 
    protected:
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::string name_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
+    Level level_;
     const ThreadInfoType thread_info_type_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const size_t max_buffer_size_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::chrono::milliseconds latency_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const size_t max_message_length_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     CircularBuffer<Event> events_;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     std::atomic_size_t size_ = 0;
-    // NOLINTNEXTLINE(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};
+    // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
   };
 
 }  // namespace soralog

@@ -28,6 +28,7 @@ namespace soralog {
     SinkToConsole &operator=(const SinkToConsole &) = delete;
 
     SinkToConsole(std::string name,
+                  Level level,
                   Stream stream_type,
                   bool with_color,
                   std::optional<ThreadInfoType> thread_info_type = {},

@@ -134,6 +134,7 @@ namespace soralog {
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name,
+                               Level level,
                                Stream stream_type,
                                bool with_color,
                                std::optional<ThreadInfoType> thread_info_type,
@@ -142,6 +143,7 @@ namespace soralog {
                                std::optional<size_t> buffer_size,
                                std::optional<size_t> latency)
       : Sink(std::move(name),
+             level,
              thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 6),             // 64 events
              max_message_length.value_or(1u << 10),  // 1024 bytes

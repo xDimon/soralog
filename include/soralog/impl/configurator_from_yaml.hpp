@@ -78,6 +78,9 @@ namespace soralog {
      private:
       void parse(const YAML::Node &node);
 
+      std::optional<Level> parseLevel(const std::string &target,
+                                      const YAML::Node &node);
+
       void parseSinks(const YAML::Node &sinks);
 
       void parseSink(int number, const YAML::Node &sink);

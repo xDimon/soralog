@@ -26,6 +26,7 @@ namespace soralog {
     SinkToSyslog &operator=(const SinkToSyslog &) = delete;
 
     SinkToSyslog(std::string name,
+                 Level level,
                  std::string ident,
                  std::optional<ThreadInfoType> thread_info_type = {},
                  std::optional<size_t> capacity = {},

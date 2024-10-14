@@ -14,8 +14,9 @@
 namespace soralog {
 
   Multisink::Multisink(std::string name,
+                       Level level,
                        std::vector<std::shared_ptr<Sink>> sinks)
-      : Sink(std::move(name), std::move(sinks)) {}
+      : Sink(std::move(name), level, std::move(sinks)) {}
 
   void Multisink::flush() noexcept {
     for (const auto &sink : underlying_sinks_) {

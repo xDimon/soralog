@@ -25,7 +25,9 @@ namespace soralog {
     Multisink &operator=(Multisink &&) noexcept = delete;
     Multisink &operator=(const Multisink &) = delete;
 
-    Multisink(std::string name, std::vector<std::shared_ptr<Sink>> sinks);
+    Multisink(std::string name,
+              Level level,
+              std::vector<std::shared_ptr<Sink>> sinks);
 
     void rotate() noexcept override;
     void flush() noexcept override;

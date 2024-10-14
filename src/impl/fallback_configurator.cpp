@@ -16,7 +16,7 @@ namespace soralog {
   Configurator::Result FallbackConfigurator::applyOn(
       LoggingSystem &system) const {
     system.makeSink<SinkToConsole>(
-        "console", SinkToConsole::Stream::STDOUT, with_color_);
+        "console", level_, SinkToConsole::Stream::STDOUT, with_color_);
     system.makeGroup("*", {}, "console", level_);
 
     return {.has_error = false,
