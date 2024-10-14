@@ -19,7 +19,10 @@ namespace soralog {
 
   class SinkToConsole final : public Sink {
    public:
-    enum class Stream { STDOUT = 1, STDERR = 2 };
+    enum class Stream : uint8_t {
+      STDOUT = 1,
+      STDERR = 2,
+    };
 
     SinkToConsole() = delete;
     SinkToConsole(SinkToConsole &&) noexcept = delete;

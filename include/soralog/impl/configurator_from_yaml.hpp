@@ -103,6 +103,7 @@ namespace soralog {
                       const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &system_;
       std::shared_ptr<Configurator> previous_ = nullptr;
       std::variant<std::filesystem::path, std::string> config_;

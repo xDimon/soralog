@@ -46,7 +46,7 @@ namespace soralog {
    */
   class Sink {
    public:
-    enum class ThreadInfoType {
+    enum class ThreadInfoType : uint8_t {
       NONE,  //!< No log thread info
       NAME,  //!< Log thread name
       ID     //!< Log thread id

@@ -42,7 +42,7 @@ namespace soralog {
         };
 
     template <typename... Args>
-    inline void pass(Args &&...styles) {}
+    inline void pass(const Args...) {}
 
     enum V {};
     template <typename T>

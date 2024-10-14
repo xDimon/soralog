@@ -90,7 +90,7 @@ namespace soralog {
     out_.open(path_, std::ios::app);
     if (not out_.is_open()) {
       std::cerr << "Can't open log file '" << path_ << "': " << strerror(errno)
-                << std::endl;
+                << '\n';
     } else if (latency_ != std::chrono::milliseconds::zero()) {
       sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     }
@@ -229,11 +229,12 @@ namespace soralog {
       if (not out.is_open()) {
         if (out_.is_open()) {
           std::cerr << "Can't re-open log file '" << path_
-                    << "': " << strerror(errno) << std::endl;
+                    << "': " << strerror(errno) << '\n';
         } else {
           std::cerr << "Can't open log file '" << path_
-                    << "': " << strerror(errno) << std::endl;
+                    << "': " << strerror(errno) << '\n';
         }
+        std::cerr.flush();
       } else {
         std::swap(out_, out);
       }

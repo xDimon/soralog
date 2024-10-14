@@ -14,7 +14,7 @@
 
 using std::literals::string_literals::operator""s;
 
-enum ConfiguratorType {
+enum class ConfiguratorType : uint8_t {
   Fallback,
   Customized,
   YamlByPath,
@@ -109,7 +109,7 @@ int main() {
 
   auto r = log_system.configure();
   if (not r.message.empty()) {
-    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+    (r.has_error ? std::cerr : std::cout) << r.message << '\n';
   }
   if (r.has_error) {
     exit(EXIT_FAILURE);
@@ -125,7 +125,7 @@ int main() {
   main_log->info("Start");
 
   auto lambda = [](const auto &tag) {
-    std::cout << "CALCULATED: " << tag << std::endl;
+    std::cout << "CALCULATED: " << tag << '\n';
     return tag;
   };
 

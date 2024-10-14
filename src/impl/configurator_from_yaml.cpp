@@ -177,17 +177,23 @@ namespace soralog {
 
     if (level_string == "off") {
       return Level::OFF;
-    } else if (level_string == "critical" || level_string == "crit") {
+    }
+    if (level_string == "critical" || level_string == "crit") {
       return Level::CRITICAL;
-    } else if (level_string == "error") {
+    }
+    if (level_string == "error") {
       return Level::ERROR;
-    } else if (level_string == "warning" || level_string == "warn") {
+    }
+    if (level_string == "warning" || level_string == "warn") {
       return Level::WARN;
-    } else if (level_string == "info") {
+    }
+    if (level_string == "info") {
       return Level::INFO;
-    } else if (level_string == "verbose") {
+    }
+    if (level_string == "verbose") {
       return Level::VERBOSE;
-    } else if (level_string == "debug" || level_string == "deb") {
+    }
+    if (level_string == "debug" || level_string == "deb") {
       if constexpr (debug_level_disable) {
         errors_ << "W: Level 'debug' in " << target << " won't work: "
                 << "it has disabled with compile option"
@@ -195,7 +201,8 @@ namespace soralog {
         has_warning_ = true;
       }
       return Level::DEBUG;
-    } else if (level_string == "trace") {
+    }
+    if (level_string == "trace") {
       if constexpr (trace_level_disabled) {
         errors_ << "W: Level 'trace' in " << target << " won't work: "
                 << "it has disabled with compile option"
@@ -203,12 +210,11 @@ namespace soralog {
         has_warning_ = true;
       }
       return Level::TRACE;
-    } else {
-      errors_ << "E: Invalid level in " << target << ": "  //
-              << level_string << "\n";
-      has_error_ = true;
-      return std::nullopt;
     }
+    errors_ << "E: Invalid level in " << target << ": "  //
+            << level_string << "\n";
+    has_error_ = true;
+    return std::nullopt;
   }
 
   void ConfiguratorFromYAML::Applicator::parseSink(int number,

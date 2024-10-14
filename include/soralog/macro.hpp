@@ -21,13 +21,13 @@
  */
 
 #define _SL_LOG_IF_LEVEL(LOG, LVL, FMT, ...)                 \
-  do {                                                       \
+  ({                                                         \
     auto &&_sl_log_log = (LOG);                              \
     soralog::Level _sl_log_level = (LVL);                    \
     if (_sl_log_log->level() >= _sl_log_level) {             \
       _sl_log_log->log(_sl_log_level, (FMT), ##__VA_ARGS__); \
     }                                                        \
-  } while (false)
+  })
 
 #define _SL_LOG(LOG, LVL, FMT, ...) \
   _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
