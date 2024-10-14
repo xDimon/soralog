@@ -12,7 +12,8 @@
 
 namespace soralog {
 
-  Group::Group(LoggingSystem &logging_system, std::string group_name,
+  Group::Group(LoggingSystem &logging_system,
+               std::string group_name,
                const std::optional<std::string> &parent_name,
                const std::optional<std::string> &sink_name,
                std::optional<Level> level)

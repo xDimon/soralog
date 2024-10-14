@@ -29,9 +29,10 @@ namespace soralog {
     Logger(const Logger &) = delete;
     ~Logger() = default;
     Logger &operator=(Logger &&) noexcept = delete;
-    Logger &operator=(Logger const &) = delete;
+    Logger &operator=(const Logger &) = delete;
 
-    Logger(LoggingSystem &system, std::string logger_name,
+    Logger(LoggingSystem &system,
+           std::string logger_name,
            std::shared_ptr<const Group> group);
 
    private:
@@ -40,8 +41,9 @@ namespace soralog {
      * name and event's data ({@param format} and {@param args}) to sink
      */
     template <typename Format, typename... Args>
-    void __attribute__((no_sanitize("thread")))
-    push(Level level, const Format &format, const Args &...args) {
+    void __attribute__((no_sanitize("thread"))) push(Level level,
+                                                     const Format &format,
+                                                     const Args &...args) {
       if (level_ >= level) {
         if (level != Level::OFF and level != Level::IGNORE) {
           sink_->push(name_, level, format, args...);

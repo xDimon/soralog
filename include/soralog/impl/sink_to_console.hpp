@@ -19,15 +19,21 @@ namespace soralog {
 
   class SinkToConsole final : public Sink {
    public:
-    enum class Stream { STDOUT = 1, STDERR = 2 };
+    enum class Stream : uint8_t {
+      STDOUT = 1,
+      STDERR = 2,
+    };
 
     SinkToConsole() = delete;
     SinkToConsole(SinkToConsole &&) noexcept = delete;
     SinkToConsole(const SinkToConsole &) = delete;
     SinkToConsole &operator=(SinkToConsole &&) noexcept = delete;
-    SinkToConsole &operator=(SinkToConsole const &) = delete;
+    SinkToConsole &operator=(const SinkToConsole &) = delete;
 
-    SinkToConsole(std::string name, Stream stream_type, bool with_color,
+    SinkToConsole(std::string name,
+                  Level level,
+                  Stream stream_type,
+                  bool with_color,
                   std::optional<ThreadInfoType> thread_info_type = {},
                   std::optional<size_t> capacity = {},
                   std::optional<size_t> max_message_length = {},
@@ -35,7 +41,7 @@ namespace soralog {
                   std::optional<size_t> latency = {});
     ~SinkToConsole() override;
 
-    void rotate() noexcept override{};
+    void rotate() noexcept override {};
 
     void flush() noexcept override;
 

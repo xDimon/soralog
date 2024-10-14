@@ -52,15 +52,19 @@ namespace soralog {
 
     template <typename T>
     void put_string(char *&ptr, const T &name, size_t width) {
-      if (width == 0)
+      if (width == 0) {
         return;
+      }
       for (auto c : name) {
-        if (c == '\0' or width == 0)
+        if (c == '\0' or width == 0) {
           break;
+        }
         *ptr++ = c;  // NOLINT
         --width;
       }
-      while (width--) *ptr++ = ' ';  // NOLINT
+      while (width--) {
+        *ptr++ = ' ';  // NOLINT
+      }
     }
 
   }  // namespace
@@ -68,13 +72,17 @@ namespace soralog {
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
   std::atomic_bool SinkToSyslog::syslog_is_opened_{false};
 
-  SinkToSyslog::SinkToSyslog(std::string name, std::string ident,
+  SinkToSyslog::SinkToSyslog(std::string name,
+                             Level level,
+                             std::string ident,
                              std::optional<ThreadInfoType> thread_info_type,
                              std::optional<size_t> capacity,
                              std::optional<size_t> max_message_length,
                              std::optional<size_t> buffer_size,
                              std::optional<size_t> latency)
-      : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
+      : Sink(std::move(name),
+             level,
+             thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 11),            // 2048 events
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 22),         // 4 Mb
@@ -142,10 +150,15 @@ namespace soralog {
 
         if (psec != sec) {
           tm = fmt::localtime(sec);
-          fmt::format_to_n(datetime.data(), datetime.size(),
+          fmt::format_to_n(datetime.data(),
+                           datetime.size(),
                            "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
-                           tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-                           tm.tm_hour, tm.tm_min, tm.tm_sec);
+                           tm.tm_year % 100,
+                           tm.tm_mon + 1,
+                           tm.tm_mday,
+                           tm.tm_hour,
+                           tm.tm_min,
+                           tm.tm_sec);
           psec = sec;
         }
 

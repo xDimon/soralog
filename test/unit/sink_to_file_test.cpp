@@ -47,7 +47,9 @@ class SinkToFileTest : public ::testing::Test {
 
   std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
     auto sink = std::make_shared<SinkToFile>(
-        "file", path_,
+        "file",
+        Level::TRACE,
+        path_,
         Sink::ThreadInfoType::NONE,  // ignore thread info
         4,                           // capacity: 4 events
         64,                          // max message length: 64 byte
@@ -66,8 +68,8 @@ TEST_F(SinkToFileTest, Logging) {
   int count = 100;
   for (int round = 1; round <= 3; ++round) {
     for (int i = 1; i <= count; ++i) {
-      logger->debug("round: {}, message: {}, delay: {}ms", round, i,
-                    abs(i - count / 2));
+      logger->debug(
+          "round: {}, message: {}, delay: {}ms", round, i, abs(i - count / 2));
       std::this_thread::sleep_for(delay * abs(i - count / 2));
     }
   }

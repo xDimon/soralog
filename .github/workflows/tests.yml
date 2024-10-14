@@ -38,7 +38,7 @@ jobs:
          - name: "Undefined Behavior Sanitizer"
            sanitizer: UBSAN
     name: "${{ matrix.options.name }}"
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v1
@@ -52,8 +52,8 @@ jobs:
           set -e
           sudo apt-get update || true
           sudo apt-get install -y ninja-build
-          sudo python3 -m pip install --upgrade pip
-          sudo pip3 install cmake requests gitpython gcovr pyyaml
+#          sudo python3 -m pip install --upgrade pip
+#          sudo pip3 install cmake requests gitpython gcovr pyyaml
 
       - name: cmake
         env:

@@ -69,9 +69,9 @@ namespace soralog {
             try {
               node = YAML::LoadFile(arg);
             } catch (const std::exception &exception) {
-              errors_ << "E: Can't parse file `"
-                      << std::filesystem::canonical(arg).string()
-                      << "': " << exception.what() << "\n";
+              errors_ << "E: Can't parse file "
+                      << std::filesystem::weakly_canonical(arg) << ": "
+                      << exception.what() << "\n";
               has_error_ = true;
             }
 
@@ -95,9 +95,10 @@ namespace soralog {
 
     result.has_error = result.has_error || has_error_;
     result.has_warning = result.has_warning || has_warning_;
-    result.message += (has_error_ or has_warning_)
-        ? ("I: Some problems are found in config:\n" + errors_.str())
-        : "";
+    result.message +=
+        (has_error_ or has_warning_)
+            ? ("I: Some problems are found in config:\n" + errors_.str())
+            : "";
     return result;
   }
 
@@ -118,10 +119,12 @@ namespace soralog {
 
     for (const auto &it : node) {
       auto key = it.first.as<std::string>();
-      if (key == "sinks")
+      if (key == "sinks") {
         continue;
-      if (key == "groups")
+      }
+      if (key == "groups") {
         continue;
+      }
       errors_ << "W: Unknown property: " << key << "\n";
       has_warning_ = true;
     }
@@ -156,6 +159,62 @@ namespace soralog {
       }
       parseSink(i, sink);
     }
+  }
+
+  std::optional<Level> ConfiguratorFromYAML::Applicator::parseLevel(
+      const std::string &target, const YAML::Node &node) {
+    auto level_node = node["level"];
+    if (not level_node.IsDefined()) {
+      return std::nullopt;
+    }
+    if (not level_node.IsScalar()) {
+      errors_ << "E: Property 'level' of " << target << " is not scalar\n";
+      has_error_ = true;
+      return std::nullopt;
+    }
+
+    auto level_string = level_node.as<std::string>();
+
+    if (level_string == "off") {
+      return Level::OFF;
+    }
+    if (level_string == "critical" || level_string == "crit") {
+      return Level::CRITICAL;
+    }
+    if (level_string == "error") {
+      return Level::ERROR;
+    }
+    if (level_string == "warning" || level_string == "warn") {
+      return Level::WARN;
+    }
+    if (level_string == "info") {
+      return Level::INFO;
+    }
+    if (level_string == "verbose") {
+      return Level::VERBOSE;
+    }
+    if (level_string == "debug" || level_string == "deb") {
+      if constexpr (debug_level_disable) {
+        errors_ << "W: Level 'debug' in " << target << " won't work: "
+                << "it has disabled with compile option"
+                << "\n";
+        has_warning_ = true;
+      }
+      return Level::DEBUG;
+    }
+    if (level_string == "trace") {
+      if constexpr (trace_level_disabled) {
+        errors_ << "W: Level 'trace' in " << target << " won't work: "
+                << "it has disabled with compile option"
+                << "\n";
+        has_warning_ = true;
+      }
+      return Level::TRACE;
+    }
+    errors_ << "E: Invalid level in " << target << ": "  //
+            << level_string << "\n";
+    has_error_ = true;
+    return std::nullopt;
   }
 
   void ConfiguratorFromYAML::Applicator::parseSink(int number,
@@ -344,28 +403,43 @@ namespace soralog {
       }
     }
 
+    auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
+                     .value_or(Level::TRACE);
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       auto val = it.second;
 
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "stream")
+      }
+      if (key == "stream") {
         continue;
-      if (key == "color")
+      }
+      if (key == "color") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
+      if (key == "level") {
+        continue;
+      }
       errors_ << "W: Unknown property of sink '" << name
               << "' with type 'console': " << key << "\n";
       has_warning_ = true;
@@ -377,8 +451,14 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, stream_type, color, thread_info_type,
-                                    capacity, max_message_length, buffer_size,
+    system_.makeSink<SinkToConsole>(name,
+                                    level,
+                                    stream_type,
+                                    color,
+                                    thread_info_type,
+                                    capacity,
+                                    max_message_length,
+                                    buffer_size,
                                     latency);
   }
 
@@ -492,24 +572,38 @@ namespace soralog {
       }
     }
 
+    auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
+                     .value_or(Level::TRACE);
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "path")
+      }
+      if (key == "path") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
+      if (key == "level") {
+        continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -527,8 +621,14 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
-                                 max_message_length, buffer_size, latency);
+    system_.makeSink<SinkToFile>(name,
+                                 level,
+                                 path,
+                                 thread_info_type,
+                                 capacity,
+                                 max_message_length,
+                                 buffer_size,
+                                 latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
@@ -641,24 +741,38 @@ namespace soralog {
       }
     }
 
+    auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
+                     .value_or(Level::TRACE);
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "ident")
+      }
+      if (key == "ident") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
+      if (key == "level") {
+        continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -676,8 +790,14 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToSyslog>(name, ident, thread_info_type, capacity,
-                                   max_message_length, buffer_size, latency);
+    system_.makeSink<SinkToSyslog>(name,
+                                   level,
+                                   ident,
+                                   thread_info_type,
+                                   capacity,
+                                   max_message_length,
+                                   buffer_size,
+                                   latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
@@ -695,14 +815,23 @@ namespace soralog {
       has_error_ = true;
     }
 
+    auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
+                     .value_or(Level::TRACE);
+
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "sinks")
+      }
+      if (key == "sinks") {
         continue;
+      }
+      if (key == "level") {
+        continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -726,7 +855,7 @@ namespace soralog {
       }
     }
 
-    system_.makeSink<Multisink>(name, std::move(sinks));
+    system_.makeSink<Multisink>(name, level, std::move(sinks));
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
@@ -755,7 +884,8 @@ namespace soralog {
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroup(
-      int number, const YAML::Node &group_node,
+      int number,
+      const YAML::Node &group_node,
       const std::optional<std::string> &parent) {
     bool fail = false;
 
@@ -809,22 +939,13 @@ namespace soralog {
       sink.emplace("*");
     }
 
-    std::optional<std::string> level_string{};
     auto level_node = group_node["level"];
-    if (level_node.IsDefined()) {
-      if (not level_node.IsScalar()) {
-        fail = true;
-        errors_ << "E: Property 'level' of group " << tmp_name
-                << " is not scalar\n";
-        has_error_ = true;
-      } else {
-        level_string.emplace(level_node.as<std::string>());
-      }
-    } else if (not parent) {
+    if (not level_node.IsDefined() and not parent) {
       fail = true;
       errors_ << "E: Not found 'level' of root group " << tmp_name << "\n";
       has_error_ = true;
     }
+    auto level = parseLevel(fmt::format("group '{}'", tmp_name), group_node);
 
     auto children_node = group_node["children"];
     if (children_node.IsDefined()) {
@@ -839,16 +960,21 @@ namespace soralog {
     for (const auto &it : group_node) {
       auto key = it.first.as<std::string>();
 
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "is_fallback")
+      }
+      if (key == "is_fallback") {
         continue;
-      if (key == "sink")
+      }
+      if (key == "sink") {
         continue;
-      if (key == "level")
+      }
+      if (key == "level") {
         continue;
-      if (key == "children")
+      }
+      if (key == "children") {
         continue;
+      }
       errors_ << "W: Unknown property of group " << tmp_name << ": " << key
               << "\n";
       has_warning_ = true;
@@ -858,43 +984,6 @@ namespace soralog {
       if (not system_.getSink(*sink)) {
         errors_ << "E: Unknown sink in group " << tmp_name << ": " << *sink
                 << "\n";
-        has_error_ = true;
-      }
-    }
-
-    std::optional<Level> level{};
-    if (level_string) {
-      if (level_string == "off") {
-        level.emplace(Level::OFF);
-      } else if (level_string == "critical" || level_string == "crit") {
-        level.emplace(Level::CRITICAL);
-      } else if (level_string == "error") {
-        level.emplace(Level::ERROR);
-      } else if (level_string == "warning" || level_string == "warn") {
-        level.emplace(Level::WARN);
-      } else if (level_string == "info") {
-        level.emplace(Level::INFO);
-      } else if (level_string == "verbose") {
-        level.emplace(Level::VERBOSE);
-      } else if (level_string == "debug" || level_string == "deb") {
-        level.emplace(Level::DEBUG);
-        if constexpr (debug_level_disable) {
-          errors_ << "W: Level 'trace' in group " << tmp_name
-                  << " woun't work: it has disabled with compile option"
-                  << "\n";
-          has_warning_ = true;
-        }
-      } else if (level_string == "trace") {
-        level.emplace(Level::TRACE);
-        if constexpr (trace_level_disabled) {
-          errors_ << "W: Level 'trace' in group " << tmp_name
-                  << " woun't work: it has disabled with compile option"
-                  << "\n";
-          has_warning_ = true;
-        }
-      } else {
-        errors_ << "E: Invalid level in group " << tmp_name << ": "
-                << *level_string << "\n";
         has_error_ = true;
       }
     }

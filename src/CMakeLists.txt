@@ -87,6 +87,7 @@ add_library(configurator_yaml
 target_link_libraries(configurator_yaml
     yaml-cpp::yaml-cpp
     configurator
+    logging_system
     )
 
 add_library(fallback_configurator
@@ -100,6 +101,8 @@ add_library(logging_system
     logging_system.cpp
     )
 target_link_libraries(logging_system
+    group
+    logger
     sink
     sink_to_nowhere
     )

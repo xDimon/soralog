@@ -41,7 +41,8 @@ namespace soralog::util {
 #warning \
     "Function getThreadName() is not implemented for current platform; An auto-generated name will be used instead"
       auto generated = "Thread#" + std::to_string(getThreadNumber());
-      memcpy(thr_name.data(), generated.data(),
+      memcpy(thr_name.data(),
+             generated.data(),
              std::min(generated.size(), thr_name.size()));
 #endif
       return true;

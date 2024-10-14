@@ -43,7 +43,7 @@ namespace soralog {
           r[static_cast<uint8_t>(Level::IGNORE)] = "?Ignore";
           return r;
         }();
-  }
+  }  // namespace detail
 
   /**
    * @returns symbol in according with {@param level}

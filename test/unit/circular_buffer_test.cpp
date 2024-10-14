@@ -55,7 +55,7 @@ TEST_F(CircularBufferTest, Put) {
     EXPECT_EQ(testee.avail(), capacity - i);
     EXPECT_EQ(testee.capacity(), capacity);
 
-    std::cout << "--- put #" << (i + 1) << std::endl;
+    std::cout << "--- put #" << (i + 1) << '\n';
     auto ref = testee.put('1' + i);
     EXPECT_TRUE(ref);
   }
@@ -65,14 +65,14 @@ TEST_F(CircularBufferTest, Put) {
   EXPECT_EQ(testee.capacity(), capacity);
 
   // Overfill
-  std::cout << "--- put #" << (capacity + 1) << " (overfill)" << std::endl;
+  std::cout << "--- put #" << (capacity + 1) << " (overfill)" << '\n';
   auto ref = testee.put('1' + capacity);
   EXPECT_FALSE(ref);
 
   EXPECT_EQ(testee.size(), capacity);
   EXPECT_EQ(testee.avail(), 0);
   EXPECT_EQ(testee.capacity(), capacity);
-  std::cout << '\n' << std::endl;
+  std::cout << '\n' << '\n';
 }
 
 TEST_F(CircularBufferTest, Get) {
@@ -85,7 +85,7 @@ TEST_F(CircularBufferTest, Get) {
     EXPECT_EQ(testee.avail(), capacity);
     EXPECT_EQ(testee.capacity(), capacity);
 
-    std::cout << "--- get (nothing actually)" << std::endl;
+    std::cout << "--- get (nothing actually)" << '\n';
     auto ref = testee.get();
     EXPECT_FALSE(ref);
   }
@@ -101,7 +101,7 @@ TEST_F(CircularBufferTest, Get) {
     EXPECT_EQ(testee.avail(), i);
     EXPECT_EQ(testee.capacity(), capacity);
 
-    std::cout << "--- get #" << (i + 1) << std::endl;
+    std::cout << "--- get #" << (i + 1) << '\n';
     auto ref = testee.get();
     EXPECT_TRUE(ref);
 
@@ -127,7 +127,7 @@ TEST_F(CircularBufferTest, PutGet) {
       std::cout << "[lag=" << lag << "]: "          //
                 << "put " << ref_put->c() << " > "  //
                 << "size=" << testee.size() << " avail=" << testee.avail()
-                << std::endl;
+                << '\n';
     }
     for (auto n = 0; n < capacity; ++n) {
       {
@@ -137,7 +137,7 @@ TEST_F(CircularBufferTest, PutGet) {
         std::cout << "[lag=" << lag << "]: "          //
                   << "put " << ref_put->c() << " > "  //
                   << "size=" << testee.size() << " avail=" << testee.avail()
-                  << std::endl;
+                  << '\n';
       }
       {
         auto ref_get = testee.get();
@@ -145,7 +145,7 @@ TEST_F(CircularBufferTest, PutGet) {
         std::cout << "[lag=" << lag << "]: "          //
                   << "get " << ref_get->c() << " > "  //
                   << "size=" << testee.size() << " avail=" << testee.avail()
-                  << std::endl;
+                  << '\n';
       }
     }
   }
@@ -168,13 +168,13 @@ TEST_F(CircularBufferTest, PutGetMt) {
     latch.arrive_and_wait();
 #endif
     while (i < n) {
-      std::cout << "w" << i << std::endl;
+      std::cout << "w" << i << '\n';
       //      if (auto ref = testee.put('0' + (i % 10))) {
       if (auto ref = testee.put('0')) {
         ++i;
         std::cout << "put " << ref->c()  //
                   << " [" << testee.size() << " | " << testee.avail() << "]"
-                  << std::endl;
+                  << '\n';
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
     }
@@ -185,11 +185,11 @@ TEST_F(CircularBufferTest, PutGetMt) {
     latch.arrive_and_wait();
 #endif
     while (i < n) {
-      std::cout << "r" << std::endl;
+      std::cout << "r" << '\n';
       if (auto ref = testee.get()) {
         std::cout << "get " << ref->c()  //
                   << " [" << testee.size() << " | " << testee.avail() << "]"
-                  << std::endl;
+                  << '\n';
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
     }
@@ -218,7 +218,7 @@ TEST_F(CircularBufferTest, Mutual) {
     if (auto ref = testee.put('*')) {
       std::cout << "put " << ref->c()  //
                 << " [" << testee.size() << " | " << testee.avail() << "]"
-                << std::endl;
+                << '\n';
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
   });
@@ -231,7 +231,7 @@ TEST_F(CircularBufferTest, Mutual) {
     if (auto ref = testee.get()) {
       std::cout << "get " << ref->c()  //
                 << " [" << testee.size() << " | " << testee.avail() << "]"
-                << std::endl;
+                << '\n';
     }
   });
 

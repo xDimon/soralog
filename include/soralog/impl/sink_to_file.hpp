@@ -25,9 +25,11 @@ namespace soralog {
     SinkToFile(SinkToFile &&) noexcept = delete;
     SinkToFile(const SinkToFile &) = delete;
     SinkToFile &operator=(SinkToFile &&) noexcept = delete;
-    SinkToFile &operator=(SinkToFile const &) = delete;
+    SinkToFile &operator=(const SinkToFile &) = delete;
 
-    SinkToFile(std::string name, std::filesystem::path path,
+    SinkToFile(std::string name,
+               Level level,
+               std::filesystem::path path,
                std::optional<ThreadInfoType> thread_info_type = {},
                std::optional<size_t> capacity = {},
                std::optional<size_t> buffer_size = {},

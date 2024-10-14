@@ -53,7 +53,7 @@ namespace soralog {
       NodeRef(NodeRef &&) noexcept = delete;
       NodeRef(const NodeRef &) = delete;
       NodeRef &operator=(NodeRef &&) noexcept = delete;
-      NodeRef &operator=(NodeRef const &) = delete;
+      NodeRef &operator=(const NodeRef &) = delete;
 
       NodeRef(Node &node) noexcept : node(&node) {}
 
@@ -83,7 +83,7 @@ namespace soralog {
     CircularBuffer(const CircularBuffer &) = delete;
     ~CircularBuffer() = default;
     CircularBuffer &operator=(CircularBuffer &&) noexcept = delete;
-    CircularBuffer &operator=(CircularBuffer const &) = delete;
+    CircularBuffer &operator=(const CircularBuffer &) = delete;
 
     CircularBuffer(size_t capacity, size_t padding)
         : capacity_(capacity),
@@ -102,7 +102,7 @@ namespace soralog {
     };
 
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    explicit CircularBuffer(size_t capacity) : CircularBuffer(capacity, 0){};
+    explicit CircularBuffer(size_t capacity) : CircularBuffer(capacity, 0) {};
 
     size_t capacity() const noexcept {
       while (busy_.test_and_set()) {

@@ -6,13 +6,22 @@
 #
 
 BasedOnStyle: Google
+BreakStringLiterals: true
 NamespaceIndentation: All
 BreakBeforeBinaryOperators: NonAssignment
-AlignOperands: false
+AlignOperands: AlignAfterOperator
 DerivePointerAlignment: false
 PointerAlignment: Right
-BinPackArguments: true
-BinPackParameters: true
+BinPackArguments: false
+BinPackParameters: false
 AllowShortFunctionsOnASingleLine: Empty
-AllowShortIfStatementsOnASingleLine: false
 IncludeBlocks: Preserve
+InsertBraces: true
+InsertTrailingCommas: Wrapped
+SortIncludes: CaseSensitive
+QualifierAlignment: Custom
+QualifierOrder: ['inline', 'static', 'constexpr', 'const', 'volatile', 'type', 'restrict']
+ReferenceAlignment: Right
+ReflowComments: true
+#RemoveSemicolon: true
+InsertNewlineAtEOF: true

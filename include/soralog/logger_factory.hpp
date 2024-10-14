@@ -35,7 +35,8 @@ namespace soralog {
      * overridden to {@param level}
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
+        std::string logger_name,
+        const std::string &group_name,
         Level level) = 0;
 
     /**
@@ -44,7 +45,8 @@ namespace soralog {
      * overridden to sink with name {@param sink_name}
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
+        std::string logger_name,
+        const std::string &group_name,
         std::string sink_name) = 0;
 
     /**
@@ -53,8 +55,10 @@ namespace soralog {
      * andd level overridden to {@param sink_name} and {@param level}
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
-        std::string sink_name, Level level) = 0;
+        std::string logger_name,
+        const std::string &group_name,
+        std::string sink_name,
+        Level level) = 0;
   };
 
 }  // namespace soralog

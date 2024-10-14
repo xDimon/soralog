@@ -18,7 +18,7 @@ namespace soralog {
     SinkToNowhere(SinkToNowhere &&) noexcept = delete;
     SinkToNowhere(const SinkToNowhere &) = delete;
     SinkToNowhere &operator=(SinkToNowhere &&) noexcept = delete;
-    SinkToNowhere &operator=(SinkToNowhere const &) = delete;
+    SinkToNowhere &operator=(const SinkToNowhere &) = delete;
 
     explicit SinkToNowhere(std::string name);
     ~SinkToNowhere() override;

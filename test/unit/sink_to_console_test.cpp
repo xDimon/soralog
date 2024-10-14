@@ -39,6 +39,7 @@ class SinkToConsoleTest : public ::testing::Test {
   std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
     auto sink = std::make_shared<SinkToConsole>(
         "console",
+        Level::TRACE,
         SinkToConsole::Stream::STDOUT,  // standard output stream
         false,                          // no color
         Sink::ThreadInfoType::ID,       // ignore thread info
@@ -56,8 +57,8 @@ TEST_F(SinkToConsoleTest, Logging) {
   int count = 100;
   for (int round = 1; round <= 3; ++round) {
     for (int i = 1; i <= count; ++i) {
-      logger->debug("round: {}, message: {}, delay: {}ms", round, i,
-                    abs(i - count / 2));
+      logger->debug(
+          "round: {}, message: {}, delay: {}ms", round, i, abs(i - count / 2));
       std::this_thread::sleep_for(delay * abs(i - count / 2));
     }
   }

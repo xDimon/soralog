@@ -17,7 +17,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
       name: checkout
@@ -29,20 +29,20 @@ jobs:
       run: |
         set -e
         sudo apt-get update || true
-        sudo apt-get install -y ninja-build gcovr gcc-13 g++-13 clang-15 clang++-15 llvm-15
+        sudo apt-get install -y ninja-build gcovr gcc-13 g++-13 llvm-18 clang-18 clang++-18 clang-tidy-18 clang-format-18
 
         sudo update-alternatives --install /usr/bin/python       python       /usr/bin/python3               90
-        sudo update-alternatives --install /usr/bin/clang-tidy   clang-tidy   /usr/bin/clang-tidy-15         999 
-        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-15       999 
-        sudo update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-15/bin/clang-15  999
-        sudo update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-15            999
+        sudo update-alternatives --install /usr/bin/clang-tidy   clang-tidy   /usr/bin/clang-tidy-18         999 
+        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-18       999 
+        sudo update-alternatives --install /usr/bin/clang        clang        /usr/lib/llvm-18/bin/clang-18  999
+        sudo update-alternatives --install /usr/bin/clang++      clang++      /usr/bin/clang++-18            999
         sudo update-alternatives --install /usr/bin/gcc          gcc          /usr/bin/gcc-13                90
         sudo update-alternatives --install /usr/bin/g++          g++          /usr/bin/g++-13                90
         sudo update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-13               90
 
-        sudo python3 -m pip install --upgrade pip
-        sudo python3 -m pip install scikit-build
-        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
+#        sudo python3 -m pip install --upgrade pip
+#        sudo python3 -m pip install scikit-build
+#        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
     - name: run checks
       run: |
         #!/bin/bash

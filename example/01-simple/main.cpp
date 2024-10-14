@@ -12,7 +12,9 @@
 
 #include "logging_object.hpp"
 
-enum ConfiguratorType {
+using std::literals::string_literals::operator""s;
+
+enum class ConfiguratorType : uint8_t {
   Fallback,
   Customized,
   YamlByPath,
@@ -107,7 +109,7 @@ int main() {
 
   auto r = log_system.configure();
   if (not r.message.empty()) {
-    (r.has_error ? std::cerr : std::cout) << r.message << std::endl;
+    (r.has_error ? std::cerr : std::cout) << r.message << '\n';
   }
   if (r.has_error) {
     exit(EXIT_FAILURE);
@@ -123,7 +125,7 @@ int main() {
   main_log->info("Start");
 
   auto lambda = [](const auto &tag) {
-    std::cout << "CALCULATED: " << tag << std::endl;
+    std::cout << "CALCULATED: " << tag << '\n';
     return tag;
   };
 
@@ -156,14 +158,16 @@ int main() {
       "Very long message  |.....30->|.....40->|.....50->|.....60->|.....70->|"
       ".....80->|.....90->|....100->|....110->|....120->|....130->|....140->|");
 
-  auto dynamic_format = std::string("Custom made format: {} ==>") + "<== {}";
+  auto dynamic_format = "Custom made format: {} ==>"s + "<== {}"s;
   main_log->info(dynamic_format, 1, 2);
   SL_INFO_DF(main_log, dynamic_format, 3, 4);
 
   LoggingObject object(log_system);
   object.method();
 
-  for (auto &thread : threads) thread->join();
+  for (auto &thread : threads) {
+    thread->join();
+  }
 
   main_log->info("Finish");
 

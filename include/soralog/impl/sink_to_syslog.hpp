@@ -23,9 +23,11 @@ namespace soralog {
     SinkToSyslog(SinkToSyslog &&) noexcept = delete;
     SinkToSyslog(const SinkToSyslog &) = delete;
     SinkToSyslog &operator=(SinkToSyslog &&) noexcept = delete;
-    SinkToSyslog &operator=(SinkToSyslog const &) = delete;
+    SinkToSyslog &operator=(const SinkToSyslog &) = delete;
 
-    SinkToSyslog(std::string name, std::string ident,
+    SinkToSyslog(std::string name,
+                 Level level,
+                 std::string ident,
                  std::optional<ThreadInfoType> thread_info_type = {},
                  std::optional<size_t> capacity = {},
                  std::optional<size_t> max_message_length = {},
@@ -33,7 +35,7 @@ namespace soralog {
                  std::optional<size_t> latency = {});
     ~SinkToSyslog() override;
 
-    void rotate() noexcept override{};
+    void rotate() noexcept override {};
 
     void flush() noexcept override;
 
