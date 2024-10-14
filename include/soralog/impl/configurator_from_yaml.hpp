@@ -29,13 +29,13 @@ namespace soralog {
      * Uses YAML-file {@param config_path} as source of config
      */
     explicit ConfiguratorFromYAML(std::filesystem::path config_path)
-        : config_(std::move(config_path)){};
+        : config_(std::move(config_path)) {};
 
     /**
      * Uses YAML-content {@param config_content} as source of config
      */
     explicit ConfiguratorFromYAML(std::string config_content)
-        : config_(std::move(config_content)){};
+        : config_(std::move(config_content)) {};
 
     /**
      * Uses YAML-file {@param config_path} as source of config.
@@ -43,7 +43,7 @@ namespace soralog {
      */
     explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
                                   std::filesystem::path config_path)
-        : previous_(std::move(previous)), config_(std::move(config_path)){};
+        : previous_(std::move(previous)), config_(std::move(config_path)) {};
 
     /**
      * Uses YAML-content {@param config_content} as source of config
@@ -51,7 +51,7 @@ namespace soralog {
      */
     explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
                                   std::string config_content)
-        : previous_(std::move(previous)), config_(std::move(config_content)){};
+        : previous_(std::move(previous)), config_(std::move(config_content)) {};
 
     ~ConfiguratorFromYAML() override = default;
 
@@ -96,7 +96,8 @@ namespace soralog {
       void parseGroups(const YAML::Node &groups,
                        const std::optional<std::string> &parent);
 
-      void parseGroup(int number, const YAML::Node &group_node,
+      void parseGroup(int number,
+                      const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
       LoggingSystem &system_;

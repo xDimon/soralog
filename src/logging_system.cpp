@@ -24,7 +24,8 @@ namespace soralog {
   }
 
   std::shared_ptr<Group> LoggingSystem::makeGroup(
-      std::string name, const std::optional<std::string> &parent,
+      std::string name,
+      const std::optional<std::string> &parent,
       const std::optional<std::string> &sink,
       const std::optional<Level> &level) {
     auto group =
@@ -76,7 +77,7 @@ namespace soralog {
         continue;
       }
       if (group->sink()->name() == "*") {
-        result.message +=
+        result.message += //
             "W: Group '" + name + "' has undefined sink; "
             "Sink to nowhere will be used\n";
         result.has_warning = true;
@@ -87,7 +88,8 @@ namespace soralog {
   }
 
   std::shared_ptr<Logger> LoggingSystem::getLogger(
-      std::string logger_name, const std::string &group_name,
+      std::string logger_name,
+      const std::string &group_name,
       const std::optional<std::string> &sink_name,
       const std::optional<Level> &level) {
     std::lock_guard guard(mutex_);
@@ -122,11 +124,13 @@ namespace soralog {
       logger->warn(
           "Group '{}' for logger '{}' is not found. "
           "Fallback group will be used (it is group '{}' right now).",
-          group_name, logger_name, group->name());
+          group_name,
+          logger_name,
+          group->name());
     }
 
-    auto logger = std::make_shared<Logger>(*this, std::move(logger_name),
-                                           std::move(group));
+    auto logger = std::make_shared<Logger>(
+        *this, std::move(logger_name), std::move(group));
 
     if (sink_name.has_value()) {
       logger->setSink(sink_name.value());

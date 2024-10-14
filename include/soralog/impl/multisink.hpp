@@ -23,7 +23,7 @@ namespace soralog {
     Multisink(Multisink &&) noexcept = delete;
     Multisink(const Multisink &) = delete;
     Multisink &operator=(Multisink &&) noexcept = delete;
-    Multisink &operator=(Multisink const &) = delete;
+    Multisink &operator=(const Multisink &) = delete;
 
     Multisink(std::string name, std::vector<std::shared_ptr<Sink>> sinks);
 
@@ -31,7 +31,7 @@ namespace soralog {
     void flush() noexcept override;
 
    private:
-    void async_flush() noexcept override{};
+    void async_flush() noexcept override {};
   };
 
 }  // namespace soralog

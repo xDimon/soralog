@@ -28,9 +28,10 @@ namespace soralog {
     Group(const Group &) = delete;
     virtual ~Group() = default;
     Group &operator=(Group &&) noexcept = delete;
-    Group &operator=(Group const &) = delete;
+    Group &operator=(const Group &) = delete;
 
-    Group(LoggingSystem &logging_system, std::string group_name,
+    Group(LoggingSystem &logging_system,
+          std::string group_name,
           const std::optional<std::string> &parent_name,
           const std::optional<std::string> &sink_name,
           std::optional<Level> level);

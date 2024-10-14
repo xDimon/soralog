@@ -32,7 +32,7 @@ namespace soralog {
    public:
     LoggingSystem() = delete;
     LoggingSystem(const LoggingSystem &) = delete;
-    LoggingSystem &operator=(LoggingSystem const &) = delete;
+    LoggingSystem &operator=(const LoggingSystem &) = delete;
     ~LoggingSystem() override = default;
     LoggingSystem(LoggingSystem &&tmp) noexcept = delete;
     LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
@@ -51,8 +51,8 @@ namespace soralog {
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name) override {
-      return getLogger(std::move(logger_name), group_name, std::nullopt,
-                       std::nullopt);
+      return getLogger(
+          std::move(logger_name), group_name, std::nullopt, std::nullopt);
     }
 
     /**
@@ -61,9 +61,12 @@ namespace soralog {
      * overridden to {@param level}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
+        std::string logger_name,
+        const std::string &group_name,
         Level level) override {
-      return getLogger(std::move(logger_name), group_name, std::nullopt,
+      return getLogger(std::move(logger_name),
+                       group_name,
+                       std::nullopt,
                        std::make_optional(level));
     }
 
@@ -73,10 +76,13 @@ namespace soralog {
      * overridden to sink with name {@param sink_name}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
+        std::string logger_name,
+        const std::string &group_name,
         std::string sink_name) override {
-      return getLogger(std::move(logger_name), group_name,
-                       std::make_optional(std::move(sink_name)), std::nullopt);
+      return getLogger(std::move(logger_name),
+                       group_name,
+                       std::make_optional(std::move(sink_name)),
+                       std::nullopt);
     }
 
     /**
@@ -85,9 +91,12 @@ namespace soralog {
      * andd level overridden to {@param sink_name} and {@param level}
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
-        std::string sink_name, Level level) override {
-      return getLogger(std::move(logger_name), group_name,
+        std::string logger_name,
+        const std::string &group_name,
+        std::string sink_name,
+        Level level) override {
+      return getLogger(std::move(logger_name),
+                       group_name,
                        std::make_optional(std::move(sink_name)),
                        std::make_optional(level));
     }
@@ -224,7 +233,8 @@ namespace soralog {
      * provided or inherits from the group elsewise
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
-        std::string logger_name, const std::string &group_name,
+        std::string logger_name,
+        const std::string &group_name,
         const std::optional<std::string> &sink_name,
         const std::optional<Level> &level);
 

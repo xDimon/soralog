@@ -95,9 +95,10 @@ namespace soralog {
 
     result.has_error = result.has_error || has_error_;
     result.has_warning = result.has_warning || has_warning_;
-    result.message += (has_error_ or has_warning_)
-        ? ("I: Some problems are found in config:\n" + errors_.str())
-        : "";
+    result.message +=
+        (has_error_ or has_warning_)
+            ? ("I: Some problems are found in config:\n" + errors_.str())
+            : "";
     return result;
   }
 
@@ -118,10 +119,12 @@ namespace soralog {
 
     for (const auto &it : node) {
       auto key = it.first.as<std::string>();
-      if (key == "sinks")
+      if (key == "sinks") {
         continue;
-      if (key == "groups")
+      }
+      if (key == "groups") {
         continue;
+      }
       errors_ << "W: Unknown property: " << key << "\n";
       has_warning_ = true;
     }
@@ -348,24 +351,33 @@ namespace soralog {
       auto key = it.first.as<std::string>();
       auto val = it.second;
 
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "stream")
+      }
+      if (key == "stream") {
         continue;
-      if (key == "color")
+      }
+      if (key == "color") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
       errors_ << "W: Unknown property of sink '" << name
               << "' with type 'console': " << key << "\n";
       has_warning_ = true;
@@ -377,8 +389,13 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToConsole>(name, stream_type, color, thread_info_type,
-                                    capacity, max_message_length, buffer_size,
+    system_.makeSink<SinkToConsole>(name,
+                                    stream_type,
+                                    color,
+                                    thread_info_type,
+                                    capacity,
+                                    max_message_length,
+                                    buffer_size,
                                     latency);
   }
 
@@ -494,22 +511,30 @@ namespace soralog {
 
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "path")
+      }
+      if (key == "path") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -527,8 +552,13 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToFile>(name, path, thread_info_type, capacity,
-                                 max_message_length, buffer_size, latency);
+    system_.makeSink<SinkToFile>(name,
+                                 path,
+                                 thread_info_type,
+                                 capacity,
+                                 max_message_length,
+                                 buffer_size,
+                                 latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
@@ -643,22 +673,30 @@ namespace soralog {
 
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "ident")
+      }
+      if (key == "ident") {
         continue;
-      if (key == "thread")
+      }
+      if (key == "thread") {
         continue;
-      if (key == "capacity")
+      }
+      if (key == "capacity") {
         continue;
-      if (key == "buffer")
+      }
+      if (key == "buffer") {
         continue;
-      if (key == "max_message_length")
+      }
+      if (key == "max_message_length") {
         continue;
-      if (key == "latency")
+      }
+      if (key == "latency") {
         continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -676,8 +714,13 @@ namespace soralog {
       has_warning_ = true;
     }
 
-    system_.makeSink<SinkToSyslog>(name, ident, thread_info_type, capacity,
-                                   max_message_length, buffer_size, latency);
+    system_.makeSink<SinkToSyslog>(name,
+                                   ident,
+                                   thread_info_type,
+                                   capacity,
+                                   max_message_length,
+                                   buffer_size,
+                                   latency);
   }
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
@@ -697,12 +740,15 @@ namespace soralog {
 
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "type")
+      }
+      if (key == "type") {
         continue;
-      if (key == "sinks")
+      }
+      if (key == "sinks") {
         continue;
+      }
       errors_ << "W: Unknown property of sink '" << name << "': " << key
               << "\n";
       has_warning_ = true;
@@ -755,7 +801,8 @@ namespace soralog {
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroup(
-      int number, const YAML::Node &group_node,
+      int number,
+      const YAML::Node &group_node,
       const std::optional<std::string> &parent) {
     bool fail = false;
 
@@ -839,16 +886,21 @@ namespace soralog {
     for (const auto &it : group_node) {
       auto key = it.first.as<std::string>();
 
-      if (key == "name")
+      if (key == "name") {
         continue;
-      if (key == "is_fallback")
+      }
+      if (key == "is_fallback") {
         continue;
-      if (key == "sink")
+      }
+      if (key == "sink") {
         continue;
-      if (key == "level")
+      }
+      if (key == "level") {
         continue;
-      if (key == "children")
+      }
+      if (key == "children") {
         continue;
+      }
       errors_ << "W: Unknown property of group " << tmp_name << ": " << key
               << "\n";
       has_warning_ = true;

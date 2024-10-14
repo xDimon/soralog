@@ -56,11 +56,15 @@ namespace soralog {
     Sink(const Sink &) = delete;
     Sink(Sink &&) noexcept = delete;
     virtual ~Sink() = default;
-    Sink &operator=(Sink const &) = delete;
+    Sink &operator=(const Sink &) = delete;
     Sink &operator=(Sink &&) noexcept = delete;
 
-    Sink(std::string name, ThreadInfoType thread_info_type, size_t max_events,
-         size_t max_message_length, size_t max_buffer_size, size_t latency)
+    Sink(std::string name,
+         ThreadInfoType thread_info_type,
+         size_t max_events,
+         size_t max_message_length,
+         size_t max_buffer_size,
+         size_t latency)
         : name_(std::move(name)),
           thread_info_type_(thread_info_type),
           max_message_length_(max_message_length),
@@ -81,7 +85,7 @@ namespace soralog {
           max_buffer_size_(),
           latency_(),
           events_(0, 0),
-          underlying_sinks_(std::move(sinks)){};
+          underlying_sinks_(std::move(sinks)) {};
 
     /**
      * @returns name of sink
@@ -98,13 +102,19 @@ namespace soralog {
      * @param args arguments is of log message
      */
     template <typename Format, typename... Args>
-    void push(std::string_view name, Level level, const Format &format,
+    void push(std::string_view name,
+              Level level,
+              const Format &format,
               const Args &...args) noexcept(IF_RELEASE) {
       if (underlying_sinks_.empty()) {
         while (true) {
           {
-            auto node = events_.put(name, thread_info_type_, level, format,
-                                    max_message_length_, args...);
+            auto node = events_.put(name,
+                                    thread_info_type_,
+                                    level,
+                                    format,
+                                    max_message_length_,
+                                    args...);
 
             // Event is queued successfully
             LIKELY_IF((bool)node) {

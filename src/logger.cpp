@@ -12,7 +12,8 @@
 
 namespace soralog {
 
-  Logger::Logger(soralog::LoggingSystem &system, std::string logger_name,
+  Logger::Logger(soralog::LoggingSystem &system,
+                 std::string logger_name,
                  std::shared_ptr<const Group> group)
       : system_(system),
         name_(std::move(logger_name)),

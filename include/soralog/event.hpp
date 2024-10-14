@@ -34,7 +34,7 @@ namespace soralog {
     Event(const Event &) = delete;
     ~Event() = default;
     Event &operator=(Event &&) noexcept = delete;
-    Event &operator=(Event const &) = delete;
+    Event &operator=(const Event &) = delete;
 
     /**
      * @param name of logger
@@ -43,8 +43,12 @@ namespace soralog {
      */
     template <typename ThreadInfoType, typename Format, typename... Args>
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
-    Event(std::string_view name, ThreadInfoType thread_info_type, Level level,
-          const Format &format, size_t max_message_length, const Args &...args)
+    Event(std::string_view name,
+          ThreadInfoType thread_info_type,
+          Level level,
+          const Format &format,
+          size_t max_message_length,
+          const Args &...args)
         : timestamp_(std::chrono::system_clock::now()), level_(level) {
       switch (thread_info_type) {
         case ThreadInfoType::NAME:
@@ -86,14 +90,17 @@ namespace soralog {
       try {
         message_size_ =
             ::fmt::vformat_to_n(
-                it, max_message_length,
+                it,
+                max_message_length,
                 ::fmt::detail_exported::compile_string_to_view<char>(format),
                 ::fmt::make_format_args(args...))
                 .size;
       } catch (const std::exception &exception) {
-        message_size_ = fmt::format_to_n(it, max_message_length,
+        message_size_ = fmt::format_to_n(it,
+                                         max_message_length,
                                          "Format error: {}; Format: {}",
-                                         exception.what(), format)
+                                         exception.what(),
+                                         format)
                             .size;
         name = "Soralog";
         level_ = Level::ERROR;

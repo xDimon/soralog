@@ -53,26 +53,32 @@ namespace soralog {
 
     template <typename T>
     void put_string(char *&ptr, const T &name, size_t width) {
-      if (width == 0)
+      if (width == 0) {
         return;
+      }
       for (auto c : name) {
-        if (c == '\0' or width == 0)
+        if (c == '\0' or width == 0) {
           break;
+        }
         *ptr++ = c;  // NOLINT
         --width;
       }
-      while (width--) *ptr++ = ' ';  // NOLINT
+      while (width--) {
+        *ptr++ = ' ';  // NOLINT
+      }
     }
 
   }  // namespace
 
-  SinkToFile::SinkToFile(std::string name, std::filesystem::path path,
+  SinkToFile::SinkToFile(std::string name,
+                         std::filesystem::path path,
                          std::optional<ThreadInfoType> thread_info_type,
                          std::optional<size_t> capacity,
                          std::optional<size_t> max_message_length,
                          std::optional<size_t> buffer_size,
                          std::optional<size_t> latency)
-      : Sink(std::move(name), thread_info_type.value_or(ThreadInfoType::NONE),
+      : Sink(std::move(name),
+             thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 11),            // 2048 events
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 22),         // 4 Mb
@@ -134,10 +140,15 @@ namespace soralog {
 
         if (psec != sec) {
           tm = fmt::localtime(sec);
-          fmt::format_to_n(datetime.data(), datetime.size(),
+          fmt::format_to_n(datetime.data(),
+                           datetime.size(),
                            "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
-                           tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-                           tm.tm_hour, tm.tm_min, tm.tm_sec);
+                           tm.tm_year % 100,
+                           tm.tm_mon + 1,
+                           tm.tm_mday,
+                           tm.tm_hour,
+                           tm.tm_min,
+                           tm.tm_sec);
           psec = sec;
         }
 
@@ -159,8 +170,8 @@ namespace soralog {
             break;
 
           case ThreadInfoType::ID:
-            ptr = fmt::format_to_n(ptr, end - ptr, "T:{:<6}",
-                                   event.thread_number())
+            ptr = fmt::format_to_n(
+                      ptr, end - ptr, "T:{:<6}", event.thread_number())
                       .out;
             put_separator(ptr);
             break;
@@ -190,7 +201,7 @@ namespace soralog {
 
       if ((end - ptr) < sizeof(Event) or appended
           or std::chrono::steady_clock::now()
-              >= next_flush_.load(std::memory_order_acquire)) {
+                 >= next_flush_.load(std::memory_order_acquire)) {
         next_flush_.store(std::chrono::steady_clock::now() + latency_,
                           std::memory_order_release);
         out_.write(begin, ptr - begin);
@@ -199,8 +210,8 @@ namespace soralog {
 
       if (appended) {
         bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(true_v, false,
-                                                 std::memory_order_acq_rel)) {
+        if (need_to_flush_.compare_exchange_weak(
+                true_v, false, std::memory_order_acq_rel)) {
           out_.flush();
         }
       }
@@ -209,8 +220,8 @@ namespace soralog {
     }
 
     bool true_v = true;
-    if (need_to_rotate_.compare_exchange_weak(true_v, false,
-                                              std::memory_order_acq_rel)) {
+    if (need_to_rotate_.compare_exchange_weak(
+            true_v, false, std::memory_order_acq_rel)) {
       std::ofstream out;
       out.open(path_, std::ios::app);
       if (not out.is_open()) {
