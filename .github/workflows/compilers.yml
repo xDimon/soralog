@@ -41,6 +41,9 @@ jobs:
         clean: true
         fetch-depth: 1
 
+    - name: venv
+      run: python3 -m venv --upgrade-deps ~/venv && .github/aux/github_venv.sh $_
+
     - name: install dependencies
       run: |
         set -e
@@ -61,9 +64,8 @@ jobs:
           sudo update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-13               90
         fi
 
-#        sudo python3 -m pip install --upgrade pip
-#        sudo python3 -m pip install scikit-build
-#        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
+        pip3 install scikit-build
+        pip3 install cmake==3.25 requests gitpython gcovr pyyaml
 
     - name: cmake
       env:
