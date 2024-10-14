@@ -69,9 +69,9 @@ namespace soralog {
             try {
               node = YAML::LoadFile(arg);
             } catch (const std::exception &exception) {
-              errors_ << "E: Can't parse file `"
-                      << std::filesystem::canonical(arg).string()
-                      << "': " << exception.what() << "\n";
+              errors_ << "E: Can't parse file "
+                      << std::filesystem::weakly_canonical(arg) << ": "
+                      << exception.what() << "\n";
               has_error_ = true;
             }
 

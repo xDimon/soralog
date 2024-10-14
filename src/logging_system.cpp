@@ -16,8 +16,9 @@
 #include <soralog/impl/sink_to_nowhere.hpp>
 #include <soralog/logger.hpp>
 
-namespace soralog {
+using std::literals::string_literals::operator""s;
 
+namespace soralog {
   LoggingSystem::LoggingSystem(std::shared_ptr<Configurator> configurator)
       : configurator_(std::move(configurator)) {
     makeSink<SinkToNowhere>("*");
@@ -63,7 +64,16 @@ namespace soralog {
       throw std::logic_error("LoggerSystem is already configured");
     }
     is_configured_ = true;
-    auto result = configurator_->applyOn(*this);
+
+    Configurator::Result result;
+    try {
+      result = configurator_->applyOn(*this);
+    } catch (const std::exception &exception) {
+      result.message += "E: Configure is failed: "s + exception.what() + "; "
+                      + "Logging system is unworkable\n";
+      result.has_error = true;
+      return result;
+    }
 
     if (groups_.empty()) {
       result.message +=
@@ -77,9 +87,8 @@ namespace soralog {
         continue;
       }
       if (group->sink()->name() == "*") {
-        result.message += //
-            "W: Group '" + name + "' has undefined sink; "
-            "Sink to nowhere will be used\n";
+        result.message += "W: Group '" + name + "' has undefined sink; "
+                        + "Sink to nowhere will be used\n";
         result.has_warning = true;
       }
     }
