@@ -5,64 +5,53 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-sinks:
-  - name: colored_stdout
-    type: console
-    stream: stdout
-    color: true
-    thread: name
-    capacity: 64
-    max_message_length: 120
-    buffer: 131072
-    latency: 100
-  - name: simple_stderr
-    type: console
-    stream: stderr
-    color: false
-    thread: name
-    capacity: 64
-    max_message_length: 120
-    buffer: 131072
-    latency: 100
-  - name: file
-    type: file
-    path: /tmp/solalog_example.log
-    thread: name
-    capacity: 2048
-    buffer: 4194304
-    latency: 1000
-  - name: syslog
-    type: syslog
-    ident: solalog_example
-    thread: name
-    capacity: 2048
-    buffer: 4194304
-    latency: 1000
-  - name: sink_to_everywhere
-    type: multisink
-    sinks:
+sinks:                             # List of sink configurations
+  - name: colored_stdout           # Unique name of the sink
+    type: console                  # Sink type: 'console' means output to the standard output or error stream
+    stream: stdout                 # Output stream type (stdout or stderr)
+    color: true                    # Whether to insert escape sequences for colored output
+    thread: name                   # Thread differentiation method: 'name' for named threads, 'id' for enumerated threads, 'none' for no print (default)
+    capacity: 64                   # Maximum number of buffered messages; affects memory usage
+    max_message_length: 120        # Maximum length of a single message; extra characters are dropped, affects memory usage
+    buffer: 131072                 # Maximum buffered data size in bytes before forcing a flush
+    latency: 100                   # Maximum delay in milliseconds before forcing a buffer flush; 0 means immediate flushing (default)
+    level: trace                   # Maximum log level this sink accepts (from trace and above)
+  - name: simple_stderr            # Unique name of the sink
+    type: console                  # Sink type: 'console' means output to the standard output or error stream
+    stream: stderr                 # Output stream type (stdout or stderr)
+    color: false                   # Whether to insert escape sequences for colored output
+    thread: name                   # Thread differentiation method: 'name' for named threads, 'id' for enumerated threads, 'none' for no print (default)
+    capacity: 64                   # Maximum number of buffered messages; affects memory usage
+    max_message_length: 120        # Maximum length of a single message; extra characters are dropped, affects memory usage
+    buffer: 131072                 # Maximum buffered data size in bytes before forcing a flush
+    latency: 100                   # Maximum delay in milliseconds before forcing a buffer flush
+    level: info                    # Maximum log level this sink accepts (from info and above)
+  - name: file                     # Unique name of the sink
+    type: file                     # Sink type: 'file' means output to a file
+    path: /tmp/solalog_example.log # Path to the output file
+    thread: name                   # Thread differentiation method: 'name' for named threads, 'id' for enumerated threads, 'none' for no print (default)
+    capacity: 2048                 # Maximum number of buffered messages; affects memory usage
+    buffer: 4194304                # Maximum buffered data size in bytes before forcing a flush
+    latency: 1000                  # Maximum delay in milliseconds before forcing a buffer flush; 0 means immediate flushing (default)
+  - name: syslog                   # Unique name of the sink
+    type: syslog                   # Sink type: 'syslog' means messages are sent to the system's syslog daemon
+    ident: solalog_example         # Identifier for the syslog channel
+    thread: name                   # Thread differentiation method: 'name' for named threads, 'id' for enumerated threads, 'none' for no print (default)
+    capacity: 2048                 # Maximum number of buffered messages; affects memory usage
+    buffer: 4194304                # Maximum buffered data size in bytes before forcing a flush
+    latency: 1000                  # Maximum delay in milliseconds before forcing a buffer flush; 0 means immediate flushing (default)
+  - name: sink_to_everywhere       # Unique name of the sink
+    type: multisink                # Sink type: 'multisink' means messages are broadcasted to the specified underlying sinks
+    sinks:                         # List of underlying sinks by name
       - file
       - colored_stdout
       - simple_stderr
       - syslog
-groups:
-  - name: main
-    sink: sink_to_everywhere
-    level: trace
-    children:
-      - name: blockchain
-      - name: consensus
-        level: debug
-        children:
-          - name: grandpa
-            level: info
-          - name: babe
-            children:
-              - name: block_executor
-                level: trace
-      - name: runtime
-        level: off
-        children:
-          - name: transaction
-            sink: file
-            level: debug
+groups:                            # List of group configurations
+  - name: main                     # Unique name of the group
+    sink: sink_to_everywhere       # Name of the sink used for output from loggers in this group; must be defined for a root group
+    level: trace                   # Maximum log level this group accepts; must be defined for a root group
+    is_fallback: true              # If true, this group is the default fallback group; only one group can be marked as fallback
+    children:                      # Nested groups; these groups inherit properties from the parent
+      - name: example_group
+      - name: another_group
