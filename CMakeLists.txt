@@ -7,10 +7,28 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-include("cmake/Hunter/init.cmake")
+if (PACKAGE_MANAGER)
+    if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
+        message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
+    endif ()
+else ()
+    set(PACKAGE_MANAGER "hunter")
+    if (CMAKE_TOOLCHAIN_FILE)
+        get_filename_component(ACTUAL_NAME ${CMAKE_TOOLCHAIN_FILE} NAME)
+        if(ACTUAL_NAME STREQUAL "vcpkg.cmake")
+            message(STATUS "vcpkg will be used because vcpkg.cmake has found")
+            set(PACKAGE_MANAGER "vcpkg")
+        endif ()
+    endif ()
+endif ()
+message(STATUS "Selected package manager: ${PACKAGE_MANAGER}")
+
+if (PACKAGE_MANAGER STREQUAL "hunter")
+    include("cmake/Hunter/init.cmake")
+endif ()
 
 cmake_policy(SET CMP0048 NEW)
-project(soralog VERSION 0.2.2 LANGUAGES CXX)
+project(soralog VERSION 0.2.5 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)
@@ -34,9 +52,9 @@ if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
             CACHE FILEPATH "Default toolchain"
         )
     endif ()
+    print("Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
+    include(${CMAKE_TOOLCHAIN_FILE})
 endif ()
-print("Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-include(${CMAKE_TOOLCHAIN_FILE})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
