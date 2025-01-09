@@ -3,7 +3,14 @@
   "version": "0.2.5",
   "dependencies": [
     "fmt",
-    "yaml-cpp",
-    "gtest"
-  ]
+    "yaml-cpp"
+  ],
+  "features": {
+    "test": {
+      "description": "Test",
+      "dependencies": [
+        "gtest"
+      ]
+    }
+  }
 }

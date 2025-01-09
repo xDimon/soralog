@@ -7,6 +7,19 @@
 
 cmake_minimum_required(VERSION 3.12)
 
+option(TESTING      "Build tests"                                 ON)
+option(EXAMPLES     "Build examples"                              ON)
+option(CLANG_FORMAT "Enable clang-format target"                  OFF)
+option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
+option(COVERAGE     "Enable generation of coverage info"          OFF)
+
+# Sanitizers enables only for this project, and will be disabled for dependencies
+option(ASAN         "Enable address sanitizer"                    OFF)
+option(LSAN         "Enable leak sanitizer"                       OFF)
+option(MSAN         "Enable memory sanitizer"                     OFF)
+option(TSAN         "Enable thread sanitizer"                     OFF)
+option(UBSAN        "Enable UB sanitizer"                         OFF)
+
 if (PACKAGE_MANAGER)
     if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
         message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
@@ -27,7 +40,14 @@ if (PACKAGE_MANAGER STREQUAL "hunter")
     include("cmake/Hunter/init.cmake")
 endif ()
 
+if(TESTING)
+    if (PACKAGE_MANAGER STREQUAL "vcpkg")
+        list(APPEND VCPKG_MANIFEST_FEATURES test)
+    endif()
+endif()
+
 cmake_policy(SET CMP0048 NEW)
+
 project(soralog VERSION 0.2.5 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
@@ -57,19 +77,6 @@ if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
 endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-option(TESTING      "Build tests"                                 ON)
-option(EXAMPLES     "Build examples"                              ON)
-option(CLANG_FORMAT "Enable clang-format target"                  OFF)
-option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
-option(COVERAGE     "Enable generation of coverage info"          OFF)
-
-# Sanitizers enables only for this project, and will be disabled for dependencies
-option(ASAN         "Enable address sanitizer"                    OFF)
-option(LSAN         "Enable leak sanitizer"                       OFF)
-option(MSAN         "Enable memory sanitizer"                     OFF)
-option(TSAN         "Enable thread sanitizer"                     OFF)
-option(UBSAN        "Enable UB sanitizer"                         OFF)
 
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)

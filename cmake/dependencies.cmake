@@ -14,9 +14,6 @@ endfunction()
 
 
 reg_dependency(yaml-cpp)
-if (NOT TARGET yaml-cpp::yaml-cpp)
-    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
-endif()
 
 reg_dependency(fmt)
 
