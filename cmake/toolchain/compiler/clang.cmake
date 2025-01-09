@@ -20,6 +20,9 @@ endif()
 
 find_program(CMAKE_C_COMPILER
     clang
+    clang-20
+    clang-19
+    clang-18
     clang-17
     clang-16
     clang-15
@@ -29,6 +32,9 @@ find_program(CMAKE_C_COMPILER
     clang-11)
 find_program(CMAKE_CXX_COMPILER
     clang++
+    clang++-20
+    clang++-19
+    clang++-18
     clang++-17
     clang++-16
     clang++-15

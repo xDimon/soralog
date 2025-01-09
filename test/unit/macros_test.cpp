@@ -20,8 +20,9 @@ class MacrosTest : public ::testing::Test {
     template <typename Format, typename... Args>
     void log(Level lvl, const Format &format, Args &&...args) {
       last_level = lvl;
+      using OutputIt = decltype(message_buf.begin());
       size_t len =
-          ::fmt::vformat_to_n(
+          ::fmt::vformat_to_n<OutputIt>(
               message_buf.begin(), message_buf.size(),
               ::fmt::detail_exported::compile_string_to_view<char>(format),
               ::fmt::make_format_args(args...))

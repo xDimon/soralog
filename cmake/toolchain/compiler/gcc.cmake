@@ -13,6 +13,7 @@ endif()
 
 find_program(CMAKE_C_COMPILER
     gcc
+    gcc-14
     gcc-13
     gcc-12
     gcc-11
@@ -20,6 +21,7 @@ find_program(CMAKE_C_COMPILER
     gcc-9)
 find_program(CMAKE_CXX_COMPILER
     g++
+    g++-14
     g++-13
     g++-12
     g++-11

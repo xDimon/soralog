@@ -88,8 +88,9 @@ namespace soralog {
       } it{message_data_};
 
       try {
+        using OutputIt = decltype(it);
         message_size_ =
-            ::fmt::vformat_to_n(
+            ::fmt::vformat_to_n<OutputIt>(
                 it,
                 max_message_length,
                 ::fmt::detail_exported::compile_string_to_view<char>(format),
