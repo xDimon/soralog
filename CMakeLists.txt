@@ -7,6 +7,23 @@
 
 cmake_minimum_required(VERSION 3.12)
 
+option(BUILD_TESTS  "Build tests"                                 OFF)
+option(EXAMPLES     "Build examples"                              ON)
+option(CLANG_FORMAT "Enable clang-format target"                  OFF)
+option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
+option(COVERAGE     "Enable generation of coverage info"          OFF)
+
+# Sanitizers enables only for this project, and will be disabled for dependencies
+option(ASAN         "Enable address sanitizer"                    OFF)
+option(LSAN         "Enable leak sanitizer"                       OFF)
+option(MSAN         "Enable memory sanitizer"                     OFF)
+option(TSAN         "Enable thread sanitizer"                     OFF)
+option(UBSAN        "Enable UB sanitizer"                         OFF)
+
+if (COVERAGE)
+    set(BUILD_TESTS ON) # tests are needed to generate coverage info
+endif ()
+
 if (PACKAGE_MANAGER)
     if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
         message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
@@ -27,7 +44,14 @@ if (PACKAGE_MANAGER STREQUAL "hunter")
     include("cmake/Hunter/init.cmake")
 endif ()
 
+if(BUILD_TESTS)
+    if (PACKAGE_MANAGER STREQUAL "vcpkg")
+        list(APPEND VCPKG_MANIFEST_FEATURES soralog-tests)
+    endif()
+endif()
+
 cmake_policy(SET CMP0048 NEW)
+
 project(soralog VERSION 0.2.5 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
@@ -40,36 +64,20 @@ include(cmake/functions.cmake)
 
 include(cmake/toolchain/compiler.cmake)
 
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE OR NOT DEFINED CMAKE_CXX_STANDARD)
     if (MAX_SUPPORTED_CXX_STANDARD GREATER_EQUAL 20)
-        set(CMAKE_TOOLCHAIN_FILE
-            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx20.cmake"
-            CACHE FILEPATH "Default toolchain"
-        )
+        set(CXXSTD 20)
     else ()
-        set(CMAKE_TOOLCHAIN_FILE
-            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake"
-            CACHE FILEPATH "Default toolchain"
-        )
+        set(CXXSTD 17)
     endif ()
-    print("Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-    include(${CMAKE_TOOLCHAIN_FILE})
+    include("${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx${CXXSTD}.cmake")
+    print("Using C++${CXXSTD} standard")
+    if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+        set(CMAKE_TOOLCHAIN_FILE "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx${CXXSTD}.cmake")
+    endif ()
 endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-option(TESTING      "Build tests"                                 ON)
-option(EXAMPLES     "Build examples"                              ON)
-option(CLANG_FORMAT "Enable clang-format target"                  OFF)
-option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
-option(COVERAGE     "Enable generation of coverage info"          OFF)
-
-# Sanitizers enables only for this project, and will be disabled for dependencies
-option(ASAN         "Enable address sanitizer"                    OFF)
-option(LSAN         "Enable leak sanitizer"                       OFF)
-option(MSAN         "Enable memory sanitizer"                     OFF)
-option(TSAN         "Enable thread sanitizer"                     OFF)
-option(UBSAN        "Enable UB sanitizer"                         OFF)
 
 # the property is out of "if TESTING" scope due to addtest func is out too
 set_property(GLOBAL PROPERTY TEST_TARGETS)
@@ -88,7 +96,7 @@ endif()
 
 add_subdirectory(src)
 
-if(TESTING OR COVERAGE)
+if (BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()

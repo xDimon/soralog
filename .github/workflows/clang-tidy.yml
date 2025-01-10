@@ -40,9 +40,6 @@ jobs:
         sudo update-alternatives --install /usr/bin/g++          g++          /usr/bin/g++-13                90
         sudo update-alternatives --install /usr/bin/gcov         gcov         /usr/bin/gcov-13               90
 
-#        sudo python3 -m pip install --upgrade pip
-#        sudo python3 -m pip install scikit-build
-#        sudo python3 -m pip install cmake==3.25 requests gitpython gcovr pyyaml
     - name: run checks
       run: |
         #!/bin/bash
@@ -51,5 +48,5 @@ jobs:
         test ${VER_COUNT} -eq 0 && echo "no llvm version detected" && exit 1
         export LLVM_ROOT=$(ls -r -d -1 ${LLVM_DIR} | head -1)
         export PATH=${LLVM_ROOT}/bin:${LLVM_ROOT}/share/clang:${PATH}
-        cmake . -Bbuild
+        cmake . -Bbuild -DBUILD_TESTS=ON
         .github/aux/clang-tidy.sh build

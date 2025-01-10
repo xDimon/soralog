@@ -50,6 +50,7 @@ jobs:
 
         if [ "$RUNNER_OS" = "macOS" ]; then
           brew install ninja
+          sudo xcode-select --switch /Library/Developer/CommandLineTools
         else
           sudo apt-get update || true
           sudo apt-get install -y ninja-build gcovr gcc-13 g++-13 clang-18 clang++-18 clang-tidy-18 clang-format-18
@@ -74,7 +75,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # has to be included to access other secrets
         GITHUB_HUNTER_USERNAME: ${{ secrets.GITHUB_HUNTER_USERNAME }}
         GITHUB_HUNTER_TOKEN: ${{ secrets.GITHUB_HUNTER_TOKEN }}
-      run: cmake . -Bbuild
+      run: cmake . -Bbuild -DBUILD_TESTS=ON
 
     - name: build
       run: cmake --build build -- -j4

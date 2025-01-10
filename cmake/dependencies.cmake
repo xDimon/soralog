@@ -5,8 +5,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
+    cmake_policy(SET CMP0144 NEW)
+endif ()
+
 function(reg_dependency name)
-    if (${HUNTER_ENABLED})
+    if (PACKAGE_MANAGER STREQUAL "hunter")
         hunter_add_package(${name})
     endif ()
     find_package(${name} CONFIG REQUIRED)
@@ -14,12 +18,9 @@ endfunction()
 
 
 reg_dependency(yaml-cpp)
-if (NOT TARGET yaml-cpp::yaml-cpp)
-    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
-endif()
 
 reg_dependency(fmt)
 
-if (TESTING OR COVERAGE)
+if (BUILD_TESTS)
     reg_dependency(GTest)
 endif()
