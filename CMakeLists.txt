@@ -21,7 +21,7 @@ option(TSAN         "Enable thread sanitizer"                     OFF)
 option(UBSAN        "Enable UB sanitizer"                         OFF)
 
 if (COVERAGE)
-    set(COVERAGE ON) # tests are needed to generate coverage info
+    set(BUILD_TESTS ON) # tests are needed to generate coverage info
 endif ()
 
 if (PACKAGE_MANAGER)
