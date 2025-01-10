@@ -64,20 +64,14 @@ include(cmake/functions.cmake)
 
 include(cmake/toolchain/compiler.cmake)
 
-if (NOT DEFINED CMAKE_TOOLCHAIN_FILE)
+if (NOT DEFINED CMAKE_TOOLCHAIN_FILE OR NOT DEFINED CMAKE_CXX_STANDARD)
     if (MAX_SUPPORTED_CXX_STANDARD GREATER_EQUAL 20)
-        set(CMAKE_TOOLCHAIN_FILE
-            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx20.cmake"
-            CACHE FILEPATH "Default toolchain"
-        )
+        include("${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx20.cmake")
+        print("Using C++20 standard")
     else ()
-        set(CMAKE_TOOLCHAIN_FILE
-            "${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake"
-            CACHE FILEPATH "Default toolchain"
-        )
+        include("${CMAKE_SOURCE_DIR}/cmake/toolchain/cxx17.cmake")
+        print("Using C++17 standard")
     endif ()
-    print("Toolchain: ${CMAKE_TOOLCHAIN_FILE}")
-    include(${CMAKE_TOOLCHAIN_FILE})
 endif ()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
