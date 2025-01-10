@@ -7,7 +7,7 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-option(TESTING      "Build tests"                                 ON)
+option(BUILD_TESTS  "Build tests"                                 OFF)
 option(EXAMPLES     "Build examples"                              ON)
 option(CLANG_FORMAT "Enable clang-format target"                  OFF)
 option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
@@ -19,6 +19,10 @@ option(LSAN         "Enable leak sanitizer"                       OFF)
 option(MSAN         "Enable memory sanitizer"                     OFF)
 option(TSAN         "Enable thread sanitizer"                     OFF)
 option(UBSAN        "Enable UB sanitizer"                         OFF)
+
+if (COVERAGE)
+    set(COVERAGE ON) # tests are needed to generate coverage info
+endif ()
 
 if (PACKAGE_MANAGER)
     if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
@@ -40,9 +44,9 @@ if (PACKAGE_MANAGER STREQUAL "hunter")
     include("cmake/Hunter/init.cmake")
 endif ()
 
-if(TESTING)
+if(BUILD_TESTS)
     if (PACKAGE_MANAGER STREQUAL "vcpkg")
-        list(APPEND VCPKG_MANIFEST_FEATURES test)
+        list(APPEND VCPKG_MANIFEST_FEATURES soralog-tests)
     endif()
 endif()
 
@@ -95,7 +99,7 @@ endif()
 
 add_subdirectory(src)
 
-if(TESTING OR COVERAGE)
+if (BUILD_TESTS)
     enable_testing()
     add_subdirectory(test)
 endif()

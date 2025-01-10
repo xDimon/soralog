@@ -6,8 +6,8 @@
     "yaml-cpp"
   ],
   "features": {
-    "test": {
-      "description": "Test",
+    "soralog-tests": {
+      "description": "Test of soralog's mechanisms",
       "dependencies": [
         "gtest"
       ]

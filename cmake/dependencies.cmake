@@ -6,7 +6,7 @@
 #
 
 function(reg_dependency name)
-    if (${HUNTER_ENABLED})
+    if (PACKAGE_MANAGER STREQUAL "hunter")
         hunter_add_package(${name})
     endif ()
     find_package(${name} CONFIG REQUIRED)
@@ -17,6 +17,6 @@ reg_dependency(yaml-cpp)
 
 reg_dependency(fmt)
 
-if (TESTING OR COVERAGE)
+if (BUILD_TESTS)
     reg_dependency(GTest)
 endif()
