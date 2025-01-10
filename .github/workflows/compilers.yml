@@ -50,6 +50,7 @@ jobs:
 
         if [ "$RUNNER_OS" = "macOS" ]; then
           brew install ninja
+          sudo xcode-select --switch /Library/Developer/CommandLineTools
         else
           sudo apt-get update || true
           sudo apt-get install -y ninja-build gcovr gcc-13 g++-13 clang-18 clang++-18 clang-tidy-18 clang-format-18
