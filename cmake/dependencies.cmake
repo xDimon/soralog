@@ -5,6 +5,10 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.27")
+    cmake_policy(SET CMP0144 NEW)
+endif ()
+
 function(reg_dependency name)
     if (PACKAGE_MANAGER STREQUAL "hunter")
         hunter_add_package(${name})
