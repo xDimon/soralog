@@ -225,6 +225,11 @@ namespace soralog {
      */
     bool resetLevelOfLogger(const std::string &logger_name);
 
+    /**
+     * Calls `Sink::rotate()` for all registered sinks
+     */
+    void callRotateForAllSinks();
+
    private:
     /**
      * @returns loggers (with creating that if it isn't exists yet) with

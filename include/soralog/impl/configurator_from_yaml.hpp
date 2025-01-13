@@ -20,8 +20,8 @@ namespace soralog {
 
   /**
    * @class ConfiguratorFromYAML
-   * @brief This configurator for set up Logging System in according with
-   * config using YAML format.
+   * @brief This configurator for set up Logging System
+   * in according to config using YAML format.
    */
   class ConfiguratorFromYAML : public Configurator {
    public:
@@ -53,22 +53,32 @@ namespace soralog {
                                   std::string config_content)
         : previous_(std::move(previous)), config_(std::move(config_content)) {};
 
+    /**
+     * Uses YAML-node {@param config_yaml_node} as source of config
+     * Firstly applies provided underlying configurator {@param previous}.
+     */
+    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
+                                  YAML::Node config_yaml_node)
+        : previous_(std::move(previous)),
+          config_(std::move(config_yaml_node)) {};
+
     ~ConfiguratorFromYAML() override = default;
 
     Result applyOn(LoggingSystem &system) const override;
 
    private:
     std::shared_ptr<Configurator> previous_;
-    std::variant<std::filesystem::path, std::string> config_;
+    std::variant<std::filesystem::path, std::string, YAML::Node> config_;
 
     /**
      * Helper-class to parse config and create sinks and groups during that
      */
     class Applicator {
      public:
-      Applicator(LoggingSystem &system,
-                 std::variant<std::filesystem::path, std::string> config,
-                 std::shared_ptr<Configurator> previous = {})
+      Applicator(
+          LoggingSystem &system,
+          std::variant<std::filesystem::path, std::string, YAML::Node> config,
+          std::shared_ptr<Configurator> previous = {})
           : system_(system),
             previous_(std::move(previous)),
             config_(std::move(config)) {}
@@ -106,7 +116,7 @@ namespace soralog {
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &system_;
       std::shared_ptr<Configurator> previous_ = nullptr;
-      std::variant<std::filesystem::path, std::string> config_;
+      std::variant<std::filesystem::path, std::string, YAML::Node> config_;
       bool has_warning_ = false;
       bool has_error_ = false;
       std::ostringstream errors_;

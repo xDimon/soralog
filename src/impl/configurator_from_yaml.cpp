@@ -65,6 +65,7 @@ namespace soralog {
         [&](auto &&arg) {
           using T = std::decay_t<decltype(arg)>;
 
+          // Provided path - trying to read and parse like yaml-file
           if constexpr (std::is_same_v<T, std::filesystem::path>) {
             try {
               node = YAML::LoadFile(arg);
@@ -75,6 +76,7 @@ namespace soralog {
               has_error_ = true;
             }
 
+          // Provided string - trying to parse like yaml-content
           } else if constexpr (std::is_same_v<T, std::string>) {
             try {
               node = YAML::Load(arg);
@@ -82,6 +84,10 @@ namespace soralog {
               errors_ << "E: Can't parse content: " << exception.what() << "\n";
               has_error_ = true;
             }
+
+          // Provided yaml-node - using directly
+          } else if constexpr (std::is_same_v<T, YAML::Node>) {
+              node = arg;
 
           } else {
             static_assert(always_false_v<T>, "non-exhaustive visitor!");
