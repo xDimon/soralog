@@ -51,6 +51,11 @@ namespace soralog {
       NAME,  //!< Log thread name
       ID     //!< Log thread id
     };
+    enum class AtFaultReactionType : uint8_t {
+      WAITING,     //!< Continue trying to write
+      TERMINATE,   //!< Immediate terminate process by exit(EX_IOERR)
+      DROP_BUFFER  //!< Drop buffered messages and continue
+    };
 
     Sink() = delete;
     Sink(const Sink &) = delete;
@@ -65,13 +70,15 @@ namespace soralog {
          size_t max_events,
          size_t max_message_length,
          size_t max_buffer_size,
-         size_t latency)
+         size_t latency,
+         AtFaultReactionType at_fault)
         : name_(std::move(name)),
           level_(level),
           thread_info_type_(thread_info_type),
           max_message_length_(max_message_length),
           max_buffer_size_(max_buffer_size),
           latency_(latency),
+          at_fault_(at_fault),
           events_(max_events, max_message_length) {
       // Auto-fix buffer size
       if (max_buffer_size_ < max_message_length * 2) {
@@ -89,6 +96,7 @@ namespace soralog {
           max_message_length_(),
           max_buffer_size_(),
           latency_(),
+          at_fault_(),
           events_(0, 0),
           underlying_sinks_(std::move(sinks)) {};
 
@@ -174,9 +182,10 @@ namespace soralog {
     const std::string name_;
     Level level_;
     const ThreadInfoType thread_info_type_;
+    const size_t max_message_length_;
     const size_t max_buffer_size_;
     const std::chrono::milliseconds latency_;
-    const size_t max_message_length_;
+    const AtFaultReactionType at_fault_;
     CircularBuffer<Event> events_;
     std::atomic_size_t size_ = 0;
     const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};

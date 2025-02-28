@@ -24,7 +24,8 @@ namespace soralog {
                4,
                1024,
                4096,
-               0) {}
+               0,
+               AtFaultReactionType::DROP_BUFFER) {}
     ~SinkMock() override = default;
 
     template <typename... Args>

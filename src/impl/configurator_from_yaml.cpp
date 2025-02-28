@@ -76,7 +76,7 @@ namespace soralog {
               has_error_ = true;
             }
 
-          // Provided string - trying to parse like yaml-content
+            // Provided string - trying to parse like yaml-content
           } else if constexpr (std::is_same_v<T, std::string>) {
             try {
               node = YAML::Load(arg);
@@ -85,9 +85,9 @@ namespace soralog {
               has_error_ = true;
             }
 
-          // Provided yaml-node - using directly
+            // Provided yaml-node - using directly
           } else if constexpr (std::is_same_v<T, YAML::Node>) {
-              node = arg;
+            node = arg;
 
           } else {
             static_assert(always_false_v<T>, "non-exhaustive visitor!");
@@ -288,6 +288,7 @@ namespace soralog {
     std::optional<size_t> buffer_size;
     std::optional<size_t> max_message_length;
     std::optional<size_t> latency;
+    Sink::AtFaultReactionType at_fault = Sink::AtFaultReactionType::WAITING;
 
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
@@ -409,6 +410,25 @@ namespace soralog {
       }
     }
 
+    auto at_fault_node = sink_node["at_fault"];
+    if (at_fault_node.IsDefined()) {
+      if (not at_fault_node.IsScalar()) {
+        errors_ << "W: Property 'at_fault' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto at_fault_str = at_fault_node.as<std::string>();
+        if (at_fault_str == "terminate") {
+          at_fault = Sink::AtFaultReactionType::TERMINATE;
+        } else if (at_fault_str == "ignore") {
+          at_fault = Sink::AtFaultReactionType::DROP_BUFFER;
+        } else if (at_fault_str != "wait") {
+          errors_ << "W: Wrong property 'at_fault' value of sink '" << name
+                  << "': " << at_fault_str << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
     auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
                      .value_or(Level::TRACE);
 
@@ -443,6 +463,9 @@ namespace soralog {
       if (key == "latency") {
         continue;
       }
+      if (key == "at_fault") {
+        continue;
+      }
       if (key == "level") {
         continue;
       }
@@ -465,7 +488,8 @@ namespace soralog {
                                     capacity,
                                     max_message_length,
                                     buffer_size,
-                                    latency);
+                                    latency,
+                                    at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
@@ -476,6 +500,7 @@ namespace soralog {
     std::optional<size_t> buffer_size;
     std::optional<size_t> max_message_length;
     std::optional<size_t> latency;
+    Sink::AtFaultReactionType at_fault = Sink::AtFaultReactionType::WAITING;
 
     auto path_node = sink_node["path"];
     if (not path_node.IsDefined()) {
@@ -578,6 +603,25 @@ namespace soralog {
       }
     }
 
+    auto at_fault_node = sink_node["at_fault"];
+    if (at_fault_node.IsDefined()) {
+      if (not at_fault_node.IsScalar()) {
+        errors_ << "W: Property 'at_fault' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto at_fault_str = at_fault_node.as<std::string>();
+        if (at_fault_str == "terminate") {
+          at_fault = Sink::AtFaultReactionType::TERMINATE;
+        } else if (at_fault_str == "ignore") {
+          at_fault = Sink::AtFaultReactionType::DROP_BUFFER;
+        } else if (at_fault_str != "wait") {
+          errors_ << "W: Wrong property 'at_fault' value of sink '" << name
+                  << "': " << at_fault_str << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
     auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
                      .value_or(Level::TRACE);
 
@@ -607,6 +651,9 @@ namespace soralog {
       if (key == "latency") {
         continue;
       }
+      if (key == "at_fault") {
+        continue;
+      }
       if (key == "level") {
         continue;
       }
@@ -634,7 +681,8 @@ namespace soralog {
                                  capacity,
                                  max_message_length,
                                  buffer_size,
-                                 latency);
+                                 latency,
+                                 at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
@@ -645,6 +693,7 @@ namespace soralog {
     std::optional<size_t> buffer_size;
     std::optional<size_t> max_message_length;
     std::optional<size_t> latency;
+    Sink::AtFaultReactionType at_fault = Sink::AtFaultReactionType::WAITING;
 
     auto ident_node = sink_node["ident"];
     if (not ident_node.IsDefined()) {
@@ -747,6 +796,25 @@ namespace soralog {
       }
     }
 
+    auto at_fault_node = sink_node["at_fault"];
+    if (at_fault_node.IsDefined()) {
+      if (not at_fault_node.IsScalar()) {
+        errors_ << "W: Property 'at_fault' of sink node is not scalar\n";
+        has_warning_ = true;
+      } else {
+        auto at_fault_str = at_fault_node.as<std::string>();
+        if (at_fault_str == "terminate") {
+          at_fault = Sink::AtFaultReactionType::TERMINATE;
+        } else if (at_fault_str == "ignore") {
+          at_fault = Sink::AtFaultReactionType::DROP_BUFFER;
+        } else if (at_fault_str != "wait") {
+          errors_ << "W: Wrong property 'at_fault' value of sink '" << name
+                  << "': " << at_fault_str << "\n";
+          has_warning_ = true;
+        }
+      }
+    }
+
     auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
                      .value_or(Level::TRACE);
 
@@ -776,6 +844,9 @@ namespace soralog {
       if (key == "latency") {
         continue;
       }
+      if (key == "at_fault") {
+        continue;
+      }
       if (key == "level") {
         continue;
       }
@@ -803,7 +874,8 @@ namespace soralog {
                                    capacity,
                                    max_message_length,
                                    buffer_size,
-                                   latency);
+                                   latency,
+                                   at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
