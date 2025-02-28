@@ -141,14 +141,16 @@ namespace soralog {
                                std::optional<size_t> capacity,
                                std::optional<size_t> max_message_length,
                                std::optional<size_t> buffer_size,
-                               std::optional<size_t> latency)
+                               std::optional<size_t> latency,
+                               std::optional<AtFaultReactionType> at_fault)
       : Sink(std::move(name),
              level,
              thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 6),             // 64 events
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 17),         // 128 Kb
-             latency.value_or(200)),                 // 200 ms
+             latency.value_or(200),                  // 200 ms
+             at_fault.value_or(AtFaultReactionType::DROP_BUFFER)),
         stream_(stream_type == Stream::STDERR ? std::cerr : std::cout),
         with_color_(with_color),
         buff_(max_buffer_size_) {

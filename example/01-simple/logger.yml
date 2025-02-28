@@ -33,6 +33,7 @@ sinks:                             # List of sink configurations
     capacity: 2048                 # Maximum number of buffered messages; affects memory usage
     buffer: 4194304                # Maximum buffered data size in bytes before forcing a flush
     latency: 1000                  # Maximum delay in milliseconds before forcing a buffer flush; 0 means immediate flushing (default)
+    at_fault: wait                 # Action at fault: 'terminate' - stop process execution with exit code EX_IOERR, 'wait' - continue attempts to write messages (can freeze process), 'ignore' - drop buffer and return control (miss some messages)
   - name: syslog                   # Unique name of the sink
     type: syslog                   # Sink type: 'syslog' means messages are sent to the system's syslog daemon
     ident: solalog_example         # Identifier for the syslog channel

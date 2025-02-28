@@ -18,7 +18,8 @@ namespace soralog {
              1024,
              0,
              0,
-             1000) {}
+             1000,
+             AtFaultReactionType::DROP_BUFFER) {}
 
   SinkToNowhere::~SinkToNowhere() {
     flush();

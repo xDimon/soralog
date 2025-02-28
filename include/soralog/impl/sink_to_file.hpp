@@ -34,7 +34,8 @@ namespace soralog {
                std::optional<size_t> capacity = {},
                std::optional<size_t> buffer_size = {},
                std::optional<size_t> max_message_length = {},
-               std::optional<size_t> latency = {});
+               std::optional<size_t> latency = {},
+               std::optional<AtFaultReactionType> at_fault = {});
     ~SinkToFile() override;
 
     void rotate() noexcept override;

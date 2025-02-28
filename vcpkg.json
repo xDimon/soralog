@@ -5,6 +5,12 @@
     "fmt",
     "yaml-cpp"
   ],
+  "overrides": [
+    {
+      "name": "fmt",
+      "version": "10.1.1"
+    }
+  ],
   "features": {
     "soralog-tests": {
       "description": "Test of soralog's mechanisms",

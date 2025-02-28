@@ -7,6 +7,7 @@
 
 #include <soralog/impl/sink_to_file.hpp>
 
+#include <sysexits.h>
 #include <chrono>
 #include <iostream>
 
@@ -77,14 +78,16 @@ namespace soralog {
                          std::optional<size_t> capacity,
                          std::optional<size_t> max_message_length,
                          std::optional<size_t> buffer_size,
-                         std::optional<size_t> latency)
+                         std::optional<size_t> latency,
+                         std::optional<AtFaultReactionType> at_fault)
       : Sink(std::move(name),
              level,
              thread_info_type.value_or(ThreadInfoType::NONE),
              capacity.value_or(1u << 11),            // 2048 events
              max_message_length.value_or(1u << 10),  // 1024 bytes
              buffer_size.value_or(1u << 22),         // 4 Mb
-             latency.value_or(1000)),                // 1 sec
+             latency.value_or(1000),                 // 1 sec
+             at_fault.value_or(AtFaultReactionType::WAITING)),
         path_(std::move(path)),
         buff_(max_buffer_size_) {
     out_.open(path_, std::ios::app);
@@ -204,10 +207,60 @@ namespace soralog {
       if ((end - ptr) < sizeof(Event) or appended
           or std::chrono::steady_clock::now()
                  >= next_flush_.load(std::memory_order_acquire)) {
-        next_flush_.store(std::chrono::steady_clock::now() + latency_,
-                          std::memory_order_release);
-        out_.write(begin, ptr - begin);
-        ptr = begin;
+        std::chrono::seconds attempt_delay{1};
+        auto *data_begin = begin;
+        auto *data_end = ptr;
+
+        while (data_end
+               > data_begin) {  // Loop of trying to write into a log-file
+          next_flush_.store(std::chrono::steady_clock::now() + latency_,
+                            std::memory_order_release);
+          auto pos_before_write = out_.tellp();
+          out_.write(data_begin, data_end - data_begin);
+
+          if (out_.fail() or out_.bad()) {
+            const auto *msg =
+                out_.bad()
+                    ? "Critical I/O error (disk full or hardware failure).\n"
+                    : "Write failed (possibly out of disk space).\n";
+            std::cerr << msg;
+            std::cerr.flush();
+
+            switch (at_fault_) {
+              case AtFaultReactionType::TERMINATE:
+                out_ << "Fatal: " << msg;
+                out_.close();
+                exit(EX_IOERR);
+
+              case AtFaultReactionType::WAITING:
+                std::this_thread::sleep_for(attempt_delay);
+                attempt_delay =
+                    std::min(attempt_delay * 2, std::chrono::seconds(60));
+                if (out_.bad()) {
+                  while (true) {  // Loop of trying to reopen a log-file
+                    std::ofstream out;
+                    out.open(path_, std::ios::app);
+                    if (out.is_open()) {
+                      std::swap(out_, out);
+                      break;  // Leave loop of trying to reopen a log-file
+                    }
+                    std::cerr << "Can't " << (out_.is_open() ? "re-" : "")
+                              << "open log file '" << path_
+                              << "': " << strerror(errno) << ". Waiting for "
+                              << attempt_delay.count() << " seconds...\n";
+                    std::cerr.flush();
+                  }
+                } else {
+                  out_.clear();
+                  std::advance(data_begin, out_.tellp() - pos_before_write);
+                }
+                continue;
+
+              case AtFaultReactionType::DROP_BUFFER:;  // Do nothing
+            }
+          }
+          break;  // Leave loop of trying to write an info log-file
+        }
       }
 
       if (appended) {
