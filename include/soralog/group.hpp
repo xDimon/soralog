@@ -19,7 +19,7 @@ namespace soralog {
 
   /**
    * @class Group
-   * Entity to save and distribute properties
+   * @brief Manages logging properties such as level and sink.
    */
   class Group final {
    public:
@@ -30,6 +30,14 @@ namespace soralog {
     Group &operator=(Group &&) noexcept = delete;
     Group &operator=(const Group &) = delete;
 
+    /**
+     * @brief Creates a logging group.
+     * @param logging_system Logging system reference.
+     * @param group_name Group name.
+     * @param parent_name Optional parent group name.
+     * @param sink_name Optional sink name.
+     * @param level Optional logging level.
+     */
     Group(LoggingSystem &logging_system,
           std::string group_name,
           const std::optional<std::string> &parent_name,
@@ -37,7 +45,8 @@ namespace soralog {
           std::optional<Level> level);
 
     /**
-     * @returns name of group
+     * @brief Gets the group's name.
+     * @return Group name.
      */
     [[nodiscard]] const std::string &name() const noexcept {
       return name_;
@@ -46,122 +55,132 @@ namespace soralog {
     // Level
 
     /**
-     * @returns current level of logging
+     * @brief Gets the current logging level.
+     * @return Logging level.
      */
     [[nodiscard]] Level level() const noexcept {
       return level_;
     }
 
     /**
-     * @returns true if level is overridden, and true if it is inherited from
-     * group
+     * @brief Checks if the level is overridden.
+     * @return True if overridden, false if inherited.
      */
     [[nodiscard]] bool isLevelOverridden() const noexcept {
       return is_level_overridden_;
     }
 
     /**
-     * Set level to level from group. Level will be marked as inherited
+     * @brief Resets level to inherit from parent.
      */
     void resetLevel();
 
     /**
-     * Set level to {@param level}. Level will be marked as overridden
+     * @brief Sets the logging level.
+     * @param level New logging level.
      */
     void setLevel(Level level);
 
     /**
-     * Set level to level from group {@param group}
+     * @brief Sets level from another group.
+     * @param group Source group.
      */
     void setLevelFromGroup(const std::shared_ptr<const Group> &group);
 
     /**
-     * Set level to level from group with name {@param group_name}
+     * @brief Sets level from a group by name.
+     * @param group_name Name of source group.
      */
     void setLevelFromGroup(const std::string &group_name);
 
     // Sink
 
     /**
-     * @returns current sink of logging
+     * @brief Gets the current sink.
+     * @return Shared pointer to sink.
      */
     [[nodiscard]] std::shared_ptr<const Sink> sink() const noexcept {
       return sink_;
     }
 
     /**
-     * @returns true if sink is overridden, and true if it is inherited from
-     * group
+     * @brief Checks if the sink is overridden.
+     * @return True if overridden, false if inherited.
      */
     [[nodiscard]] bool isSinkOverridden() const noexcept {
       return is_sink_overridden_;
     }
 
     /**
-     * Set sink to sink from group. Level will be marked as inherited
+     * @brief Resets the sink to inherit from parent.
      */
     void resetSink();
 
     /**
-     * Set sink to sink with name {@param sink_name}.
-     * Level will be marked as overridden
+     * @brief Sets the sink by name.
+     * @param sink_name Name of the sink.
      */
     void setSink(const std::string &sink_name);
 
     /**
-     * Set sink to sink {@param sink}. Level will be marked as overridden
+     * @brief Sets the sink.
+     * @param sink Shared pointer to sink.
      */
     void setSink(std::shared_ptr<const Sink> sink);
 
     /**
-     * Set sink to sink from group {@param group}
+     * @brief Sets the sink from another group.
+     * @param group Source group.
      */
     void setSinkFromGroup(const std::shared_ptr<const Group> &group);
 
     /**
-     * Set sink to sink from group with name {@param group_name}
+     * @brief Sets the sink from a group by name.
+     * @param group_name Name of source group.
      */
     void setSinkFromGroup(const std::string &group_name);
 
     // Parent group
 
     /**
-     * @returns parent group
+     * @brief Gets the parent group.
+     * @return Shared pointer to parent group.
      */
     [[nodiscard]] std::shared_ptr<const Group> parent() const noexcept {
       return parent_group_;
     }
 
     /**
-     * Unset parent group.
-     * All properties will be marked as overridden
+     * @brief Unsets the parent group.
+     * All properties become overridden.
      */
-
     void unsetParentGroup();
 
     /**
-     * Set parent group to {@param group}.
-     * Non overridden properties will be inherited from new parent
+     * @brief Sets the parent group.
+     * Non-overridden properties inherit from it.
+     * @param group New parent group.
      */
     void setParentGroup(std::shared_ptr<const Group> group);
 
     /**
-     * Set parent group to group with name {@param group_name}.
-     * Non overridden properties will be inherited from new parent
+     * @brief Sets the parent group by name.
+     * Non-overridden properties inherit from it.
+     * @param group_name Name of parent group.
      */
     void setParentGroup(const std::string &group_name);
 
    private:
-    LoggingSystem &system_;
-    const std::string name_;
+    LoggingSystem &system_;   ///< Reference to logging system.
+    const std::string name_;  ///< Group name.
 
-    std::shared_ptr<const Group> parent_group_;
+    std::shared_ptr<const Group> parent_group_;  ///< Parent group.
 
-    std::shared_ptr<const Sink> sink_;
-    bool is_sink_overridden_{};
+    std::shared_ptr<const Sink> sink_;  ///< Logging sink.
+    bool is_sink_overridden_{};         ///< Is sink overridden.
 
-    Level level_{};
-    bool is_level_overridden_{};
+    Level level_{};               ///< Logging level.
+    bool is_level_overridden_{};  ///< Is level overridden.
   };
 
 }  // namespace soralog

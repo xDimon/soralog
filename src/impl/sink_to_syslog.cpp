@@ -20,36 +20,47 @@ namespace soralog {
 
     using namespace std::chrono_literals;
 
-    // Separator is using between logical parts of log record.
-    // Might be any substring or symbol: space, tab, etc.
-    // Couple of space is selected to differ of single space
+    // Separator used between logical parts of a log record.
+    // It can be any substring or symbol: space, tab, etc.
+    // Double space is chosen to differentiate from a single space.
     constexpr std::string_view separator = "  ";
 
+    // Appends the separator sequence to the buffer
     void put_separator(char *&ptr) {
       for (auto c : separator) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
+    // Writes the log level string representation to the buffer
     void put_level(char *&ptr, Level level) {
-      const char *const end = ptr + 8;  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const char *const end = ptr + 8;
       const char *str = levelToStr(level);
-      while (auto c = *str++) {  // NOLINT
-        *ptr++ = c;              // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      while (auto c = *str++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
+    // Writes the short log level character representation to the buffer
     void put_level_short(char *&ptr, Level level) {
-      *ptr++ = levelToChar(level);  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      *ptr++ = levelToChar(level);
     }
 
+    // Writes a string to the buffer
     template <typename T>
     void put_string(char *&ptr, const T &name) {
       for (auto c : name) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
+    // Writes a string to the buffer with a specified width, padding if needed
     template <typename T>
     void put_string(char *&ptr, const T &name, size_t width) {
       if (width == 0) {
@@ -59,11 +70,13 @@ namespace soralog {
         if (c == '\0' or width == 0) {
           break;
         }
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
         --width;
       }
       while (width--) {
-        *ptr++ = ' ';  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = ' ';
       }
     }
 
@@ -84,21 +97,26 @@ namespace soralog {
       : Sink(std::move(name),
              level,
              thread_info_type.value_or(ThreadInfoType::NONE),
-             capacity.value_or(1u << 11),            // 2048 events
-             max_message_length.value_or(1u << 10),  // 1024 bytes
-             buffer_size.value_or(1u << 22),         // 4 Mb
-             latency.value_or(1000),                 // 1 sec
-             at_fault.value_or(AtFaultReactionType::DROP_BUFFER)),
+             capacity.value_or(1u << 11),            // Default: 2048 events
+             max_message_length.value_or(1u << 10),  // Default: 1024 bytes
+             buffer_size.value_or(1u << 22),         // Default: 4 MB
+             latency.value_or(1000),                 // Default: 1 second
+             at_fault.value_or(AtFaultReactionType::IGNORE)),
         ident_(std::move(ident)),
         buff_(max_buffer_size_) {
     bool false_v = false;
+    // Ensures only one instance of SinkToSyslog can be active at a time
     if (not syslog_is_opened_.compare_exchange_strong(
             false_v, true, std::memory_order_acq_rel)) {
       throw std::runtime_error(
-          "SinkToSyslog has not created: Syslog already opened");
+          "SinkToSyslog has not been created: Syslog is already open");
     }
+
+    // Initialize syslog with process ID logging enabled
     openlog(ident_.c_str(), LOG_PID | LOG_NDELAY, LOG_USER);
 
+    // If latency is configured, start the worker thread for asynchronous
+    // logging
     if (latency_ != std::chrono::milliseconds::zero()) {
       sink_worker_ = std::make_unique<std::thread>([this] { run(); });
     }
@@ -134,7 +152,8 @@ namespace soralog {
     }
 
     auto *const begin = buff_.data();
-    auto *const end = buff_.data() + buff_.size();  // NOLINT
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    auto *const end = buff_.data() + buff_.size();
     auto *ptr = begin;
 
     decltype(1s / 1s) psec = 0;
@@ -146,10 +165,12 @@ namespace soralog {
       if (node) {
         const auto &event = *node;
 
+        // Extract timestamp
         const auto time = event.timestamp().time_since_epoch();
         const auto sec = time / 1s;
         const auto usec = time % 1s / 1us;
 
+        // Convert timestamp to a formatted datetime string
         if (psec != sec) {
           tm = fmt::localtime(sec);
           fmt::format_to_n(datetime.data(),
@@ -164,17 +185,14 @@ namespace soralog {
           psec = sec;
         }
 
-        // Timestamp
-
+        // Write timestamp
         std::memcpy(ptr, datetime.data(), datetime.size());
-        ptr = ptr + datetime.size();  // NOLINT
-
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ptr = ptr + datetime.size();
         ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
-
         put_separator(ptr);
 
-        // Thread
-
+        // Write thread information
         switch (thread_info_type_) {
           case ThreadInfoType::NAME:
             put_string(ptr, event.thread_name());
@@ -192,21 +210,20 @@ namespace soralog {
             break;
         }
 
-        // Level
-
+        // Write log level
         put_level(ptr, event.level());
         put_separator(ptr);
 
-        // Name
-
+        // Write logger name
         put_string(ptr, event.name());
         put_separator(ptr);
 
-        // Message
-
+        // Write log message
         put_string(ptr, event.message());
-        *ptr++ = '\0';  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = '\0';
 
+        // Determine syslog priority based on log level
         bool must_log = true;
         int priority = 8;
         switch (event.level()) {
@@ -214,24 +231,24 @@ namespace soralog {
             must_log = false;
             break;
           case Level::CRITICAL:
-            priority = LOG_EMERG;  // system is unusable
+            priority = LOG_EMERG;  // System is unusable
             break;
-          case Level::ERROR:  // error conditions
-            priority = LOG_ALERT;
+          case Level::ERROR:
+            priority = LOG_ALERT;  // Error conditions
             break;
-          case Level::WARN:  // warning conditions
-            priority = LOG_WARNING;
+          case Level::WARN:
+            priority = LOG_WARNING;  // Warning conditions
             break;
-          case Level::INFO:  // normal but significant condition
-            priority = LOG_NOTICE;
+          case Level::INFO:
+            priority = LOG_NOTICE;  // Normal but significant condition
             break;
-          case Level::VERBOSE:  // informational
-            priority = LOG_INFO;
+          case Level::VERBOSE:
+            priority = LOG_INFO;  // Informational
             break;
-          case Level::DEBUG:  // debug-level messages
-            priority = LOG_DEBUG;
+          case Level::DEBUG:
+            priority = LOG_DEBUG;  // Debug-level messages
             break;
-          case Level::TRACE:  // trace messages must not be logged by syslog
+          case Level::TRACE:  // syslog must not log trace messages
             [[fallthrough]];
           default:
             must_log = false;
@@ -256,17 +273,22 @@ namespace soralog {
   }
 
   void SinkToSyslog::run() {
+    // Set the thread name for debugging purposes
     util::setThreadName("log:" + name_);
 
+    // Initialize the next flush time to the current moment
     next_flush_.store(std::chrono::steady_clock::now(),
                       std::memory_order_relaxed);
 
     while (true) {
       {
         std::unique_lock lock(mutex_);
+
+        // Wait until the next scheduled flush time or until explicitly notified
         if (condvar_.wait_until(lock,
                                 next_flush_.load(std::memory_order_relaxed))
             == std::cv_status::no_timeout) {
+          // If no flush or finalization is needed, continue waiting
           if (not need_to_flush_.load(std::memory_order_relaxed)
               and not need_to_finalize_.load(std::memory_order_relaxed)) {
             continue;
@@ -274,8 +296,11 @@ namespace soralog {
         }
       }
 
+      // Perform a flush operation to write logs to syslog
       flush();
 
+      // If finalization is requested and there are
+      // no pending events, exit the loop
       if (need_to_finalize_.load(std::memory_order_acquire)
           && events_.size() == 0) {
         return;

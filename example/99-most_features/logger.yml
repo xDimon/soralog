@@ -1,0 +1,68 @@
+#
+# Copyright Soramitsu Co., 2021-2023
+# Copyright Quadrivium Co., 2023
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Logging configuration defining sinks and groups
+
+sinks:                             # List of available logging sinks (outputs)
+  - name: colored_stdout           # Unique identifier for this sink
+    type: console                  # Sink type: 'console' means output to stdout or stderr
+    stream: stdout                 # Output destination: 'stdout' (default) or 'stderr'
+    color: true                    # Enables colored output using ANSI escape codes
+    thread: name                   # Thread info: 'name' (thread name), 'id' (thread ID), 'none' (no thread info)
+    capacity: 64                   # Max buffered log messages before forced flush
+    max_message_length: 120        # Maximum length of each log message (longer messages are truncated)
+    buffer: 131072                 # Maximum buffer size in bytes before forced flush
+    latency: 100                   # Maximum delay (ms) before buffered messages are flushed (0 = immediate flush)
+    level: trace                   # Minimum log level handled by this sink (e.g., trace, debug, info, etc.)
+
+  - name: simple_stderr            # Unique identifier for this sink
+    type: console                  # Console output sink
+    stream: stderr                 # Redirect output to standard error stream
+    color: false                   # Disable ANSI color codes
+    thread: name                   # Include thread name in logs
+    capacity: 64                   # Buffer capacity in messages
+    max_message_length: 120        # Maximum allowed message length
+    buffer: 131072                 # Total buffer size before automatic flushing
+    latency: 100                   # Max delay before forced flush
+    level: info                    # Accept logs of level 'info' and higher
+
+  - name: file                     # Unique identifier for this sink
+    type: file                     # Log output to a file
+    path: /tmp/solalog_example.log # Path to the log file
+    thread: name                   # Include thread name in logs
+    capacity: 2048                 # Buffer capacity in messages
+    buffer: 4194304                # Max buffer size before automatic flushing
+    latency: 1000                  # Max delay before flushing logs to the file
+    at_fault: wait                 # Behavior on write failure:
+                                    # - 'terminate': exit process with IO error
+                                    # - 'wait': retry indefinitely (may freeze process)
+                                    # - 'ignore': discard logs and continue
+
+  - name: syslog                   # Unique identifier for this sink
+    type: syslog                   # Sends logs to the system's syslog service
+    ident: solalog_example         # Identifier used in syslog entries
+    thread: name                   # Include thread name in logs
+    capacity: 2048                 # Buffer capacity in messages
+    buffer: 4194304                # Maximum buffer size before automatic flush
+    latency: 1000                  # Max delay before syslog messages are sent
+
+  - name: sink_to_everywhere       # Sink that broadcasts logs to multiple other sinks
+    type: multisink                # 'multisink' type aggregates multiple sinks
+    sinks:                         # List of sinks where messages should be forwarded
+      - file
+      - colored_stdout
+      - simple_stderr
+      - syslog
+
+groups:                            # Log groups define hierarchical loggers
+  - name: main                     # Root group handling logs
+    sink: sink_to_everywhere       # Default sink for this group
+    level: trace                   # Minimum log level for this group
+    is_fallback: true              # This is the fallback group (only one allowed)
+    children:                      # Sub-groups inherit properties from this group
+      - name: example_group        # Example subgroup
+      - name: another_group        # Another subgroup

@@ -10,16 +10,20 @@
 #include <soralog/logger.hpp>
 
 /**
- * SL_LOG
- * SL_TRACE
- * SL_DEBUG
- * SL_VERBOSE
- * SL_INFO
- * SL_WARN
- * SL_ERROR
- * SL_CRITICAL
+ * @file log_macros.hpp
+ * @brief Provides logging macros for different log levels.
+ *
+ * These macros simplify logging calls by automatically checking log levels
+ * and formatting messages. Two sets of macros are available:
+ * - Standard format (compile-time validation).
+ * - Dynamic format (_DF suffix, runtime validation).
+ *
+ * Optionally, trace and debug logging can be disabled at compile time using:
+ * - `WITHOUT_TRACE_LOG_LEVEL`
+ * - `WITHOUT_DEBUG_LOG_LEVEL`
  */
 
+// Base macro that logs a message if the specified log level is enabled.
 #define _SL_LOG_IF_LEVEL(LOG, LVL, FMT, ...)                 \
   ({                                                         \
     auto &&_sl_log_log = (LOG);                              \
@@ -29,41 +33,36 @@
     }                                                        \
   })
 
+// Standard logging macro.
 #define _SL_LOG(LOG, LVL, FMT, ...) \
   _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
+// Public macro for general logging.
 #define SL_LOG(LOG, LVL, FMT, ...) _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
+// Dynamic format version (runtime format validation).
 #define _SL_LOG_DF(LOG, LVL, FMT, ...) \
   _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
 #define SL_LOG_DF(LOG, LVL, FMT, ...) \
   _SL_LOG_DF((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
-/* You can use cmake options WITHOUT_TRACE_LOG_LEVEL and WITHOUT_DEBUG_LOG_LEVEL
-   to remove (or not) debug and trace messages. See next cmake code for example:
-
-option(WITHOUT_TRACE_LOG_LEVEL "Build without trace macro"        OFF)
-option(WITHOUT_DEBUG_LOG_LEVEL "Build without debug macro"        OFF)
-if (WITHOUT_TRACE_LOG_LEVEL AND NOT WITHOUT_DEBUG_LOG_LEVEL)
-    set(WITHOUT_TRACE_LOG_LEVEL OFF)
-    message(STATUS "Trace level have switched off, because bebug level is off")
-endif() if (WITHOUT_TRACE_LOG_LEVEL)
-    add_compile_definitions(WITHOUT_TRACE_LOG_LEVEL)
-endif()
-if (WITHOUT_DEBUG_LOG_LEVEL)
-    add_compile_definitions(WITHOUT_DEBUG_LOG_LEVEL)
-endif()
-
-*/
+/**
+ * @section Conditional Compilation for Debug and Trace Logs
+ *
+ * To disable trace/debug logs at compile time, define:
+ * - `WITHOUT_TRACE_LOG_LEVEL`
+ * - `WITHOUT_DEBUG_LOG_LEVEL`
+ *
+ * If trace logs are disabled, debug logs will be disabled automatically.
+ */
 
 #if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
-#warning "Trace log level have switched off, because bebug log level is off"
+#warning "Trace log level has been disabled because debug log level is off"
 #undef WITHOUT_DEBUG_LOG_LEVEL
 #endif
 
-// Macros for string-literal format
-// Correctness of their format will be validated in compile-time
+// Macros for standard logging levels (compile-time format validation).
 
 #ifndef WITHOUT_TRACE_LOG_LEVEL
 #define SL_TRACE(LOG, FMT, ...) \
@@ -100,7 +99,7 @@ endif()
 
 #ifndef WITHOUT_TRACE_LOG_LEVEL
 #define SL_TRACE_DF(LOG, FMT, ...) \
-  _SL_LOG((LOG), soralog::Level::TRACE, (FMT), ##__VA_ARGS__)
+  _SL_LOG_DF((LOG), soralog::Level::TRACE, (FMT), ##__VA_ARGS__)
 #else
 #define SL_TRACE_DF(LOG, FMT, ...)
 #endif

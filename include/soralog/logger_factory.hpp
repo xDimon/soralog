@@ -18,21 +18,34 @@ namespace soralog {
 
   class Logger;
 
+  /**
+   * @class LoggerFactory
+   * @brief Abstract factory for creating and managing loggers.
+   *
+   * This factory provides methods to obtain loggers, creating them
+   * if they do not already exist. It supports setting logging levels
+   * and output sinks dynamically.
+   */
   class LoggerFactory {
    public:
     virtual ~LoggerFactory() = default;
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name} and group {@param group_name}
+     * @brief Retrieves or creates a logger with a specified name and group.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group to which the logger belongs.
+     * @return Shared pointer to the requested logger.
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name) = 0;
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and level
-     * overridden to {@param level}
+     * @brief Retrieves or creates a logger with a specified name, group,
+     *        and overridden logging level.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group to which the logger belongs.
+     * @param level Logging level to override.
+     * @return Shared pointer to the requested logger.
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -40,9 +53,12 @@ namespace soralog {
         Level level) = 0;
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and sink
-     * overridden to sink with name {@param sink_name}
+     * @brief Retrieves or creates a logger with a specified name, group,
+     *        and overridden sink.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group to which the logger belongs.
+     * @param sink_name Name of the sink to override.
+     * @return Shared pointer to the requested logger.
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -50,9 +66,13 @@ namespace soralog {
         std::string sink_name) = 0;
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and sink
-     * andd level overridden to {@param sink_name} and {@param level}
+     * @brief Retrieves or creates a logger with a specified name, group,
+     *        overridden sink, and overridden logging level.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group to which the logger belongs.
+     * @param sink_name Name of the sink to override.
+     * @param level Logging level to override.
+     * @return Shared pointer to the requested logger.
      */
     [[nodiscard]] virtual std::shared_ptr<Logger> getLogger(
         std::string logger_name,

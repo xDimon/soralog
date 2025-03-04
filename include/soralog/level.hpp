@@ -14,21 +14,25 @@
 namespace soralog {
 
   /**
-   * Level detalization of logging or event
+   * @enum Level
+   * @brief Defines the level of detail for logging or events.
    */
   enum class Level : uint8_t {
-    OFF = 0,   /// No log (for logger)
-    CRITICAL,  /// Log only critical
-    ERROR,     /// Error
-    WARN,      /// Warning
-    INFO,      /// Important information
-    VERBOSE,   /// All information
-    DEBUG,     /// Message for debug
-    TRACE,     /// Trace event
-    IGNORE,    /// No log (for message)
+    OFF = 0,   ///< No logging (for disabling logger)
+    CRITICAL,  ///< Logs only critical messages
+    ERROR,     ///< Logs error messages
+    WARN,      ///< Logs warning messages
+    INFO,      ///< Logs important informational messages
+    VERBOSE,   ///< Logs all information messages
+    DEBUG,     ///< Logs debugging messages
+    TRACE,     ///< Logs trace events
+    IGNORE,    ///< No logging (for specific messages)
   };
 
   namespace detail {
+    /**
+     * @brief Mapping of log levels to their string representations.
+     */
     constexpr std::array<const char *, static_cast<uint8_t>(Level::IGNORE) + 1>
         level_to_str_map = [] {
           std::array<const char *, static_cast<uint8_t>(Level::IGNORE) + 1> r{};
@@ -46,7 +50,9 @@ namespace soralog {
   }  // namespace detail
 
   /**
-   * @returns symbol in according with {@param level}
+   * @brief Converts a logging level to its representative character.
+   * @param level The logging level.
+   * @return The first character of the level's string representation.
    */
   constexpr char levelToChar(Level level) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
@@ -54,7 +60,9 @@ namespace soralog {
   }
 
   /**
-   * @returns C-string in according with {@param level}
+   * @brief Converts a logging level to its string representation.
+   * @param level The logging level.
+   * @return A C-string representing the given logging level.
    */
   constexpr const char *levelToStr(Level level) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)

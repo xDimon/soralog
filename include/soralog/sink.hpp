@@ -40,21 +40,31 @@ namespace soralog {
 
   /**
    * @class Sink
-   * This is base class of all sink.
-   * It is accumulate events in inner lock-free circular buffer and drop it into
-   * destination place on demand or condition
+   * @brief Base class for all log sinks.
+   *
+   * Accumulates events in a lock-free circular buffer and flushes them
+   * to the destination when needed.
    */
   class Sink {
    public:
+    /**
+     * @enum ThreadInfoType
+     * @brief Defines how thread info is logged.
+     */
     enum class ThreadInfoType : uint8_t {
-      NONE,  //!< No log thread info
-      NAME,  //!< Log thread name
-      ID     //!< Log thread id
+      NONE,  ///< Do not log thread info
+      NAME,  ///< Log thread name
+      ID     ///< Log thread ID
     };
+
+    /**
+     * @enum AtFaultReactionType
+     * @brief Defines behavior on logging failure.
+     */
     enum class AtFaultReactionType : uint8_t {
-      WAITING,     //!< Continue trying to write
-      TERMINATE,   //!< Immediate terminate process by exit(EX_IOERR)
-      DROP_BUFFER  //!< Drop buffered messages and continue
+      WAIT,       ///< Retry writing
+      TERMINATE,  ///< Exit process with error
+      IGNORE      ///< Drop messages and continue
     };
 
     Sink() = delete;
@@ -64,6 +74,17 @@ namespace soralog {
     Sink &operator=(const Sink &) = delete;
     Sink &operator=(Sink &&) noexcept = delete;
 
+    /**
+     * @brief Constructs a Sink instance.
+     * @param name Sink name.
+     * @param level Minimum log level.
+     * @param thread_info_type Thread info logging type.
+     * @param max_events Max events in buffer.
+     * @param max_message_length Max log message length.
+     * @param max_buffer_size Max buffer size.
+     * @param latency Maximum write delay.
+     * @param at_fault Reaction on write failure.
+     */
     Sink(std::string name,
          Level level,
          ThreadInfoType thread_info_type,
@@ -82,11 +103,17 @@ namespace soralog {
           events_(max_events, max_message_length) {
       // Auto-fix buffer size
       if (max_buffer_size_ < max_message_length * 2) {
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast,-warnings-as-errors)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         const_cast<size_t &>(max_buffer_size_) = max_message_length * 2;
       }
     }
 
+    /**
+     * @brief Constructs a composite sink forwarding to other sinks.
+     * @param name Sink name.
+     * @param level Minimum log level.
+     * @param sinks List of underlying sinks.
+     */
     Sink(std::string name,
          Level level,
          std::vector<std::shared_ptr<Sink>> sinks)
@@ -101,25 +128,29 @@ namespace soralog {
           underlying_sinks_(std::move(sinks)) {};
 
     /**
-     * @returns name of sink
+     * @brief Gets the sink name.
+     * @return Sink name.
      */
     const std::string &name() const noexcept {
       return name_;
     }
 
     /**
-     * @returns minimal level which sink will accept
+     * @brief Gets the minimum log level accepted by this sink.
+     * @return Minimum log level.
      */
     Level level() const noexcept {
       return level_;
     }
 
     /**
-     * Emplaces new log event
-     * @param name is name of logger
-     * @param level is level log event
-     * @param format is format of message
-     * @param args arguments is of log message
+     * @brief Logs an event.
+     * @tparam Format Format string type.
+     * @tparam Args Additional argument types.
+     * @param name Logger name.
+     * @param level Log level.
+     * @param format Format string.
+     * @param args Formatting arguments.
      */
     template <typename Format, typename... Args>
     void push(std::string_view name,
@@ -145,9 +176,7 @@ namespace soralog {
               break;
             }
           }
-
-          // Events queue is full. Flush immediately and try to push again
-          flush();
+          flush();  // Buffer full, flush immediately and retry.
         }
 
         if (latency_ == std::chrono::milliseconds::zero()) {
@@ -163,32 +192,32 @@ namespace soralog {
     }
 
     /**
-     * Does writing all events in destination place immediately
+     * @brief Writes all events to the destination immediately.
      */
     virtual void flush() noexcept = 0;
 
     /**
-     * Does writing all events in destination place asynchronously
+     * @brief Writes all events asynchronously.
      */
     virtual void async_flush() noexcept = 0;
 
     /**
-     * Does some actions to rorate log data (e.g. reopen log-file)
+     * @brief Performs log data rotation (e.g., reopens log files).
      */
     virtual void rotate() noexcept = 0;
 
    protected:
     // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
-    const std::string name_;
-    Level level_;
-    const ThreadInfoType thread_info_type_;
-    const size_t max_message_length_;
-    const size_t max_buffer_size_;
-    const std::chrono::milliseconds latency_;
-    const AtFaultReactionType at_fault_;
-    CircularBuffer<Event> events_;
-    std::atomic_size_t size_ = 0;
-    const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};
+    const std::string name_;                   ///< Sink name.
+    Level level_;                              ///< Minimum accepted log level.
+    const ThreadInfoType thread_info_type_;    ///< Thread info logging type.
+    const size_t max_message_length_;          ///< Max message length.
+    const size_t max_buffer_size_;             ///< Max buffer size.
+    const std::chrono::milliseconds latency_;  ///< Max write delay.
+    const AtFaultReactionType at_fault_;       ///< Behavior on write failure.
+    CircularBuffer<Event> events_;             ///< Event buffer.
+    std::atomic_size_t size_ = 0;              ///< Current buffer size.
+    const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};  ///< Sinks.
     // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
   };
 

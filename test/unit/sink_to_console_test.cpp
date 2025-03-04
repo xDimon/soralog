@@ -17,17 +17,38 @@ using namespace soralog;
 using namespace testing;
 using namespace std::chrono_literals;
 
+/**
+ * @class SinkToConsoleTest
+ * @brief Test fixture for testing logging to console using SinkToConsole.
+ *
+ * This fixture provides a helper FakeLogger class to interact with the sink.
+ */
 class SinkToConsoleTest : public ::testing::Test {
  public:
+  /**
+   * @class FakeLogger
+   * @brief A simple logger wrapper around SinkToConsole for testing.
+   *
+   * This mock logger directly writes debug messages to the SinkToConsole instance.
+   */
   struct FakeLogger {
     explicit FakeLogger(std::shared_ptr<SinkToConsole> sink)
         : sink_(std::move(sink)) {}
 
+    /**
+     * @brief Logs a debug message.
+     * @tparam Args Variadic template for message arguments.
+     * @param format The format string.
+     * @param args The arguments for the format string.
+     */
     template <typename... Args>
     void debug(std::string_view format, const Args &...args) {
       sink_->push("logger", Level::DEBUG, format, args...);
     }
 
+    /**
+     * @brief Flushes the sink, ensuring all messages are written to the console.
+     */
     void flush() {
       sink_->flush();
     }
@@ -36,25 +57,40 @@ class SinkToConsoleTest : public ::testing::Test {
     std::shared_ptr<SinkToConsole> sink_;
   };
 
+  /**
+   * @brief Creates a FakeLogger instance with a SinkToConsole backend.
+   * @param latency The latency for the sink (controls delayed writes).
+   * @return A shared pointer to a FakeLogger instance.
+   */
   std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
     auto sink = std::make_shared<SinkToConsole>(
         "console",
         Level::TRACE,
-        SinkToConsole::Stream::STDOUT,  // standard output stream
-        false,                          // no color
-        Sink::ThreadInfoType::ID,       // ignore thread info
-        4,                              // capacity: 4 events
-        64,                             // max message length: 64 byte
-        16384,                          // buffers size: 16 Kb
+        SinkToConsole::Stream::STDOUT,  // Standard output stream
+        false,                          // No color formatting
+        Sink::ThreadInfoType::ID,       // Log thread ID
+        4,                              // Capacity: 4 events
+        64,                             // Max message length: 64 bytes
+        16384,                          // Buffer size: 16 KB
         latency.count());
     return std::make_shared<FakeLogger>(std::move(sink));
   }
 };
 
+/**
+ * @test Logging
+ * @brief Tests logging behavior with a console sink.
+ *
+ * @given A logger writing to a console sink with a specified latency.
+ * @when Multiple messages are logged with varying delays.
+ * @then The messages appear in the console output.
+ */
 TEST_F(SinkToConsoleTest, Logging) {
   auto logger = createLogger(20ms);
   auto delay = 1ms;
   int count = 100;
+
+  // Logging in multiple rounds with varying delays
   for (int round = 1; round <= 3; ++round) {
     for (int i = 1; i <= count; ++i) {
       logger->debug(
@@ -62,14 +98,19 @@ TEST_F(SinkToConsoleTest, Logging) {
       std::this_thread::sleep_for(delay * abs(i - count / 2));
     }
   }
+
+  // Ensure all buffered logs are flushed
   logger->flush();
 }
 
 /**
- * @given Sink with one second latency
- * @when Push four message to log every half-second
- * @then Messages will be written in pairs
- * @note Test is disabled, because it should be started and watched manually
+ * @test NonZeroLatencyLogging
+ * @brief Tests delayed logging behavior with a non-zero latency.
+ *
+ * @given A sink with a one-second latency.
+ * @when Messages are logged every half-second.
+ * @then Messages are written to the console in pairs due to buffering.
+ * @note This test is disabled as it requires manual observation.
  */
 TEST_F(SinkToConsoleTest, DISABLED_NonZeroLatencyLogging) {
   auto logger = createLogger(1000ms);
@@ -87,10 +128,13 @@ TEST_F(SinkToConsoleTest, DISABLED_NonZeroLatencyLogging) {
 }
 
 /**
- * @given Sink with zero-latency
- * @when Push four message to log every half-second
- * @then Messages will be written separately
- * @note Test is disabled, because it should be started and watched manually
+ * @test ZeroLatencyLogging
+ * @brief Tests immediate logging behavior with zero latency.
+ *
+ * @given A sink with zero-latency.
+ * @when Messages are logged every half-second.
+ * @then Messages are written to the console immediately.
+ * @note This test is disabled as it requires manual observation.
  */
 TEST_F(SinkToConsoleTest, ZeroLatencyLogging) {
   auto logger = createLogger(0ms);
@@ -108,24 +152,26 @@ TEST_F(SinkToConsoleTest, ZeroLatencyLogging) {
 }
 
 /**
- * @given Sink with zero-latency
- * @when Push four message to log every half-second
- * @then Messages will be written separately
- * @note Test is disabled, because it should be started and watched manually
+ * @test MultithreadLogging
+ * @brief Tests concurrent logging behavior in a multi-threaded environment.
+ *
+ * @given A sink with 40ms latency and multiple threads.
+ * @when Multiple threads log messages simultaneously.
+ * @then The messages are written to the console without corruption.
  */
 TEST_F(SinkToConsoleTest, MultithreadLogging) {
   auto logger = createLogger(40ms);
 
-  size_t treads_n = 10;
+  size_t threads_n = 10;
   size_t iters_n = 100;
 
 #if __cplusplus >= 202002L
-  std::latch latch(treads_n);
+  std::latch latch(threads_n);  // Synchronization barrier for thread start
 #endif
 
   auto task = [&] {
 #if __cplusplus >= 202002L
-    latch.arrive_and_wait();
+    latch.arrive_and_wait();  // Ensure all threads start simultaneously
 #endif
     std::mutex m;
     for (auto i = 0; i < iters_n; ++i) {
@@ -144,13 +190,14 @@ TEST_F(SinkToConsoleTest, MultithreadLogging) {
   };
 
   std::vector<std::thread> threads;
-  for (auto i = 0; i < treads_n; ++i) {
+  for (auto i = 0; i < threads_n; ++i) {
     threads.emplace_back([&] {
-      //      soralog::util::setThreadName(fmt::format("{}", i));
+      // Start logging task in each thread
       task();
     });
   }
 
+  // Wait for all threads to complete
   for (auto &t : threads) {
     t.join();
   }

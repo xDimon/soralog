@@ -15,15 +15,22 @@ namespace soralog {
 
   Configurator::Result FallbackConfigurator::applyOn(
       LoggingSystem &system) const {
+    // Create a default console sink with the specified logging level and color
+    // option.
     system.makeSink<SinkToConsole>(
         "console", level_, SinkToConsole::Stream::STDOUT, with_color_);
+
+    // Create a default logging group "*" that routes all logs to the console
+    // sink.
     system.makeGroup("*", {}, "console", level_);
 
+    // Return a result indicating that a fallback configuration has been
+    // applied.
     return {.has_error = false,
             .has_warning = true,
             .message = std::string()
                      + "I: Using fallback configurator for logger system\n"
-                       "I: All logs will be write into "
+                       "I: All logs will be written to "
                      + (with_color_ ? "color " : "") + "standard output with '"
                      + levelToStr(level_) + "' level"};
   }

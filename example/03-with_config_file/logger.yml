@@ -1,0 +1,19 @@
+#
+# Copyright Soramitsu Co., 2021-2023
+# Copyright Quadrivium Co., 2023
+# All Rights Reserved
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Logging configuration defining sinks and groups
+
+sinks:                             # List of available logging sinks (outputs)
+  - name: to_console               # Unique identifier for this sink
+    type: console                  # Sink type: 'console' means output to stdout or stderr
+    color: true                    # Enables colored output using ANSI escape codes
+
+groups:                            # Log groups define hierarchical loggers
+  - name: main                     # Root group handling logs
+    sink: to_console               # Default sink for this group
+    level: info                    # Minimum log level for this group
+    is_fallback: true              # This is the fallback group (only one allowed)
