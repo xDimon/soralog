@@ -20,7 +20,7 @@ namespace soralog {
 
   /**
    * @class Logger
-   * @brief Entity for filtering events by level and pushing their data to sink
+   * @brief Filters events by level and sends them to a logging sink.
    */
   class Logger final {
    public:
@@ -31,14 +31,24 @@ namespace soralog {
     Logger &operator=(Logger &&) noexcept = delete;
     Logger &operator=(const Logger &) = delete;
 
+    /**
+     * @brief Constructs a logger instance.
+     * @param system Reference to the logging system.
+     * @param logger_name Logger name.
+     * @param group Logger group.
+     */
     Logger(LoggingSystem &system,
            std::string logger_name,
            std::shared_ptr<const Group> group);
 
    private:
     /**
-     * Checks if {@param level} of event is enough to logging and push logger
-     * name and event's data ({@param format} and {@param args}) to sink
+     * @brief Logs an event if its level is sufficient.
+     * @tparam Format Format string type.
+     * @tparam Args Additional argument types.
+     * @param level Log level.
+     * @param format Format string.
+     * @param args Formatting arguments.
      */
     template <typename Format, typename... Args>
     void __attribute__((no_sanitize("thread"))) push(Level level,
@@ -56,136 +66,112 @@ namespace soralog {
 
    public:
     /**
-     * @returns name of logger
+     * @brief Gets the logger's name.
+     * @return Logger name.
      */
     [[nodiscard]] const std::string &name() const noexcept {
       return name_;
     }
 
     /**
-     * Logs event ({@param format} and {@param args})
-     * with provoded {@param level}
+     * @brief Logs an event at the specified level.
+     * @tparam Format Format string type.
+     * @tparam Args Additional argument types.
+     * @param level Log level.
+     * @param format Format string.
+     * @param args Formatting arguments.
      */
     template <typename Format, typename... Args>
     void log(Level level, Format &&format, const Args &...args) {
       push(level, std::forward<Format>(format), args...);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with trace level
-     */
+    /// Logs an event with TRACE level.
     template <typename... Args>
     void trace(std::string_view format, const Args &...args) {
       push(Level::TRACE, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with trace level
-     */
+    /// Logs a single value with TRACE level.
     template <typename Arg>
     void trace(const Arg &arg) {
       push(Level::TRACE, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with debug level
-     */
+    /// Logs an event with DEBUG level.
     template <typename... Args>
     void debug(std::string_view format, const Args &...args) {
       push(Level::DEBUG, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with debug level
-     */
+    /// Logs a single value with DEBUG level.
     template <typename Arg>
     void debug(const Arg &arg) {
       push(Level::DEBUG, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with verbose level
-     */
+    /// Logs an event with VERBOSE level.
     template <typename... Args>
     void verbose(std::string_view format, const Args &...args) {
       push(Level::VERBOSE, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with verbose level
-     */
+    /// Logs a single value with VERBOSE level.
     template <typename Arg>
     void verbose(const Arg &arg) {
       push(Level::VERBOSE, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with info level
-     */
+    /// Logs an event with INFO level.
     template <typename... Args>
     void info(std::string_view format, const Args &...args) {
       push(Level::INFO, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with info level
-     */
+    /// Logs a single value with INFO level.
     template <typename Arg>
     void info(const Arg &arg) {
       push(Level::INFO, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with warning level
-     */
+    /// Logs an event with WARN level.
     template <typename... Args>
     void warn(std::string_view format, const Args &...args) {
       push(Level::WARN, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with warning level
-     */
+    /// Logs a single value with WARN level.
     template <typename Arg>
     void warn(const Arg &arg) {
       push(Level::WARN, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with error level
-     */
+    /// Logs an event with ERROR level.
     template <typename... Args>
     void error(std::string_view format, const Args &...args) {
       push(Level::ERROR, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with error level
-     */
+    /// Logs a single value with ERROR level.
     template <typename Arg>
     void error(const Arg &arg) {
       push(Level::ERROR, "{}", arg);
     }
 
-    /**
-     * Logs event ({@param format} and {@param args}) with level of critical
-     * situation
-     */
+    /// Logs an event with CRITICAL level.
     template <typename... Args>
     void critical(std::string_view format, const Args &...args) {
       push(Level::CRITICAL, format, args...);
     }
 
-    /**
-     * Logs value {@param arg} as event with level of critical situation
-     */
+    /// Logs a single value with CRITICAL level.
     template <typename Arg>
     void critical(const Arg &arg) {
       push(Level::CRITICAL, "{}", arg);
     }
 
     /**
-     * Flushes all events accumulated in sink immediately
+     * @brief Flushes all pending log events.
      */
     void flush() const {
       sink_->flush();
@@ -193,116 +179,79 @@ namespace soralog {
 
     // Level
 
-    /**
-     * @returns current level of logging
-     */
+    /// Gets the current logging level.
     [[nodiscard]] Level level() const noexcept {
       return level_;
     }
 
-    /**
-     * @returns true if level is overridden, and true if it is inherited from
-     * group
-     */
+    /// Checks if the logging level is overridden.
     [[nodiscard]] bool isLevelOverridden() const noexcept {
       return is_level_overridden_;
     }
 
-    /**
-     * Set level to level from group. Level will be marked as inherited
-     */
+    /// Resets the logging level to inherit from the group.
     void resetLevel();
 
-    /**
-     * Set level to {@param level}. Level will be marked as overridden
-     */
+    /// Sets the logging level and marks it as overridden.
     void setLevel(Level level);
 
-    /**
-     * Set level to level from group {@param group}
-     */
+    /// Sets the logging level from another group.
     void setLevelFromGroup(const std::shared_ptr<const Group> &group);
 
-    /**
-     * Set level to level from group with name {@param group_name}
-     */
+    /// Sets the logging level from a group by name.
     void setLevelFromGroup(const std::string &group_name);
 
     // Sink
 
-    /**
-     * @returns current sink of logging
-     */
+    /// Gets the current logging sink.
     [[nodiscard]] std::shared_ptr<const Sink> sink() const noexcept {
       return sink_;
     }
 
-    /**
-     * @returns true if sink is overridden, and true if it is inherited from
-     * group
-     */
+    /// Checks if the sink is overridden.
     [[nodiscard]] bool isSinkOverridden() const noexcept {
       return is_sink_overridden_;
     }
 
-    /**
-     * Set sink to sink from group. Level will be marked as inherited
-     */
+    /// Resets the sink to inherit from the group.
     void resetSink();
 
-    /**
-     * Set sink to sink with name {@param sink_name}.
-     * Level will be marked as overridden
-     */
+    /// Sets the sink by name and marks it as overridden.
     void setSink(const std::string &sink_name);
 
-    /**
-     * Set sink to sink {@param sink}. Level will be marked as overridden
-     */
+    /// Sets the sink and marks it as overridden.
     void setSink(std::shared_ptr<Sink> sink);
 
-    /**
-     * Set sink to sink from group {@param group}
-     */
+    /// Sets the sink from another group.
     void setSinkFromGroup(const std::shared_ptr<const Group> &group);
 
-    /**
-     * Set sink to sink from group with name {@param group_name}
-     */
+    /// Sets the sink from a group by name.
     void setSinkFromGroup(const std::string &group_name);
 
     // Parent group
 
-    /**
-     * @returns group of logger
-     */
+    /// Gets the logger's group.
     [[nodiscard]] std::shared_ptr<const Group> group() const noexcept {
       return group_;
     }
 
-    /**
-     * Set group to group {@param group}.
-     * Non overridden properties will me inherited from new group
-     */
+    /// Sets the logger's group.
     void setGroup(std::shared_ptr<const Group> group);
 
-    /**
-     * Set group to group with name {@param group_name}.
-     * Non overridden properties will me inherited from new group
-     */
+    /// Sets the logger's group by name.
     void setGroup(const std::string &group_name);
 
    private:
-    LoggingSystem &system_;
+    LoggingSystem &system_;  ///< Reference to the logging system.
 
-    const std::string name_;
-    std::shared_ptr<const Group> group_;
+    const std::string name_;              ///< Logger name.
+    std::shared_ptr<const Group> group_;  ///< Logger group.
 
-    std::shared_ptr<Sink> sink_;
-    bool is_sink_overridden_{};
+    std::shared_ptr<Sink> sink_;  ///< Logger sink.
+    bool is_sink_overridden_{};   ///< Is sink overridden.
 
-    Level level_{};
-    bool is_level_overridden_{};
+    Level level_{};               ///< Logging level.
+    bool is_level_overridden_{};  ///< Is level overridden.
   };
 
 }  // namespace soralog

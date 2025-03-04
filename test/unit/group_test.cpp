@@ -16,6 +16,13 @@
 using namespace soralog;
 using namespace testing;
 
+/**
+ * @class GroupTest
+ * @brief Test fixture for testing Group functionality in LoggingSystem.
+ *
+ * This fixture initializes a logging system with multiple groups and sinks
+ * for testing various configurations and modifications of logging groups.
+ */
 class GroupTest : public ::testing::Test {
  public:
   void SetUp() override {
@@ -39,22 +46,14 @@ class GroupTest : public ::testing::Test {
 
     EXPECT_NO_THROW(auto r = system_->configure());
 
-    group1_ = system_->getGroup("first");
-    ASSERT_TRUE(group1_ != nullptr);
-    group2_ = system_->getGroup("second");
-    ASSERT_TRUE(group2_ != nullptr);
-    group3_ = system_->getGroup("third");
-    ASSERT_TRUE(group3_ != nullptr);
-    group4_ = system_->getGroup("four");
-    ASSERT_TRUE(group4_ != nullptr);
-    sink1_ = system_->getSink("sink1");
-    ASSERT_TRUE(sink1_ != nullptr);
-    sink2_ = system_->getSink("sink2");
-    ASSERT_TRUE(sink2_ != nullptr);
-    sink3_ = system_->getSink("sink3");
-    ASSERT_TRUE(sink3_ != nullptr);
-    sink4_ = system_->getSink("sink4");
-    ASSERT_TRUE(sink4_ != nullptr);
+    ASSERT_TRUE(group1_ = system_->getGroup("first"));
+    ASSERT_TRUE(group2_ = system_->getGroup("second"));
+    ASSERT_TRUE(group3_ = system_->getGroup("third"));
+    ASSERT_TRUE(group4_ = system_->getGroup("four"));
+    ASSERT_TRUE(sink1_ = system_->getSink("sink1"));
+    ASSERT_TRUE(sink2_ = system_->getSink("sink2"));
+    ASSERT_TRUE(sink3_ = system_->getSink("sink3"));
+    ASSERT_TRUE(sink4_ = system_->getSink("sink4"));
   }
   void TearDown() override {}
 
@@ -71,10 +70,18 @@ class GroupTest : public ::testing::Test {
   std::shared_ptr<Sink> sink4_;
 };
 
+/**
+ * @test MakeGroup
+ * @brief Tests group creation and property inheritance.
+ *
+ * @given A logging system with multiple groups and sinks.
+ * @when Groups are created with or without explicitly set properties.
+ * @then Groups inherit properties from their parent unless explicitly
+ * overridden.
+ */
 TEST_F(GroupTest, MakeGroup) {
-  /// @Given initial state for all next tests
-
-  // If parent isn't set, properties must be provided and not mark as overridden
+  // If parent isn't set, properties must be provided and not marked as
+  // overridden
   EXPECT_TRUE(group1_->parent() == nullptr);
   EXPECT_TRUE(group1_->level() == Level::TRACE);
   EXPECT_FALSE(group1_->isLevelOverridden());
@@ -88,7 +95,8 @@ TEST_F(GroupTest, MakeGroup) {
   EXPECT_TRUE(group2_->sink() == sink1_);
   EXPECT_FALSE(group2_->isSinkOverridden());
 
-  // If parent is set and properties are provided, then they mark as overridden
+  // If parent is set and properties are provided, then they are marked as
+  // overridden
   EXPECT_TRUE(group3_->parent() == group2_);
   EXPECT_TRUE(group3_->level() == Level::DEBUG);
   EXPECT_TRUE(group3_->isLevelOverridden());
@@ -96,67 +104,88 @@ TEST_F(GroupTest, MakeGroup) {
   EXPECT_TRUE(group3_->isSinkOverridden());
 }
 
+/**
+ * @test ChangeLevel
+ * @brief Tests changing and resetting logging levels in groups.
+ *
+ * @given A logging system with a hierarchical group structure.
+ * @when Levels are explicitly set for some groups.
+ * @then The new level is applied and marked as overridden.
+ * @when The levels are reset.
+ * @then The level is inherited from the parent and marked as not overridden.
+ */
 TEST_F(GroupTest, ChangeLevel) {
-  /// @When set level
-
+  // Set custom logging levels for groups
   group2_->setLevel(Level::CRITICAL);
   group3_->setLevel(Level::INFO);
 
-  /// @Then level is set and marked as overridden
-
+  // Verify that the levels are set and marked as overridden
   EXPECT_TRUE(group2_->level() == Level::CRITICAL);
   EXPECT_TRUE(group2_->isLevelOverridden());
   EXPECT_TRUE(group3_->level() == Level::INFO);
   EXPECT_TRUE(group3_->isLevelOverridden());
 
-  /// @When reset level
-
+  // Reset levels back to parent values
   group2_->resetLevel();
   group3_->resetLevel();
 
-  /// @Then level is set from parent group and marked as no overridden
-
+  // Verify that levels are inherited from parent groups
   EXPECT_TRUE(group2_->level() == Level::TRACE);
   EXPECT_FALSE(group2_->isLevelOverridden());
   EXPECT_TRUE(group3_->level() == Level::TRACE);
   EXPECT_FALSE(group3_->isLevelOverridden());
 }
 
+/**
+ * @test ChangeSink
+ * @brief Tests changing and resetting sinks in groups.
+ *
+ * @given A logging system with a hierarchical group structure.
+ * @when A new sink is explicitly set for some groups.
+ * @then The new sink is applied and marked as overridden.
+ * @when The sinks are reset.
+ * @then The sink is inherited from the parent and marked as not overridden.
+ */
 TEST_F(GroupTest, ChangeSink) {
-  /// @When set sink
-
+  // Set new sinks for groups
   group2_->setSink(sink3_);
   group3_->setSink(sink4_);
 
-  /// @Then sink is set to provided and marked as overridden
-
+  // Verify that sinks are set and marked as overridden
   EXPECT_TRUE(group2_->sink() == sink3_);
   EXPECT_TRUE(group2_->isSinkOverridden());
   EXPECT_TRUE(group3_->sink() == sink4_);
   EXPECT_TRUE(group3_->isSinkOverridden());
 
-  /// @When reset sink
-
+  // Reset sinks back to parent values
   group2_->resetSink();
   group3_->resetSink();
 
-  /// @Then sink is set from parent group and marked as no overridden
-
+  // Verify that sinks are inherited from parent groups
   EXPECT_TRUE(group2_->sink() == sink1_);
   EXPECT_FALSE(group2_->isSinkOverridden());
   EXPECT_TRUE(group3_->sink() == sink1_);
   EXPECT_FALSE(group3_->isSinkOverridden());
 }
 
+/**
+ * @test ChangeGroup
+ * @brief Tests changing and unsetting parent groups.
+ *
+ * @given A logging system with a hierarchical group structure.
+ * @when The parent of a group is changed to another group.
+ * @then The group inherits properties from the new parent unless explicitly
+ * overridden.
+ * @when The parent group is unset.
+ * @then The group becomes independent and retains its last known properties.
+ */
 TEST_F(GroupTest, ChangeGroup) {
-  /// @When set other parent group
-
+  // Change the parent group of two groups
   group2_->setParentGroup(group4_);
   group3_->setParentGroup(group4_);
 
-  /// @Then parent is changed and
-  ///  no overridden properties are set from new parent group
-
+  // Verify that the parent group is changed
+  // and inherited properties are updated
   EXPECT_TRUE(group2_->parent() == group4_);
   EXPECT_TRUE(group2_->level() == Level::VERBOSE);
   EXPECT_FALSE(group2_->isLevelOverridden());
@@ -169,13 +198,12 @@ TEST_F(GroupTest, ChangeGroup) {
   EXPECT_TRUE(group3_->sink() == sink3_);
   EXPECT_TRUE(group3_->isSinkOverridden());
 
-  /// @When unset parent group
-
+  // Unset the parent group for both groups
   group2_->unsetParentGroup();
   group3_->unsetParentGroup();
 
-  /// @Then parent group changes to nullptr
-
+  // Verify that the groups no longer have a parent
+  // but retain their last known properties
   EXPECT_TRUE(group2_->parent() == nullptr);
   EXPECT_TRUE(group2_->level() == Level::VERBOSE);
   EXPECT_FALSE(group2_->isLevelOverridden());

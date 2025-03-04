@@ -25,29 +25,44 @@ namespace soralog {
 
   /**
    * @class LoggingSystem
-   * Holds created sinks and group and knowns created loggers to control his
-   * proterties
+   * @brief Manages loggers, sinks, and groups, allowing dynamic configuration.
+   *
+   * The logging system tracks loggers, groups, and sinks, ensuring their
+   * proper initialization and configuration. It provides methods to create,
+   * retrieve, and modify logging entities at runtime.
    */
   class LoggingSystem final : public LoggerFactory {
    public:
-    LoggingSystem() = delete;
     LoggingSystem(const LoggingSystem &) = delete;
     LoggingSystem &operator=(const LoggingSystem &) = delete;
     ~LoggingSystem() override = default;
     LoggingSystem(LoggingSystem &&tmp) noexcept = delete;
     LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
 
+    /**
+     * @brief Constructs a non-configured logging system for manual configuring
+     */
+    LoggingSystem();
+
+    /**
+     * @brief Constructs a logging system with a configurator.
+     * @param configurator Shared pointer to a configurator instance.
+     */
     explicit LoggingSystem(std::shared_ptr<Configurator> configurator);
 
     /**
-     * Call configurator to setup logging system for work
-     * @return result of configure
+     * @brief Configures the logging system.
+     * @return Result of the configuration process.
      */
     [[nodiscard]] Configurator::Result configure();
 
+    // Logger retrieval methods
+
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name} and group {@param group_name}
+     * @brief Gets or creates a logger with a specified name and group.
+     * @param logger_name Logger name.
+     * @param group_name Associated group name.
+     * @return Shared pointer to the logger.
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name, const std::string &group_name) override {
@@ -56,9 +71,11 @@ namespace soralog {
     }
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and level
-     * overridden to {@param level}
+     * @brief Gets or creates a logger with an overridden log level.
+     * @param logger_name Logger name.
+     * @param group_name Associated group name.
+     * @param level Log level override.
+     * @return Shared pointer to the logger.
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -71,9 +88,11 @@ namespace soralog {
     }
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and sink
-     * overridden to sink with name {@param sink_name}
+     * @brief Gets or creates a logger with an overridden sink.
+     * @param logger_name Logger name.
+     * @param group_name Associated group name.
+     * @param sink_name Sink override.
+     * @return Shared pointer to the logger.
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -86,9 +105,12 @@ namespace soralog {
     }
 
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}, and sink
-     * andd level overridden to {@param sink_name} and {@param level}
+     * @brief Gets or creates a logger with overridden sink and level.
+     * @param logger_name Logger name.
+     * @param group_name Associated group name.
+     * @param sink_name Sink override.
+     * @param level Log level override.
+     * @return Shared pointer to the logger.
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -101,18 +123,28 @@ namespace soralog {
                        std::make_optional(level));
     }
 
+    // Sink and group management
+
     /**
-     * @returns sink with name {@param name}
+     * @brief Retrieves a sink by name.
+     * @param name Sink name.
+     * @return Shared pointer to the sink, or nullptr if not found.
      */
     [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
 
     /**
-     * @returns group with name {@param name}
+     * @brief Retrieves a group by name.
+     * @param name Group name.
+     * @return Shared pointer to the group, or nullptr if not found.
      */
     [[nodiscard]] std::shared_ptr<Group> getGroup(const std::string &name);
 
     /**
-     * Creates sink with type {@tparam SinkType} using arguments {@param args}
+     * @brief Creates a new sink of a specified type.
+     * @tparam SinkType Type of the sink.
+     * @tparam Args Constructor argument types.
+     * @param args Arguments for the sink constructor.
+     * @return Shared pointer to the created sink.
      */
     template <typename SinkType, typename... Args>
     std::shared_ptr<SinkType> makeSink(Args &&...args) {
@@ -123,11 +155,12 @@ namespace soralog {
     }
 
     /**
-     * Creates group with name {@param name}
-     * @param parent - group from which sink and level are inherited
-     * @param sink - overriding sink if provided
-     * @param level - overriding level if provided
-     * @note Sink and level must be provided if parent is not
+     * @brief Creates a logging group.
+     * @param name Group name.
+     * @param parent Optional parent group name.
+     * @param sink Optional sink override.
+     * @param level Optional log level override.
+     * @return Shared pointer to the created group.
      */
     std::shared_ptr<Group> makeGroup(std::string name,
                                      const std::optional<std::string> &parent,
@@ -135,107 +168,122 @@ namespace soralog {
                                      const std::optional<Level> &level);
 
     /**
-     * Declares/changes default group to group with name {@param group_name}
-     * @returns true if any
+     * @brief Declares or changes the default logging group.
+     * @param group_name Fallback group name.
+     * @return True if successful.
      */
     bool setFallbackGroup(const std::string &group_name);
 
     /**
-     * @returns fallback group
+     * @brief Retrieves the fallback group.
+     * @return Shared pointer to the fallback group.
      */
     std::shared_ptr<Group> getFallbackGroup() const;
 
     /**
-     * Set parent group of group {@param group_name} to {@param parent}.
-     * Inherited properties will be replaced by parent's
-     * @returns true if success
+    * @brief Sets the parent of a group.
+     * @param group_name Name of the group.
+     * @param parent Name of the parent group.
+     * @return True if successful.
      */
     bool setParentOfGroup(const std::string &group_name,
                           const std::string &parent);
+
     /**
-     * Unset parent group of group {@param group_name}.
-     * All properties will be marked as overridden (stay his own)
-     * @returns true if success
+     * @brief Unsets the parent of a group.
+     * @param group_name Name of the group.
+     * @return True if successful.
      */
     bool unsetParentOfGroup(const std::string &group_name);
 
     /**
-     * Set sink of group {@param group_name} to sink with name {@param
-     * sink_name}. Sink will be marked as overridden
-     * @returns true if success
+     * @brief Sets the sink of a group.
+     * @param group_name Name of the group.
+     * @param sink_name Name of the sink.
+     * @return True if successful.
      */
     bool setSinkOfGroup(const std::string &group_name,
                         const std::string &sink_name);
 
     /**
-     * Set sink of group {@param group_name} to sink of parent group, if that
-     * defined
-     * @returns true if success
+     * @brief Resets the sink of a group to its parent's sink.
+     * @param group_name Name of the group.
+     * @return True if successful.
      */
     bool resetSinkOfGroup(const std::string &group_name);
 
     /**
-     * Set level of group {@param group_name} to level {@param level}. Level
-     * will be marked as overridden
-     * @returns true if success
+     * @brief Sets the logging level of a group.
+     * @param group_name Name of the group.
+     * @param level New logging level.
+     * @return True if successful.
      */
     bool setLevelOfGroup(const std::string &group_name, Level level);
 
     /**
-     * Set level of group {@param group_name} to level of parent group, if that
-     * defined
-     * @returns true if success
+     * @brief Resets the logging level of a group to its parent's level.
+     * @param group_name Name of the group.
+     * @return True if successful.
      */
     bool resetLevelOfGroup(const std::string &group_name);
 
     /**
-     * Set group of logger {@param logger_name} to group with name {@param
-     * group_name}. Inherited properties will be replaced by group's
-     * @returns true if success
+     * @brief Sets the group of a logger.
+     * The logger will inherit properties from the specified group.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group to assign.
+     * @return True if successful.
      */
     bool setGroupOfLogger(const std::string &logger_name,
                           const std::string &group_name);
 
     /**
-     * Set sink of logger {@param logger_name} to sink with name {@param
-     * group_name}. Sink will be marked as overridden.
-     * @returns true if success
+     * @brief Overrides a logger's sink.
+     * @param logger_name Logger name.
+     * @param sink_name Sink override.
+     * @return True if successful.
      */
     bool setSinkOfLogger(const std::string &logger_name,
                          const std::string &sink_name);
 
     /**
-     * Set sink of logger with nam {@param group_name} to sink of his group.
-     * Sink will be marked as inherited.
-     * @returns true if success
+     * @brief Resets a logger's sink to match its group's.
+     * Marks the sink as inherited.
+     * @param logger_name Logger name.
+     * @return True if successful.
      */
     bool resetSinkOfLogger(const std::string &logger_name);
 
     /**
-     * Set sink of logger {@param logger_name} to sink with name {@param
-     * group_name}. Sink will be marked as overridden.
-     * @returns true if success
+     * @brief Overrides a logger's logging level.
+     * @param logger_name Logger name.
+     * @param level Log level override.
+     * @return True if successful.
      */
     bool setLevelOfLogger(const std::string &logger_name, Level level);
 
     /**
-     * Set sink of logger with name {@param logger_name} to level of his group.
-     * Level will be marked as inherited.
-     * @returns true if success
+     * @brief Resets a logger's logging level to match its group's.
+     * Marks the level as inherited.
+     * @param logger_name Logger name.
+     * @return True if successful.
      */
     bool resetLevelOfLogger(const std::string &logger_name);
 
     /**
-     * Calls `Sink::rotate()` for all registered sinks
+     * @brief Calls `rotate()` on all registered sinks.
      */
     void callRotateForAllSinks();
 
    private:
     /**
-     * @returns loggers (with creating that if it isn't exists yet) with
-     * name {@param logger_name}, group with name {@param group_name}.
-     * Set sink and level to {@param sink_name} and {@param level} if that
-     * provided or inherits from the group elsewise
+     * @brief Retrieves or creates a logger with optional sink and level
+     * overrides.
+     * @param logger_name Name of the logger.
+     * @param group_name Name of the group.
+     * @param sink_name Optional sink name override.
+     * @param level Optional log level override.
+     * @return Shared pointer to the logger.
      */
     [[nodiscard]] std::shared_ptr<Logger> getLogger(
         std::string logger_name,
@@ -244,45 +292,57 @@ namespace soralog {
         const std::optional<Level> &level);
 
     /**
-     * Set parent group of group {@param group} to {@param parent} if it
-     * provided and reset elsewise
+     * @brief Sets or unsets the parent group for a given group.
+     * @param group The group to modify.
+     * @param parent The new parent group, or null to unset.
      */
     void setParentOfGroup(const std::shared_ptr<Group> &group,
                           const std::shared_ptr<Group> &parent);
 
     /**
-     * Set sink of group {@param group} to {@param sink} if it provided and
-     * reset elsewise
+     * @brief Sets or unsets the sink for a given group.
+     * @param group The group to modify.
+     * @param sink The new sink, or null to reset.
      */
     void setSinkOfGroup(const std::shared_ptr<Group> &group,
                         std::optional<std::shared_ptr<Sink>> sink);
 
     /**
-     * Set level of group {@param group} to {@param level} if it provided and
-     * reset elsewise
+     * @brief Sets or unsets the level for a given group.
+     * @param group The group to modify.
+     * @param level The new log level, or null to reset.
      */
     void setLevelOfGroup(const std::shared_ptr<Group> &group,
                          std::optional<Level> level);
 
     /**
-     * Set sink of logger {@param logger} to {@param sink} if it provided and
-     * reset elsewise
+     * @brief Sets or unsets the sink for a logger.
+     * @param logger The logger to modify.
+     * @param sink The new sink, or null to reset.
      */
     static void setSinkOfLogger(const std::shared_ptr<Logger> &logger,
                                 std::optional<std::shared_ptr<Sink>> sink);
 
     /**
-     * Set level of logger {@param logger} to {@param level} if it provided and
-     * reset elsewise
+     * @brief Sets or unsets the level for a logger.
+     * @param logger The logger to modify.
+     * @param level The new log level, or null to reset.
      */
     static void setLevelOfLogger(const std::shared_ptr<Logger> &logger,
                                  std::optional<Level> level);
 
+    /// Logging system configurator.
     std::shared_ptr<Configurator> configurator_;
+    /// Flag indicating if the system is configured.
     bool is_configured_ = false;
+    /// Mutex for thread-safe access.
     std::recursive_mutex mutex_;
+
+    /// Logger storage.
     std::unordered_map<std::string, std::weak_ptr<Logger>> loggers_;
+    /// Sink storage.
     std::unordered_map<std::string, std::shared_ptr<Sink>> sinks_;
+    /// Group storage.
     std::unordered_map<std::string, std::shared_ptr<Group>> groups_;
   };
 

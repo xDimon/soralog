@@ -17,16 +17,25 @@ using namespace soralog;
 using namespace testing;
 using namespace std::chrono_literals;
 
+/**
+ * @brief Tests for CircularBuffer implementation.
+ *
+ * This test suite verifies the behavior of CircularBuffer, including
+ * basic operations, boundary conditions, and multi-threaded scenarios.
+ */
+
+/// @brief Test fixture for CircularBuffer
 class CircularBufferTest : public ::testing::Test {
  public:
-  class Data : std::array<char, 10> {
+  /// @brief Data structure stored in CircularBuffer.
+  class Data : public std::array<char, 10> {
    public:
-    Data(char filler) {
+    explicit Data(char filler) {
       std::fill(begin(), end(), filler);
     }
     bool operator==(const Data &other) const {
-      return (const std::array<char, 10> &)(*this)
-          == (const std::array<char, 10> &)(other);
+      return static_cast<const std::array<char, 10> &>(*this)
+          == static_cast<const std::array<char, 10> &>(other);
     }
     char c() const {
       return this->front();
@@ -34,6 +43,13 @@ class CircularBufferTest : public ::testing::Test {
   };
 };
 
+/**
+ * @brief Test buffer creation.
+ *
+ * @given A newly created CircularBuffer with specified capacity.
+ * @when The buffer is initialized.
+ * @then The buffer should be empty and have full capacity available.
+ */
 TEST_F(CircularBufferTest, Create) {
   size_t capacity = 5;
 
@@ -44,6 +60,13 @@ TEST_F(CircularBufferTest, Create) {
   EXPECT_EQ(testee.capacity(), capacity);
 }
 
+/**
+ * @brief Test inserting elements into the buffer.
+ *
+ * @given An empty CircularBuffer with limited capacity.
+ * @when Elements are inserted up to its capacity.
+ * @then The buffer should be full, and further insertions should fail.
+ */
 TEST_F(CircularBufferTest, Put) {
   size_t capacity = 3;
 
@@ -60,14 +83,15 @@ TEST_F(CircularBufferTest, Put) {
     EXPECT_TRUE(ref);
   }
 
+  // Buffer should be at full capacity
   EXPECT_EQ(testee.size(), capacity);
   EXPECT_EQ(testee.avail(), 0);
   EXPECT_EQ(testee.capacity(), capacity);
 
-  // Overfill
+  // Attempt to overfill
   std::cout << "--- put #" << (capacity + 1) << " (overfill)" << '\n';
   auto ref = testee.put('1' + capacity);
-  EXPECT_FALSE(ref);
+  EXPECT_FALSE(ref);  // Should fail as buffer is full
 
   EXPECT_EQ(testee.size(), capacity);
   EXPECT_EQ(testee.avail(), 0);
@@ -75,6 +99,13 @@ TEST_F(CircularBufferTest, Put) {
   std::cout << '\n' << '\n';
 }
 
+/**
+ * @brief Test retrieving elements from the buffer.
+ *
+ * @given A CircularBuffer with elements added.
+ * @when Elements are retrieved.
+ * @then Retrieved elements should match the order of insertion.
+ */
 TEST_F(CircularBufferTest, Get) {
   size_t capacity = 3;
 
@@ -86,17 +117,18 @@ TEST_F(CircularBufferTest, Get) {
     EXPECT_EQ(testee.capacity(), capacity);
 
     std::cout << "--- get (nothing actually)" << '\n';
+    // Try getting from empty buffer
     auto ref = testee.get();
-    EXPECT_FALSE(ref);
+    EXPECT_FALSE(ref);  // Should return nothing
   }
 
-  // Fill for full
-  for (auto i = 0; i < capacity; ++i) {
-    auto ref = testee.put('1' + i);
+  // Fill buffer to full
+  for (size_t i = 0; i < capacity; ++i) {
+    std::ignore = testee.put('1' + i);
   }
 
-  // Get for empty
-  for (auto i = 0; i < capacity; ++i) {
+  // Retrieve elements and verify order
+  for (size_t i = 0; i < capacity; ++i) {
     EXPECT_EQ(testee.size(), capacity - i);
     EXPECT_EQ(testee.avail(), i);
     EXPECT_EQ(testee.capacity(), capacity);
@@ -108,19 +140,29 @@ TEST_F(CircularBufferTest, Get) {
     EXPECT_EQ(*ref, Data('1' + i));
   }
 
+  // Buffer should be empty now
   EXPECT_EQ(testee.size(), 0);
   EXPECT_EQ(testee.avail(), capacity);
   EXPECT_EQ(testee.capacity(), capacity);
 }
 
+/**
+ * @brief Test sequential put and get operations.
+ *
+ * @given A CircularBuffer with limited capacity.
+ * @when Elements are added and removed in sequence.
+ * @then The buffer should behave as expected, maintaining the correct state.
+ */
 TEST_F(CircularBufferTest, PutGet) {
   size_t capacity = 10;
 
   size_t i = 0;
 
-  for (auto lag = 0; lag < capacity; ++lag) {
+  for (size_t lag = 0; lag < capacity; ++lag) {
     CircularBuffer<Data> testee(capacity);
-    for (auto n = 0; n < lag; ++n) {
+
+    // Pre-fill buffer up to lag
+    for (size_t n = 0; n < lag; ++n) {
       char c = '0' + (++i % capacity);
       auto ref_put = testee.put(c);
       EXPECT_TRUE(ref_put);
@@ -129,6 +171,8 @@ TEST_F(CircularBufferTest, PutGet) {
                 << "size=" << testee.size() << " avail=" << testee.avail()
                 << '\n';
     }
+
+    // Perform put/get operations in sequence
     for (auto n = 0; n < capacity; ++n) {
       {
         char c = '0' + (++i % capacity);
@@ -151,6 +195,13 @@ TEST_F(CircularBufferTest, PutGet) {
   }
 }
 
+/**
+ * @brief Test concurrent access to the buffer (multi-threaded).
+ *
+ * @given A CircularBuffer shared between producer and consumer threads.
+ * @when The producer adds data while the consumer retrieves it.
+ * @then The buffer should remain consistent and no data should be lost.
+ */
 TEST_F(CircularBufferTest, PutGetMt) {
   size_t capacity = 10;
 
@@ -169,7 +220,6 @@ TEST_F(CircularBufferTest, PutGetMt) {
 #endif
     while (i < n) {
       std::cout << "w" << i << '\n';
-      //      if (auto ref = testee.put('0' + (i % 10))) {
       if (auto ref = testee.put('0')) {
         ++i;
         std::cout << "put " << ref->c()  //
@@ -202,6 +252,13 @@ TEST_F(CircularBufferTest, PutGetMt) {
   cons.join();
 }
 
+/**
+ * @brief Test mutual exclusion during buffer operations.
+ *
+ * @given A CircularBuffer with a single producer and consumer.
+ * @when The producer adds data and the consumer retrieves it with delays.
+ * @then The buffer should correctly handle synchronization.
+ */
 TEST_F(CircularBufferTest, Mutual) {
   size_t capacity = 10;
 

@@ -20,10 +20,10 @@ namespace soralog {
 
   void Multisink::flush() noexcept {
     for (const auto &sink : underlying_sinks_) {
-      sink->async_flush();
+      sink->async_flush();  // Trigger async flush first
     }
     for (const auto &sink : underlying_sinks_) {
-      sink->flush();
+      sink->flush();  // Ensure all logs are written
     }
   }
 

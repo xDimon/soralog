@@ -16,6 +16,13 @@
 using namespace soralog;
 using namespace testing;
 
+/**
+ * @class LoggerTest
+ * @brief Test fixture for testing Logger functionality in LoggingSystem.
+ *
+ * This fixture initializes a logging system with multiple groups, sinks,
+ * and loggers for testing various configurations and modifications of loggers.
+ */
 class LoggerTest : public ::testing::Test {
  public:
   void SetUp() override {
@@ -37,28 +44,19 @@ class LoggerTest : public ::testing::Test {
 
     EXPECT_NO_THROW(auto r = system_->configure());
 
-    group1_ = system_->getGroup("first");
-    ASSERT_TRUE(group1_ != nullptr);
-    group2_ = system_->getGroup("second");
-    ASSERT_TRUE(group2_ != nullptr);
+    ASSERT_TRUE(group1_ = system_->getGroup("first"));
+    ASSERT_TRUE(group2_ = system_->getGroup("second"));
 
-    sink1_ = system_->getSink("sink1");
-    ASSERT_TRUE(sink1_ != nullptr);
-    sink2_ = system_->getSink("sink2");
-    ASSERT_TRUE(sink2_ != nullptr);
-    sink3_ = system_->getSink("sink3");
-    ASSERT_TRUE(sink3_ != nullptr);
-    sink4_ = system_->getSink("sink4");
-    ASSERT_TRUE(sink4_ != nullptr);
+    ASSERT_TRUE(sink1_ = system_->getSink("sink1"));
+    ASSERT_TRUE(sink2_ = system_->getSink("sink2"));
+    ASSERT_TRUE(sink3_ = system_->getSink("sink3"));
+    ASSERT_TRUE(sink4_ = system_->getSink("sink4"));
 
-    log1_ = system_->getLogger("log1", "first");
-    ASSERT_TRUE(log1_ != nullptr);
-    log2_ = system_->getLogger("log2", "first", "sink3");
-    ASSERT_TRUE(log2_ != nullptr);
-    log3_ = system_->getLogger("log3", "first", Level::INFO);
-    ASSERT_TRUE(log3_ != nullptr);
-    log4_ = system_->getLogger("log4", "first", "sink4", Level::VERBOSE);
-    ASSERT_TRUE(log4_ != nullptr);
+    ASSERT_TRUE(log1_ = system_->getLogger("log1", "first"));
+    ASSERT_TRUE(log2_ = system_->getLogger("log2", "first", "sink3"));
+    ASSERT_TRUE(log3_ = system_->getLogger("log3", "first", Level::INFO));
+    ASSERT_TRUE(
+        log4_ = system_->getLogger("log4", "first", "sink4", Level::VERBOSE));
   }
   void TearDown() override {}
 
@@ -77,27 +75,38 @@ class LoggerTest : public ::testing::Test {
   std::shared_ptr<Logger> log4_;
 };
 
+/**
+ * @test MakeLogger
+ * @brief Tests logger creation and property inheritance.
+ *
+ * @given A logging system with multiple groups and sinks.
+ * @when Loggers are created with or without explicitly set properties.
+ * @then Loggers inherit properties from their group unless explicitly
+ * overridden.
+ */
 TEST_F(LoggerTest, MakeLogger) {
-  /// @Given initial state for all next tests
-
+  // Verify loggers with default properties from their groups
   EXPECT_TRUE(log1_->group() == group1_);
   EXPECT_TRUE(log1_->level() == Level::TRACE);
   EXPECT_FALSE(log1_->isLevelOverridden());
   EXPECT_TRUE(log1_->sink() == sink1_);
   EXPECT_FALSE(log1_->isSinkOverridden());
 
+  // Logger with explicitly set sink
   EXPECT_TRUE(log2_->group() == group1_);
   EXPECT_TRUE(log2_->level() == Level::TRACE);
   EXPECT_FALSE(log2_->isLevelOverridden());
   EXPECT_TRUE(log2_->sink() == sink3_);
   EXPECT_TRUE(log2_->isSinkOverridden());
 
+  // Logger with explicitly set level
   EXPECT_TRUE(log3_->group() == group1_);
   EXPECT_TRUE(log3_->level() == Level::INFO);
   EXPECT_TRUE(log3_->isLevelOverridden());
   EXPECT_TRUE(log3_->sink() == sink1_);
   EXPECT_FALSE(log3_->isSinkOverridden());
 
+  // Logger with explicitly set sink and level
   EXPECT_TRUE(log4_->group() == group1_);
   EXPECT_TRUE(log4_->level() == Level::VERBOSE);
   EXPECT_TRUE(log4_->isLevelOverridden());
@@ -105,16 +114,24 @@ TEST_F(LoggerTest, MakeLogger) {
   EXPECT_TRUE(log4_->isSinkOverridden());
 }
 
+/**
+ * @test ChangeLevel
+ * @brief Tests changing and resetting logging levels in loggers.
+ *
+ * @given A logging system with a hierarchical group structure.
+ * @when Levels are explicitly set for some loggers.
+ * @then The new level is applied and marked as overridden.
+ * @when The levels are reset.
+ * @then The level is inherited from the group and marked as not overridden.
+ */
 TEST_F(LoggerTest, ChangeLevel) {
-  /// @When set level
-
+  // Set custom logging levels for loggers
   log1_->setLevel(Level::CRITICAL);
   log2_->setLevel(Level::CRITICAL);
   log3_->setLevel(Level::CRITICAL);
   log4_->setLevel(Level::CRITICAL);
 
-  /// @Then level is set and marked as overridden
-
+  // Verify that the levels are set and marked as overridden
   EXPECT_TRUE(log1_->level() == Level::CRITICAL);
   EXPECT_TRUE(log1_->isLevelOverridden());
   EXPECT_TRUE(log2_->level() == Level::CRITICAL);
@@ -124,15 +141,13 @@ TEST_F(LoggerTest, ChangeLevel) {
   EXPECT_TRUE(log4_->level() == Level::CRITICAL);
   EXPECT_TRUE(log4_->isLevelOverridden());
 
-  /// @When reset level
-
+  // Reset levels back to group values
   log1_->resetLevel();
   log2_->resetLevel();
   log3_->resetLevel();
   log4_->resetLevel();
 
-  /// @Then level is set from parent group and marked as no overridden
-
+  // Verify that levels are inherited from groups
   EXPECT_TRUE(log1_->level() == Level::TRACE);
   EXPECT_FALSE(log1_->isLevelOverridden());
   EXPECT_TRUE(log2_->level() == Level::TRACE);
@@ -143,16 +158,24 @@ TEST_F(LoggerTest, ChangeLevel) {
   EXPECT_FALSE(log4_->isLevelOverridden());
 }
 
+/**
+ * @test ChangeSink
+ * @brief Tests changing and resetting sinks in loggers.
+ *
+ * @given A logging system with a hierarchical group structure.
+ * @when A new sink is explicitly set for some loggers.
+ * @then The new sink is applied and marked as overridden.
+ * @when The sinks are reset.
+ * @then The sink is inherited from the group and marked as not overridden.
+ */
 TEST_F(LoggerTest, ChangeSink) {
-  /// @When set sink
-
+  // Set new sinks for loggers
   log1_->setSink(sink2_);
   log2_->setSink(sink2_);
   log3_->setSink(sink2_);
   log4_->setSink(sink2_);
 
-  /// @Then sink is set to provided and marked as overridden
-
+  // Verify that sinks are set and marked as overridden
   EXPECT_TRUE(log1_->sink() == sink2_);
   EXPECT_TRUE(log1_->isSinkOverridden());
   EXPECT_TRUE(log2_->sink() == sink2_);
@@ -162,15 +185,13 @@ TEST_F(LoggerTest, ChangeSink) {
   EXPECT_TRUE(log4_->sink() == sink2_);
   EXPECT_TRUE(log4_->isSinkOverridden());
 
-  /// @When reset sink
-
+  // Reset sinks back to group values
   log1_->resetSink();
   log2_->resetSink();
   log3_->resetSink();
   log4_->resetSink();
 
-  /// @Then sink is set from parent group and marked as no overridden
-
+  // Verify that sinks are inherited from groups
   EXPECT_TRUE(log1_->sink() == sink1_);
   EXPECT_FALSE(log1_->isSinkOverridden());
   EXPECT_TRUE(log2_->sink() == sink1_);
@@ -179,40 +200,4 @@ TEST_F(LoggerTest, ChangeSink) {
   EXPECT_FALSE(log3_->isSinkOverridden());
   EXPECT_TRUE(log4_->sink() == sink1_);
   EXPECT_FALSE(log4_->isSinkOverridden());
-}
-
-TEST_F(LoggerTest, ChangeGroup) {
-  /// @When set other parent group
-
-  log1_->setGroup(group2_);
-  log2_->setGroup(group2_);
-  log3_->setGroup(group2_);
-  log4_->setGroup(group2_);
-
-  /// @Then parent is changed and
-  ///  no overridden properties are set from new parent group
-
-  EXPECT_TRUE(log1_->group() == group2_);
-  EXPECT_TRUE(log1_->level() == Level::DEBUG);
-  EXPECT_FALSE(log1_->isLevelOverridden());
-  EXPECT_TRUE(log1_->sink() == sink2_);
-  EXPECT_FALSE(log1_->isSinkOverridden());
-
-  EXPECT_TRUE(log2_->group() == group2_);
-  EXPECT_TRUE(log2_->level() == Level::DEBUG);
-  EXPECT_FALSE(log2_->isLevelOverridden());
-  EXPECT_TRUE(log2_->sink() == sink3_);
-  EXPECT_TRUE(log2_->isSinkOverridden());
-
-  EXPECT_TRUE(log3_->group() == group2_);
-  EXPECT_TRUE(log3_->level() == Level::INFO);
-  EXPECT_TRUE(log3_->isLevelOverridden());
-  EXPECT_TRUE(log3_->sink() == sink2_);
-  EXPECT_FALSE(log3_->isSinkOverridden());
-
-  EXPECT_TRUE(log4_->group() == group2_);
-  EXPECT_TRUE(log4_->level() == Level::VERBOSE);
-  EXPECT_TRUE(log4_->isLevelOverridden());
-  EXPECT_TRUE(log4_->sink() == sink4_);
-  EXPECT_TRUE(log4_->isSinkOverridden());
 }

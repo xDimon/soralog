@@ -14,29 +14,36 @@ namespace soralog {
   class LoggingSystem;
 
   /**
-   * @interface Configurator
-   * @brief This object serves for set up Logging System in according with
-   * config (external or embedded) by adding of sinks and groups.
+   * @class Configurator
+   * @brief Interface for configuring the logging system.
+   *
+   * The configurator is responsible for setting up the logging system
+   * using an external or embedded configuration. It adds sinks and
+   * groups according to the specified configuration.
    */
   class Configurator {
    public:
     virtual ~Configurator() = default;
 
     /**
-     * Result of applying config by configurator
+     * @struct Result
+     * @brief Represents the result of applying a configuration.
      */
     struct Result {
-      /// Error flag. Set to true if has error, and logging can't work correctly
+      /// Indicates whether a critical error occurred.
+      /// If true, logging may fail.
       bool has_error = false;
-      /// Warning flag. Set to true if has error, but logging can work
+      /// Indicates whether a non-critical warning occurred.
+      /// Logging can continue.
       bool has_warning = false;
-      /// Messages for explaining of error and warning
+      /// Message explaining any errors or warnings.
       std::string message{};
     };
 
     /**
-     * @param system is reference to target LoggingSystem
-     * @return result of applying
+     * @brief Applies the configuration to a logging system.
+     * @param system Reference to the target logging system.
+     * @return Result of the configuration process.
      */
     virtual Result applyOn(LoggingSystem &system) const = 0;
   };
