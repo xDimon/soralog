@@ -58,7 +58,8 @@ namespace soralog {
     V put_style(char *&ptr, T style) {
       auto size = std::end(style) - std::begin(style);
       std::memcpy(ptr, std::begin(style), size);
-      ptr += size;  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      ptr += size;
       return {};
     }
 
@@ -77,7 +78,8 @@ namespace soralog {
       const auto &style = reset_color;
       auto size = std::end(style) - std::begin(style);
       std::memcpy(ptr, std::begin(style), size);
-      ptr = ptr + size;  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      ptr = ptr + size;
     }
 
     /**
@@ -87,7 +89,8 @@ namespace soralog {
      */
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
-      auto color = level_to_color_map[static_cast<size_t>(level)];  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+      auto color = level_to_color_map[static_cast<size_t>(level)];
       put_style(ptr,
                 fmt::detail::make_foreground_color<char>(color),
                 fmt::detail::make_emphasis<char>(fmt::emphasis::bold));
@@ -122,7 +125,8 @@ namespace soralog {
      */
     void put_separator(char *&ptr) {
       for (auto c : separator) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
@@ -132,12 +136,16 @@ namespace soralog {
      * Ensures that the level is padded to a fixed width of 8 characters.
      */
     void put_level(char *&ptr, Level level) {
-      const char *const end = ptr + 8;  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const char *const end = ptr + 8;
       const char *str = levelToStr(level);
-      while (auto c = *str++) {  // NOLINT
-        *ptr++ = c;              // Copy characters one by one.
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      while (auto c = *str++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;  // Copy characters one by one.
       }
       while (ptr < end) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         *ptr++ = ' ';  // Pad with spaces to maintain alignment.
       }
     }
@@ -146,7 +154,8 @@ namespace soralog {
      * @brief Writes a single-character representation of a log level.
      */
     void put_level_short(char *&ptr, Level level) {
-      *ptr++ = levelToChar(level);  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      *ptr++ = levelToChar(level);
     }
 
     /**
@@ -155,7 +164,8 @@ namespace soralog {
     template <typename T>
     void put_string(char *&ptr, const T &name) {
       for (auto c : name) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
@@ -173,7 +183,8 @@ namespace soralog {
         if (c == '\0' or width == 0) {
           break;
         }
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
         --width;
       }
       while (width--) {
@@ -246,7 +257,8 @@ namespace soralog {
     }
 
     auto *const begin = buff_.data();
-    auto *const end = buff_.data() + buff_.size();  // NOLINT
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    auto *const end = buff_.data() + buff_.size();
     auto *ptr = begin;
 
     decltype(1s / 1s) psec = 0;  // Stores previous second timestamp.
@@ -281,7 +293,8 @@ namespace soralog {
 
         // Append timestamp to buffer.
         std::memcpy(ptr, datetime.data(), datetime.size());
-        ptr = ptr + datetime.size();  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ptr = ptr + datetime.size();
 
         // Apply color if enabled.
         if (with_color_) {
@@ -289,7 +302,8 @@ namespace soralog {
               fmt::detail::make_foreground_color<char>(fmt::color::gray);
           auto size = std::end(style) - std::begin(style);
           std::memcpy(ptr, std::begin(style), size);
-          ptr = ptr + size;  // NOLINT
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+          ptr = ptr + size;
         }
 
         // Append microseconds.

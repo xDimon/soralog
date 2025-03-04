@@ -231,6 +231,7 @@ namespace soralog {
                       const std::optional<std::string> &parent);
 
       /// Reference to the logging system being configured.
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &system_;
 
       /// Optional previous configurator applied before parsing YAML.

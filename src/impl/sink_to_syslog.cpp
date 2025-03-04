@@ -28,29 +28,35 @@ namespace soralog {
     // Appends the separator sequence to the buffer
     void put_separator(char *&ptr) {
       for (auto c : separator) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
     // Writes the log level string representation to the buffer
     void put_level(char *&ptr, Level level) {
-      const char *const end = ptr + 8;  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      const char *const end = ptr + 8;
       const char *str = levelToStr(level);
-      while (auto c = *str++) {  // NOLINT
-        *ptr++ = c;              // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      while (auto c = *str++) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
     // Writes the short log level character representation to the buffer
     void put_level_short(char *&ptr, Level level) {
-      *ptr++ = levelToChar(level);  // NOLINT
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      *ptr++ = levelToChar(level);
     }
 
     // Writes a string to the buffer
     template <typename T>
     void put_string(char *&ptr, const T &name) {
       for (auto c : name) {
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
       }
     }
 
@@ -64,11 +70,13 @@ namespace soralog {
         if (c == '\0' or width == 0) {
           break;
         }
-        *ptr++ = c;  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = c;
         --width;
       }
       while (width--) {
-        *ptr++ = ' ';  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = ' ';
       }
     }
 
@@ -144,7 +152,8 @@ namespace soralog {
     }
 
     auto *const begin = buff_.data();
-    auto *const end = buff_.data() + buff_.size();  // NOLINT
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    auto *const end = buff_.data() + buff_.size();
     auto *ptr = begin;
 
     decltype(1s / 1s) psec = 0;
@@ -178,7 +187,8 @@ namespace soralog {
 
         // Write timestamp
         std::memcpy(ptr, datetime.data(), datetime.size());
-        ptr = ptr + datetime.size();  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ptr = ptr + datetime.size();
         ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
         put_separator(ptr);
 
@@ -210,7 +220,8 @@ namespace soralog {
 
         // Write log message
         put_string(ptr, event.message());
-        *ptr++ = '\0';  // NOLINT
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = '\0';
 
         // Determine syslog priority based on log level
         bool must_log = true;

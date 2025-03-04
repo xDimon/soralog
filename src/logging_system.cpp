@@ -20,11 +20,11 @@ using std::literals::string_literals::operator""s;
 
 namespace soralog {
 
-  LoggingSystem::LoggingSystem() {
+  LoggingSystem::LoggingSystem() : is_configured_(true) {
     // Create a fallback sink that discards all logs
     makeSink<SinkToNowhere>("*");
     makeGroup("*", {}, "*", Level::OFF);
-    is_configured_ = true;
+    ;
   }
 
   LoggingSystem::LoggingSystem(std::shared_ptr<Configurator> configurator)
