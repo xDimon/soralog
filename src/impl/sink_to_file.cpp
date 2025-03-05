@@ -107,7 +107,7 @@ namespace soralog {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         *ptr++ = c;
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        -width;
+        --width;
       }
       while (width--) {  // Pad remaining space with spaces
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
