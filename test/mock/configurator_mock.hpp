@@ -26,19 +26,13 @@ namespace soralog {
     /// Default destructor.
     ~ConfiguratorMock() override = default;
 
-    /**
-     * @brief Mocks the applyOn method.
-     *
-     * This method does not modify the `LoggingSystem`. Instead, it
-     * allows tracking and verifying that `applyOn` was called with
-     * the expected arguments.
-     *
-     * @param system The logging system to which configuration should be
-     * applied.
-     * @return A `Result` structure indicating the success or failure of the
-     * configuration.
-     */
-    MOCK_METHOD(Result, applyOn, (LoggingSystem &), (const, override));
+    MOCK_METHOD(void,
+                prepare,
+                (LoggingSystem & system, int index, Result &result),
+                (override));
+    MOCK_METHOD(void, applySinks, (), (const, override));
+    MOCK_METHOD(void, applyGroups, (), (const, override));
+    MOCK_METHOD(void, cleanup, (), (override));
   };
 
 }  // namespace soralog

@@ -45,10 +45,17 @@ namespace soralog {
     LoggingSystem();
 
     /**
-     * @brief Constructs a logging system with a configurator.
-     * @param configurator Shared pointer to a configurator instance.
+     * @brief Constructs a logging system with provided configurators.
+     * @param configurators Shared pointers to configurator instances.
      */
-    explicit LoggingSystem(std::shared_ptr<Configurator> configurator);
+    template <typename... Ts>
+      requires(sizeof...(Ts) > 0
+               and (std::is_convertible_v<Ts, std::shared_ptr<Configurator>>
+                    and ...))
+    explicit LoggingSystem(Ts &&...configurators)
+        : configurators_{std::forward<Ts>(configurators)...} {
+      makeFallbackSink();
+    }
 
     /**
      * @brief Configures the logging system.
@@ -181,7 +188,7 @@ namespace soralog {
     std::shared_ptr<Group> getFallbackGroup() const;
 
     /**
-    * @brief Sets the parent of a group.
+     * @brief Sets the parent of a group.
      * @param group_name Name of the group.
      * @param parent Name of the parent group.
      * @return True if successful.
@@ -281,6 +288,8 @@ namespace soralog {
     void callRotateForAllSinks();
 
    private:
+    void makeFallbackSink();
+
     /**
      * @brief Retrieves or creates a logger with optional sink and level
      * overrides.
@@ -336,8 +345,8 @@ namespace soralog {
     static void setLevelOfLogger(const std::shared_ptr<Logger> &logger,
                                  std::optional<Level> level);
 
-    /// Logging system configurator.
-    std::shared_ptr<Configurator> configurator_;
+    /// Logging system configurators.
+    std::vector<std::shared_ptr<Configurator>> configurators_;
     /// Flag indicating if the system is configured.
     bool is_configured_ = false;
     /// Mutex for thread-safe access.

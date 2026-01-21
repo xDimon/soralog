@@ -42,54 +42,21 @@ namespace soralog {
         : config_(std::move(config_content)) {}
 
     /**
-     * @brief Constructs a configurator using a YAML file,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_path Path to the YAML configuration file.
-     */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  std::filesystem::path config_path)
-        : previous_(std::move(previous)), config_(std::move(config_path)) {}
-
-    /**
-     * @brief Constructs a configurator using a YAML string,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_content YAML configuration content as a string.
-     */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  std::string config_content)
-        : previous_(std::move(previous)), config_(std::move(config_content)) {}
-
-    /**
-     * @brief Constructs a configurator using a parsed YAML node,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_yaml_node Parsed YAML configuration node.
-     */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  YAML::Node config_yaml_node)
-        : previous_(std::move(previous)),
-          config_(std::move(config_yaml_node)) {}
-
-    /**
      * @brief Destroys the configurator.
      */
     ~ConfiguratorFromYAML() override = default;
 
-    /**
-     * @brief Applies the YAML-based configuration to the logging system.
-     * @param system The logging system instance.
-     * @return Configuration result, indicating errors or warnings.
-     */
-    Result applyOn(LoggingSystem &system) const override;
+    void prepare(LoggingSystem &system, int index, Result &result) override;
+    void applySinks() const override;
+    void applyGroups() const override;
+    void cleanup() override;
 
    private:
-    /// Optional previous configurator to apply before parsing the YAML config.
-    std::shared_ptr<Configurator> previous_;
-
     /// YAML configuration, which can be a file path, string, or parsed node.
     std::variant<std::filesystem::path, std::string, YAML::Node> config_;
+
+    class Applicator;
+    std::shared_ptr<Applicator> applicator_;
 
     /**
      * @class Applicator
@@ -100,30 +67,23 @@ namespace soralog {
       /**
        * @brief Constructs an applicator to process the YAML configuration.
        * @param system Reference to the logging system.
+       * @param index
+       * @param result
        * @param config YAML configuration (file path, string, or node).
-       * @param previous Optional previous configurator.
        */
-      Applicator(
-          LoggingSystem &system,
-          std::variant<std::filesystem::path, std::string, YAML::Node> config,
-          std::shared_ptr<Configurator> previous = {})
+      Applicator(YAML::Node node,
+                 LoggingSystem &system,
+                 int index,
+                 Result &result)
           : system_(system),
-            previous_(std::move(previous)),
-            config_(std::move(config)) {}
+            node(std::move(node)),
+            id(index + 1),
+            result_(result) {}
 
-      /**
-       * @brief Executes the configuration parsing and application process.
-       * @return Result object containing status and messages about the process.
-       */
-      Result run() &&;
+      void parseSinks();
+      void parseGroups();
 
      private:
-      /**
-       * @brief Parses the root YAML node and applies configurations.
-       * @param node The root YAML node.
-       */
-      void parse(const YAML::Node &node);
-
       /**
        * @brief Parses and returns a log level from a YAML node.
        * @param target Description of the entity being parsed..
@@ -230,24 +190,16 @@ namespace soralog {
                       const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
+      /// Parsed YAML node.
+      YAML::Node node;
+
       /// Reference to the logging system being configured.
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &system_;
 
-      /// Optional previous configurator applied before parsing YAML.
-      std::shared_ptr<Configurator> previous_ = nullptr;
+      int id;
 
-      /// YAML configuration (file path, string, or parsed node).
-      std::variant<std::filesystem::path, std::string, YAML::Node> config_;
-
-      /// Flag indicating if a warning occurred during parsing.
-      bool has_warning_ = false;
-
-      /// Flag indicating if an error occurred during parsing.
-      bool has_error_ = false;
-
-      /// Stream for collecting error messages.
-      std::ostringstream errors_;
+      Result &result_;
     };
   };
 

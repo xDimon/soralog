@@ -55,27 +55,30 @@ class LoggingSystemTest : public ::testing::Test {
    * - Catching any unexpected exceptions during configuration.
    */
   void configure() {
-    ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-      return &s == system_.get();
-    }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-      // Creating the first sink and setting expectations on flush calls
-      auto sink1 = system.makeSink<SinkMock>("sink");
-      EXPECT_CALL(*sink1, mocked_flush()).Times(testing::AnyNumber());
+    ON_CALL(*configurator_,
+            prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+        .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &result) {
+          // Creating the first sink and setting expectations on flush calls
+          auto sink1 = system.makeSink<SinkMock>("sink");
+          EXPECT_CALL(*sink1, mocked_flush()).Times(testing::AnyNumber());
 
-      // Creating the second sink and setting expectations on flush calls
-      auto sink2 = system.makeSink<SinkMock>("other");
-      EXPECT_CALL(*sink2, mocked_flush()).Times(testing::AnyNumber());
+          // Creating the second sink and setting expectations on flush calls
+          auto sink2 = system.makeSink<SinkMock>("other");
+          EXPECT_CALL(*sink2, mocked_flush()).Times(testing::AnyNumber());
 
-      // Creating groups with hierarchical relationships
-      system.makeGroup("first", {}, "sink", Level::VERBOSE);
-      system.makeGroup("second", "first", "sink", Level::DEBUG);
-      system.makeGroup("third", "second", "sink", Level::TRACE);
+          // Creating groups with hierarchical relationships
+          system.makeGroup("first", {}, "sink", Level::VERBOSE);
+          system.makeGroup("second", "first", "sink", Level::DEBUG);
+          system.makeGroup("third", "second", "sink", Level::TRACE);
 
-      return Configurator::Result{};
-    }));
+          result = Configurator::Result{};
+        }));
 
     // Expect the `applyOn` method to be called exactly once
-    EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+    EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+    EXPECT_CALL(*configurator_, applySinks()).Times(1);
+    EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+    EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
     // Ensure configuration does not throw any exceptions
     EXPECT_NO_THROW(auto r = system_->configure());
@@ -97,9 +100,10 @@ class LoggingSystemTest : public ::testing::Test {
  *       attempt throws a logic error.
  */
 TEST_F(LoggingSystemTest, Configure) {
-  EXPECT_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillRepeatedly(Return(Configurator::Result{}));
+  EXPECT_CALL(
+      *configurator_,
+      prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillRepeatedly(Return());
 
   // Verify that the default sink exists before configuration
   EXPECT_TRUE(system_->getSink("*") != nullptr);
@@ -357,16 +361,18 @@ TEST_F(LoggingSystemTest, FallbackGroup) {
  */
 TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   /// @Given a configured system with hierarchical groups and loggers
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink");
-    system.makeGroup("first", {}, "sink", Level::INFO);
-    system.makeGroup("second", "first", {}, {});
-    system.makeGroup("third", "second", {}, Level::WARN);
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink");
+        system.makeGroup("first", {}, "sink", Level::INFO);
+        system.makeGroup("second", "first", {}, {});
+        system.makeGroup("third", "second", {}, Level::WARN);
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 
@@ -538,21 +544,23 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
  */
 TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   /// @Given a configured system with hierarchical groups and multiple sinks
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink1");
-    system.makeSink<SinkMock>("sink2");
-    system.makeSink<SinkMock>("sink3");
-    system.makeSink<SinkMock>("sink4");
-    system.makeSink<SinkMock>("sink5");
-    system.makeSink<SinkMock>("sink6");
-    system.makeGroup("first", {}, "sink1", Level::INFO);
-    system.makeGroup("second", "first", {}, {});
-    system.makeGroup("third", "second", "sink2", {});
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink1");
+        system.makeSink<SinkMock>("sink2");
+        system.makeSink<SinkMock>("sink3");
+        system.makeSink<SinkMock>("sink4");
+        system.makeSink<SinkMock>("sink5");
+        system.makeSink<SinkMock>("sink6");
+        system.makeGroup("first", {}, "sink1", Level::INFO);
+        system.makeGroup("second", "first", {}, {});
+        system.makeGroup("third", "second", "sink2", {});
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 
@@ -740,23 +748,24 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
  */
 TEST_F(LoggingSystemTest, ChangeParentGroup) {
   /// @Given a configured system with hierarchical groups and multiple sinks
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink1");
-    system.makeSink<SinkMock>("sink2");
-    system.makeSink<SinkMock>("sink3");
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink1");
+        system.makeSink<SinkMock>("sink2");
+        system.makeSink<SinkMock>("sink3");
 
-    system.makeGroup("first1", {}, "sink1", Level::TRACE);
-    system.makeGroup("first2", {}, "sink2", Level::DEBUG);
-    system.makeGroup("second1", "first1", {}, {});
-    system.makeGroup("second2", "first1", {}, {});
-    system.makeGroup("third1", "second1", "sink3", {});
-    system.makeGroup("third2", "second1", {}, Level::CRITICAL);
-
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+        system.makeGroup("first1", {}, "sink1", Level::TRACE);
+        system.makeGroup("first2", {}, "sink2", Level::DEBUG);
+        system.makeGroup("second1", "first1", {}, {});
+        system.makeGroup("second2", "first1", {}, {});
+        system.makeGroup("third1", "second1", "sink3", {});
+        system.makeGroup("third2", "second1", {}, Level::CRITICAL);
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 
@@ -1133,14 +1142,16 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
  */
 TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
   /// @Given a configured system with a single group and multiple loggers
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink1");
-    system.makeGroup("group1", {}, "sink1", Level::INFO);
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink1");
+        system.makeGroup("group1", {}, "sink1", Level::INFO);
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 
@@ -1228,18 +1239,20 @@ TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
  */
 TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   /// @Given a configured system with a single group and multiple sinks
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink1");
-    system.makeSink<SinkMock>("sink2");
-    system.makeSink<SinkMock>("sink3");
-    system.makeSink<SinkMock>("sink4");
-    system.makeSink<SinkMock>("sink5");
-    system.makeGroup("group1", {}, "sink1", Level::INFO);
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink1");
+        system.makeSink<SinkMock>("sink2");
+        system.makeSink<SinkMock>("sink3");
+        system.makeSink<SinkMock>("sink4");
+        system.makeSink<SinkMock>("sink5");
+        system.makeGroup("group1", {}, "sink1", Level::INFO);
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 
@@ -1338,17 +1351,19 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
  */
 TEST_F(LoggingSystemTest, ChangeGroupOfLogger) {
   /// @Given a configured system with two groups and multiple sinks
-  ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-    return &s == system_.get();
-  }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-    system.makeSink<SinkMock>("sink1");
-    system.makeSink<SinkMock>("sink2");
-    system.makeSink<SinkMock>("sink3");
-    system.makeGroup("first", {}, "sink1", Level::TRACE);
-    system.makeGroup("second", {}, "sink2", Level::DEBUG);
-    return Configurator::Result{};
-  }));
-  EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+  ON_CALL(*configurator_,
+          prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+      .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        system.makeSink<SinkMock>("sink1");
+        system.makeSink<SinkMock>("sink2");
+        system.makeSink<SinkMock>("sink3");
+        system.makeGroup("first", {}, "sink1", Level::TRACE);
+        system.makeGroup("second", {}, "sink2", Level::DEBUG);
+      }));
+  EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+  EXPECT_CALL(*configurator_, applySinks()).Times(1);
+  EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+  EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
   EXPECT_NO_THROW(auto r = system_->configure());
 

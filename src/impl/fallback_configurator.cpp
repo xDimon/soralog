@@ -13,26 +13,50 @@
 
 namespace soralog {
 
-  Configurator::Result FallbackConfigurator::applyOn(
-      LoggingSystem &system) const {
-    // Create a default console sink with the specified logging level and color
-    // option.
-    system.makeSink<SinkToConsole>(
-        "console", level_, SinkToConsole::Stream::STDOUT, with_color_);
-
-    // Create a default logging group "*" that routes all logs to the console
-    // sink.
-    system.makeGroup("*", {}, "console", level_);
-
-    // Return a result indicating that a fallback configuration has been
-    // applied.
-    return {.has_error = false,
-            .has_warning = true,
-            .message = std::string()
-                     + "I: Using fallback configurator for logger system\n"
-                       "I: All logs will be written to "
-                     + (with_color_ ? "color " : "") + "standard output with '"
-                     + levelToStr(level_) + "' level"};
+  void FallbackConfigurator::prepare(LoggingSystem &system,
+                                     int index,
+                                     Result &result) {
+    applicator_ =
+        std::make_tuple(std::ref(system), index + 1, std::ref(result));
   }
+
+  void FallbackConfigurator::applySinks() const {
+    if (applicator_.has_value()) {
+      // Create a default console sink with the specified logging level and
+      // color option.
+      std::get<0>(applicator_.value())
+          .get()
+          .makeSink<SinkToConsole>(
+              "console", level_, SinkToConsole::Stream::STDOUT, with_color_);
+    }
+  }
+
+  void FallbackConfigurator::applyGroups() const {
+    if (applicator_.has_value()) {
+      // Create a default logging group "*" that routes all logs to the console
+      // sink.
+      std::get<0>(applicator_.value())
+          .get()
+          .makeGroup("*", {}, "console", level_);
+    }
+  }
+
+  void FallbackConfigurator::cleanup() {
+    if (applicator_.has_value()) {
+      // Set a result indicating that a fallback configuration has been applied.
+      auto id = std::get<1>(applicator_.value());
+      auto &result = std::get<2>(applicator_.value()).get();
+      result.has_warning = true;
+      result.message += fmt::format(
+          "I{}: Using fallback configurator for logger system\n", id);
+      result.message += fmt::format(
+          "I{}: All logs will be written to {}standard output with '{}' "
+          "level\n",
+          id,
+          with_color_ ? "color " : "",
+          levelToStr(level_));
+      applicator_.reset();
+    }
+  };
 
 }  // namespace soralog

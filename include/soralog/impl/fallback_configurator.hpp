@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <tuple>
+#include <functional>
 #include <soralog/configurator.hpp>
 #include <soralog/logging_system.hpp>
 
@@ -36,16 +38,15 @@ namespace soralog {
 
     ~FallbackConfigurator() override = default;
 
-    /**
-     * @brief Applies the fallback configuration to the logging system.
-     * @param system Reference to the logging system.
-     * @return Result of the configuration process.
-     */
-    Result applyOn(LoggingSystem &system) const override;
+    void prepare(LoggingSystem &system, int index, Result &result) override;
+    void applySinks() const override;
+    void applyGroups() const override;
+    void cleanup() override;
 
    private:
     Level level_ = Level::INFO;  ///< Default logging level.
     bool with_color_ = false;    ///< Enables colored console output.
+    std::optional<std::tuple<std::reference_wrapper<LoggingSystem>, int, std::reference_wrapper<Result>>> applicator_;
   };
 
 }  // namespace soralog

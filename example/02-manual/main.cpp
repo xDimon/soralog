@@ -18,6 +18,7 @@ int main() {
 
   // Initialize logging system
   soralog::LoggingSystem log_system(log_sys_cfg);
+  std::ignore = log_system.configure(); // apply fallback config
 
   // Manual creation of a sink
   log_system.makeSink<soralog::SinkToConsole>(

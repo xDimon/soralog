@@ -77,8 +77,7 @@ groups:
       - name: first-3
   )"));
 
-  return std::make_shared<soralog::ConfiguratorFromYAML>(std::move(prev),
-                                                         std::string(R"(
+  return std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 sinks:
   - name: console
     type: console

@@ -24,11 +24,9 @@ namespace soralog {
     // Create a fallback sink that discards all logs
     makeSink<SinkToNowhere>("*");
     makeGroup("*", {}, "*", Level::OFF);
-    ;
   }
 
-  LoggingSystem::LoggingSystem(std::shared_ptr<Configurator> configurator)
-      : configurator_(std::move(configurator)) {
+  void LoggingSystem::makeFallbackSink() {
     // Create a fallback sink that discards all logs
     makeSink<SinkToNowhere>("*");
   }
@@ -85,7 +83,18 @@ namespace soralog {
 
     Configurator::Result result;
     try {
-      result = configurator_->applyOn(*this);
+      for (int i = 0; i < configurators_.size(); ++i) {
+        configurators_[i]->prepare(*this, i, result);
+      }
+      for (int i = 0; i < configurators_.size(); ++i) {
+        configurators_[i]->applySinks();
+      }
+      for (int i = 0; i < configurators_.size(); ++i) {
+        configurators_[i]->applyGroups();
+      }
+      for (int i = 0; i < configurators_.size(); ++i) {
+        configurators_[i]->cleanup();
+      }
     } catch (const std::exception &exception) {
       result.message += "E: Configure failed: "s + exception.what() + "; "
                       + "Logging system is unworkable\n";

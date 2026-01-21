@@ -174,7 +174,7 @@ TEST_F(SinkToConsoleTest, MultithreadLogging) {
     latch.arrive_and_wait();  // Ensure all threads start simultaneously
 #endif
     std::mutex m;
-    for (auto i = 0; i < iters_n; ++i) {
+    for (size_t i = 0; i < iters_n; ++i) {
       logger->debug("iteration {}.1", i);
       logger->debug("iteration {}.2", i);
       logger->debug("iteration {}.3", i);
@@ -190,7 +190,7 @@ TEST_F(SinkToConsoleTest, MultithreadLogging) {
   };
 
   std::vector<std::thread> threads;
-  for (auto i = 0; i < threads_n; ++i) {
+  for (size_t i = 0; i < threads_n; ++i) {
     threads.emplace_back([&] {
       // Start logging task in each thread
       task();

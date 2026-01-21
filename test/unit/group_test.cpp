@@ -29,20 +29,22 @@ class GroupTest : public ::testing::Test {
     configurator_ = std::make_shared<ConfiguratorMock>();
     system_ = std::make_shared<LoggingSystem>(configurator_);
 
-    ON_CALL(*configurator_, applyOn(Truly([&](auto &s) {
-      return &s == system_.get();
-    }))).WillByDefault(Invoke([&](LoggingSystem &system) {
-      system.makeSink<SinkMock>("sink1");
-      system.makeSink<SinkMock>("sink2");
-      system.makeSink<SinkMock>("sink3");
-      system.makeSink<SinkMock>("sink4");
-      system.makeGroup("first", {}, "sink1", Level::TRACE);
-      system.makeGroup("second", "first", {}, {});
-      system.makeGroup("third", "second", "sink3", Level::DEBUG);
-      system.makeGroup("four", {}, "sink4", Level::VERBOSE);
-      return Configurator::Result{};
-    }));
-    EXPECT_CALL(*configurator_, applyOn(_)).Times(1);
+    ON_CALL(*configurator_,
+            prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
+        .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+          system.makeSink<SinkMock>("sink1");
+          system.makeSink<SinkMock>("sink2");
+          system.makeSink<SinkMock>("sink3");
+          system.makeSink<SinkMock>("sink4");
+          system.makeGroup("first", {}, "sink1", Level::TRACE);
+          system.makeGroup("second", "first", {}, {});
+          system.makeGroup("third", "second", "sink3", Level::DEBUG);
+          system.makeGroup("four", {}, "sink4", Level::VERBOSE);
+        }));
+    EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
+    EXPECT_CALL(*configurator_, applySinks()).Times(1);
+    EXPECT_CALL(*configurator_, applyGroups()).Times(1);
+    EXPECT_CALL(*configurator_, cleanup()).Times(1);
 
     EXPECT_NO_THROW(auto r = system_->configure());
 
