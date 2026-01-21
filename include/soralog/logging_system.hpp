@@ -271,6 +271,11 @@ namespace soralog {
     bool resetLevelOfLogger(const std::string &logger_name);
 
     /**
+     * @brief Calls `flush()` on all registered sinks.
+     */
+    void callFlushForAllSinks();
+
+    /**
      * @brief Calls `rotate()` on all registered sinks.
      */
     void callRotateForAllSinks();

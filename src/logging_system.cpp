@@ -608,6 +608,15 @@ namespace soralog {
     }
     return false;
   }
+
+  void LoggingSystem::callFlushForAllSinks() {
+    std::lock_guard guard(mutex_);
+    std::ranges::for_each(sinks_, [](const auto &it) {
+      const auto &sink = it.second;
+      sink->flush();
+    });
+  }
+
   void LoggingSystem::callRotateForAllSinks() {
     std::lock_guard guard(mutex_);
     std::ranges::for_each(sinks_, [](const auto &it) {
