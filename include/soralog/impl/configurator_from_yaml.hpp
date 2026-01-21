@@ -75,10 +75,7 @@ namespace soralog {
                  LoggingSystem &system,
                  int index,
                  Result &result)
-          : system_(system),
-            node(std::move(node)),
-            id(index + 1),
-            result_(result) {}
+          : sys(system), node(std::move(node)), id(index + 1), res(result) {}
 
       void parseSinks();
       void parseGroups();
@@ -195,11 +192,11 @@ namespace soralog {
 
       /// Reference to the logging system being configured.
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-      LoggingSystem &system_;
+      LoggingSystem &sys;
 
       int id;
 
-      Result &result_;
+      Result &res;
     };
   };
 

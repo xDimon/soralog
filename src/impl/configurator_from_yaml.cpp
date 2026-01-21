@@ -128,16 +128,6 @@ namespace soralog {
     applicator_.reset();
   }
 
-  // result.has_error = result.has_error || has_error_;
-  // result.has_warning = result.has_warning || has_warning_;
-  // if (result.has_error or result.has_warning) {
-  //   result.message += "I: Some problems are found during configuring:\n"
-  //                   + errors_.str()
-  //                   + "I: See more details on "
-  //                     "https://github.com/xDimon/soralog/tree/update/"
-  //                     "documentation?tab=readme-ov-file#configuration-file";
-  // }
-
   void ConfiguratorFromYAML::Applicator::parseSinks() {
     auto sinks = node["sinks"];
     if (sinks.IsDefined()) {
@@ -154,23 +144,23 @@ namespace soralog {
 
   void ConfiguratorFromYAML::Applicator::parseSinks(const YAML::Node &sinks) {
     if (sinks.IsNull()) {
-      result_.message += fmt::format("E: Sinks list is empty\n");
-      result_.has_error = true;
+      res.message += fmt::format("E:{}: Sinks list is empty\n", id);
+      res.has_error = true;
       return;
     }
 
     if (not sinks.IsSequence()) {
-      result_.message += fmt::format("E: Sinks is not a YAML sequence\n");
-      result_.has_error = true;
+      res.message += fmt::format("E:{}: Sinks is not a YAML sequence\n", id);
+      res.has_error = true;
       return;
     }
 
     for (size_t i = 0; i < sinks.size(); ++i) {
       auto sink = sinks[i];
       if (not sink.IsMap()) {
-        result_.message +=
-            fmt::format("W: Element #{} of 'sinks' is not a YAML map\n", i);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Element #{} of 'sinks' is not a YAML map\n", id, i);
+        res.has_warning = true;
         continue;
       }
       parseSink(i, sink);
@@ -184,9 +174,9 @@ namespace soralog {
       return std::nullopt;
     }
     if (not level_node.IsScalar()) {
-      result_.message +=
-          fmt::format("E: Property 'level' of {} is not scalar\n", target);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'level' of {} is not scalar\n", id, target);
+      res.has_error = true;
       return std::nullopt;
     }
 
@@ -212,27 +202,29 @@ namespace soralog {
     }
     if (level_string == "debug" || level_string == "deb") {
       if constexpr (debug_level_disable) {
-        result_.message += fmt::format(
-            "W: Level 'debug' in {} won't work: "
+        res.message += fmt::format(
+            "W:{}: Level 'debug' in {} won't work: "
             "it has been disabled with a compile-time option\n",
+            id,
             target);
-        result_.has_warning = true;
+        res.has_warning = true;
       }
       return Level::DEBUG;
     }
     if (level_string == "trace") {
       if constexpr (trace_level_disabled) {
-        result_.message += fmt::format(
-            "W: Level 'trace' in {} won't work: "
+        res.message += fmt::format(
+            "W:{}: Level 'trace' in {} won't work: "
             "it has been disabled with a compile-time option\n",
+            id,
             target);
-        result_.has_warning = true;
+        res.has_warning = true;
       }
       return Level::TRACE;
     }
-    result_.message +=
-        fmt::format("E: Invalid level in {}: {}\n", target, level_string);
-    result_.has_error = true;
+    res.message += fmt::format(
+        "E:{}: Invalid level in {}: {}\n", id, target, level_string);
+    res.has_error = true;
     return std::nullopt;
   }
 
@@ -243,28 +235,28 @@ namespace soralog {
     // Extract and validate the sink name
     auto name_node = sink["name"];
     if (not name_node.IsDefined()) {
-      result_.message +=
-          fmt::format("E: Not found 'name' of sink node #{}\n", number);
+      res.message +=
+          fmt::format("E:{}: Not found 'name' of sink node #{}\n", id, number);
       fail = true;
     } else if (not name_node.IsScalar()) {
       fail = true;
-      result_.message += fmt::format(
-          "E: Property 'name' of sink node #{} is not scalar\n", number);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'name' of sink node #{} is not scalar\n", id, number);
+      res.has_error = true;
     }
 
     // Extract and validate the sink type
     auto type_node = sink["type"];
     if (not type_node.IsDefined()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'type' of sink node #{}\n", number);
-      result_.has_error = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'type' of sink node #{}\n", id, number);
+      res.has_error = true;
     } else if (not type_node.IsScalar()) {
       fail = true;
-      result_.message += fmt::format(
-          "E: Property 'type' of sink node #{} is not scalar\n", number);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'type' of sink node #{} is not scalar\n", id, number);
+      res.has_error = true;
     }
 
     if (fail) {
@@ -276,10 +268,9 @@ namespace soralog {
 
     // Ensure the sink name is not reserved
     if (name == "*") {
-      result_.message += fmt::format(
-          "E: Sink name '*' is reserved; "
-          "Try to use some other name\n");
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Sink name '*' is reserved; Try to use some other name\n", id);
+      res.has_error = true;
       return;
     }
 
@@ -293,9 +284,9 @@ namespace soralog {
     } else if (type == "multisink") {
       parseMultisink(name, sink);
     } else {
-      result_.message +=
-          fmt::format("E: Unknown 'type' of sink node '{}': {}\n", name, type);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Unknown 'type' of sink node '{}': {}\n", id, name, type);
+      res.has_error = true;
     }
   }
 
@@ -314,9 +305,9 @@ namespace soralog {
     auto color_node = sink_node["color"];
     if (color_node.IsDefined()) {
       if (not color_node.IsScalar()) {
-        result_.message += fmt::format(
-            "W: Property 'color' of sink node is not true or false\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'color' of sink node is not true or false\n", id);
+        res.has_warning = true;
       } else {
         color = color_node.as<bool>();
       }
@@ -326,9 +317,10 @@ namespace soralog {
     auto stream_node = sink_node["stream"];
     if (stream_node.IsDefined()) {
       if (not stream_node.IsScalar()) {
-        result_.message += fmt::format(
-            "W: Property 'stream' of sink node is not stdout or stderr\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'stream' of sink node is not stdout or stderr\n",
+            id);
+        res.has_warning = true;
       } else {
         auto stream_str = stream_node.as<std::string>();
         if (stream_str == "stdout") {
@@ -336,9 +328,10 @@ namespace soralog {
         } else if (stream_str == "stderr") {
           stream_type = SinkToConsole::Stream::STDERR;
         } else {
-          result_.message += fmt::format(
-              "W: Invalid 'stream' value: expected 'stdout' or 'stderr'\n");
-          result_.has_warning = true;
+          res.message += fmt::format(
+              "W:{}: Invalid 'stream' value: expected 'stdout' or 'stderr'\n",
+              id);
+          res.has_warning = true;
         }
       }
     }
@@ -347,9 +340,9 @@ namespace soralog {
     auto thread_node = sink_node["thread"];
     if (thread_node.IsDefined()) {
       if (not thread_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'thread' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'thread' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto thread_str = thread_node.as<std::string>();
         if (thread_str == "name") {
@@ -357,9 +350,12 @@ namespace soralog {
         } else if (thread_str == "id") {
           thread_info_type = Sink::ThreadInfoType::ID;
         } else if (thread_str != "none") {
-          result_.message += fmt::format(
-              "W: Invalid 'thread' value of sink '{}': {}\n", name, thread_str);
-          result_.has_warning = true;
+          res.message +=
+              fmt::format("W:{}: Invalid 'thread' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          thread_str);
+          res.has_warning = true;
         }
       }
     }
@@ -368,19 +364,20 @@ namespace soralog {
     auto capacity_node = sink_node["capacity"];
     if (capacity_node.IsDefined()) {
       if (not capacity_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'capacity' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'capacity' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto capacity_int = capacity_node.as<int>();
         if (capacity_int >= 4) {
           capacity.emplace(capacity_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'capacity' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'capacity' value of sink '{}': {}\n",
+                          id,
                           name,
                           capacity_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -389,19 +386,20 @@ namespace soralog {
     auto buffer_node = sink_node["buffer"];
     if (buffer_node.IsDefined()) {
       if (not buffer_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'buffer' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'buffer' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto buffer_int = buffer_node.as<int>();
         if (buffer_int >= sizeof(Event) * 4) {
           buffer_size.emplace(buffer_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'buffer' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'buffer' value of sink '{}': {}\n",
+                          id,
                           name,
                           buffer_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -410,19 +408,21 @@ namespace soralog {
     auto max_message_length_node = sink_node["max_message_length"];
     if (max_message_length_node.IsDefined()) {
       if (not max_message_length_node.IsScalar()) {
-        result_.message += fmt::format(
-            "W: Property 'max_message_length' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'max_message_length' of sink node is not scalar\n",
+            id);
+        res.has_warning = true;
       } else {
         auto max_message_length_int = max_message_length_node.as<int>();
         if (max_message_length_int > 64) {
           max_message_length.emplace(max_message_length_int);
         } else {
-          result_.message += fmt::format(
-              "W: Invalid 'max_message_length' value of sink '{}': {}\n",
+          res.message += fmt::format(
+              "W:{}: Invalid 'max_message_length' value of sink '{}': {}\n",
+              id,
               name,
               max_message_length_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -431,18 +431,19 @@ namespace soralog {
     auto latency_node = sink_node["latency"];
     if (latency_node.IsDefined()) {
       if (not latency_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'latency' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'latency' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto latency_int = latency_node.as<int>();
         if (std::to_string(latency_int) != latency_node.as<std::string>()
             or latency_int < 0) {
-          result_.message +=
-              fmt::format("W: Invalid 'latency' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'latency' value of sink '{}': {}\n",
+                          id,
                           name,
                           latency_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         } else {
           latency.emplace(latency_int);
         }
@@ -453,9 +454,9 @@ namespace soralog {
     auto at_fault_node = sink_node["at_fault"];
     if (at_fault_node.IsDefined()) {
       if (not at_fault_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'at_fault' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'at_fault' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto at_fault_str = at_fault_node.as<std::string>();
         if (at_fault_str == "terminate") {
@@ -463,11 +464,12 @@ namespace soralog {
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
         } else if (at_fault_str != "wait") {
-          result_.message +=
-              fmt::format("W: Invalid 'at_fault' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
+                          id,
                           name,
                           at_fault_str);
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -491,32 +493,33 @@ namespace soralog {
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (std::ranges::find(known_properties, key) == known_properties.end()) {
-        result_.message +=
-            fmt::format("W: Unknown property of sink '{}': {}\n", name, key);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Unknown property of sink '{}': {}\n", id, name, key);
+        res.has_warning = true;
       }
     }
 
     // Check if the sink already exists
-    if (system_.getSink(name)) {
-      result_.message += fmt::format(
-          "W: Sink with name '{}' already exists; "
+    if (sys.getSink(name)) {
+      res.message += fmt::format(
+          "W:{}: Sink with name '{}' already exists; "
           "overriding previous version\n",
+          id,
           name);
-      result_.has_warning = true;
+      res.has_warning = true;
     }
 
     // Create the console sink
-    system_.makeSink<SinkToConsole>(name,
-                                    level,
-                                    stream_type,
-                                    color,
-                                    thread_info_type,
-                                    capacity,
-                                    max_message_length,
-                                    buffer_size,
-                                    latency,
-                                    at_fault);
+    sys.makeSink<SinkToConsole>(name,
+                                level,
+                                stream_type,
+                                color,
+                                thread_info_type,
+                                capacity,
+                                max_message_length,
+                                buffer_size,
+                                latency,
+                                at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToFile(
@@ -533,23 +536,23 @@ namespace soralog {
     auto path_node = sink_node["path"];
     if (not path_node.IsDefined()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'path' of sink '{}'\n", name);
-      result_.has_error = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'path' of sink '{}'\n", id, name);
+      res.has_error = true;
     } else if (not path_node.IsScalar()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Property 'path' of sink '{}' is not scalar\n", name);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'path' of sink '{}' is not scalar\n", id, name);
+      res.has_error = true;
     }
 
     // Parse 'thread' information type
     auto thread_node = sink_node["thread"];
     if (thread_node.IsDefined()) {
       if (not thread_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'thread' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'thread' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto thread_str = thread_node.as<std::string>();
         if (thread_str == "name") {
@@ -557,9 +560,12 @@ namespace soralog {
         } else if (thread_str == "id") {
           thread_info_type = Sink::ThreadInfoType::ID;
         } else if (thread_str != "none") {
-          result_.message += fmt::format(
-              "W: Invalid 'thread' value of sink '{}': {}\n", name, thread_str);
-          result_.has_warning = true;
+          res.message +=
+              fmt::format("W:{}: Invalid 'thread' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          thread_str);
+          res.has_warning = true;
         }
       }
     }
@@ -568,19 +574,20 @@ namespace soralog {
     auto capacity_node = sink_node["capacity"];
     if (capacity_node.IsDefined()) {
       if (not capacity_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'capacity' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'capacity' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto capacity_int = capacity_node.as<int>();
         if (capacity_int >= 4) {
           capacity.emplace(capacity_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'capacity' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'capacity' value of sink '{}': {}\n",
+                          id,
                           name,
                           capacity_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -589,19 +596,20 @@ namespace soralog {
     auto buffer_node = sink_node["buffer"];
     if (buffer_node.IsDefined()) {
       if (not buffer_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'buffer' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'buffer' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto buffer_int = buffer_node.as<int>();
         if (buffer_int >= sizeof(Event) * 4) {
           buffer_size.emplace(buffer_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'buffer' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'buffer' value of sink '{}': {}\n",
+                          id,
                           name,
                           buffer_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -610,19 +618,21 @@ namespace soralog {
     auto max_message_length_node = sink_node["max_message_length"];
     if (max_message_length_node.IsDefined()) {
       if (not max_message_length_node.IsScalar()) {
-        result_.message += fmt::format(
-            "W: Property 'max_message_length' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'max_message_length' of sink node is not scalar\n",
+            id);
+        res.has_warning = true;
       } else {
         auto max_message_length_int = max_message_length_node.as<int>();
         if (max_message_length_int >= 64) {
           max_message_length.emplace(max_message_length_int);
         } else {
-          result_.message += fmt::format(
-              "W: Invalid 'max_message_length' value of sink '{}': {}\n",
+          res.message += fmt::format(
+              "W:{}: Invalid 'max_message_length' value of sink '{}': {}\n",
+              id,
               name,
               max_message_length_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -631,18 +641,19 @@ namespace soralog {
     auto latency_node = sink_node["latency"];
     if (latency_node.IsDefined()) {
       if (not latency_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'latency' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'latency' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto latency_int = latency_node.as<int>();
         if (std::to_string(latency_int) != latency_node.as<std::string>()
             or latency_int < 0) {
-          result_.message +=
-              fmt::format("W: Invalid 'latency' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'latency' value of sink '{}': {}\n",
+                          id,
                           name,
                           latency_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         } else {
           latency.emplace(latency_int);
         }
@@ -653,9 +664,9 @@ namespace soralog {
     auto at_fault_node = sink_node["at_fault"];
     if (at_fault_node.IsDefined()) {
       if (not at_fault_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'at_fault' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'at_fault' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto at_fault_str = at_fault_node.as<std::string>();
         if (at_fault_str == "terminate") {
@@ -663,11 +674,12 @@ namespace soralog {
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
         } else if (at_fault_str != "wait") {
-          result_.message +=
-              fmt::format("W: Invalid 'at_fault' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
+                          id,
                           name,
                           at_fault_str);
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -690,9 +702,9 @@ namespace soralog {
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (std::ranges::find(known_properties, key) == known_properties.end()) {
-        result_.message +=
-            fmt::format("W: Unknown property of sink '{}': {}\n", name, key);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Unknown property of sink '{}': {}\n", id, name, key);
+        res.has_warning = true;
       }
     }
 
@@ -703,24 +715,25 @@ namespace soralog {
     auto path = path_node.as<std::string>();
 
     // Check if the sink already exists
-    if (system_.getSink(name)) {
-      result_.message += fmt::format(
-          "W: Sink with name '{}' already exists; "
+    if (sys.getSink(name)) {
+      res.message += fmt::format(
+          "W:{}: Sink with name '{}' already exists; "
           "overriding previous version\n",
+          id,
           name);
-      result_.has_warning = true;
+      res.has_warning = true;
     }
 
     // Create the file sink
-    system_.makeSink<SinkToFile>(name,
-                                 level,
-                                 path,
-                                 thread_info_type,
-                                 capacity,
-                                 max_message_length,
-                                 buffer_size,
-                                 latency,
-                                 at_fault);
+    sys.makeSink<SinkToFile>(name,
+                             level,
+                             path,
+                             thread_info_type,
+                             capacity,
+                             max_message_length,
+                             buffer_size,
+                             latency,
+                             at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
@@ -737,23 +750,23 @@ namespace soralog {
     auto ident_node = sink_node["ident"];
     if (not ident_node.IsDefined()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'ident' of sink '{}'\n", name);
-      result_.has_error = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'ident' of sink '{}'\n", id, name);
+      res.has_error = true;
     } else if (not ident_node.IsScalar()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Property 'ident' of sink '{}' is not scalar\n", name);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'ident' of sink '{}' is not scalar\n", id, name);
+      res.has_error = true;
     }
 
     // Parse 'thread' information type
     auto thread_node = sink_node["thread"];
     if (thread_node.IsDefined()) {
       if (not thread_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'thread' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'thread' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto thread_str = thread_node.as<std::string>();
         if (thread_str == "name") {
@@ -761,9 +774,12 @@ namespace soralog {
         } else if (thread_str == "id") {
           thread_info_type = Sink::ThreadInfoType::ID;
         } else if (thread_str != "none") {
-          result_.message += fmt::format(
-              "W: Invalid 'thread' value of sink '{}': {}\n", name, thread_str);
-          result_.has_warning = true;
+          res.message +=
+              fmt::format("W:{}: Invalid 'thread' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          thread_str);
+          res.has_warning = true;
         }
       }
     }
@@ -772,19 +788,20 @@ namespace soralog {
     auto capacity_node = sink_node["capacity"];
     if (capacity_node.IsDefined()) {
       if (not capacity_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'capacity' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'capacity' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto capacity_int = capacity_node.as<int>();
         if (capacity_int >= 4) {
           capacity.emplace(capacity_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'capacity' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'capacity' value of sink '{}': {}\n",
+                          id,
                           name,
                           capacity_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -793,19 +810,20 @@ namespace soralog {
     auto buffer_node = sink_node["buffer"];
     if (buffer_node.IsDefined()) {
       if (not buffer_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'buffer' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'buffer' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto buffer_int = buffer_node.as<int>();
         if (buffer_int >= sizeof(Event) * 4) {
           buffer_size.emplace(buffer_int);
         } else {
-          result_.message +=
-              fmt::format("W: Invalid 'buffer' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'buffer' value of sink '{}': {}\n",
+                          id,
                           name,
                           buffer_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -814,19 +832,21 @@ namespace soralog {
     auto max_message_length_node = sink_node["max_message_length"];
     if (max_message_length_node.IsDefined()) {
       if (not max_message_length_node.IsScalar()) {
-        result_.message += fmt::format(
-            "W: Property 'max_message_length' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'max_message_length' of sink node is not scalar\n",
+            id);
+        res.has_warning = true;
       } else {
         auto max_message_length_int = max_message_length_node.as<int>();
         if (max_message_length_int >= 64) {
           max_message_length.emplace(max_message_length_int);
         } else {
-          result_.message += fmt::format(
-              "W: Invalid 'max_message_length' value of sink '{}': {}\n",
+          res.message += fmt::format(
+              "W:{}: Invalid 'max_message_length' value of sink '{}': {}\n",
+              id,
               name,
               max_message_length_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -835,18 +855,19 @@ namespace soralog {
     auto latency_node = sink_node["latency"];
     if (latency_node.IsDefined()) {
       if (not latency_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'latency' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'latency' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto latency_int = latency_node.as<int>();
         if (std::to_string(latency_int) != latency_node.as<std::string>()
             or latency_int < 0) {
-          result_.message +=
-              fmt::format("W: Invalid 'latency' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'latency' value of sink '{}': {}\n",
+                          id,
                           name,
                           latency_node.as<std::string>());
-          result_.has_warning = true;
+          res.has_warning = true;
         } else {
           latency.emplace(latency_int);
         }
@@ -857,9 +878,9 @@ namespace soralog {
     auto at_fault_node = sink_node["at_fault"];
     if (at_fault_node.IsDefined()) {
       if (not at_fault_node.IsScalar()) {
-        result_.message +=
-            fmt::format("W: Property 'at_fault' of sink node is not scalar\n");
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Property 'at_fault' of sink node is not scalar\n", id);
+        res.has_warning = true;
       } else {
         auto at_fault_str = at_fault_node.as<std::string>();
         if (at_fault_str == "terminate") {
@@ -867,11 +888,12 @@ namespace soralog {
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
         } else if (at_fault_str != "wait") {
-          result_.message +=
-              fmt::format("W: Invalid 'at_fault' value of sink '{}': {}\n",
+          res.message +=
+              fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
+                          id,
                           name,
                           at_fault_str);
-          result_.has_warning = true;
+          res.has_warning = true;
         }
       }
     }
@@ -894,9 +916,9 @@ namespace soralog {
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (std::ranges::find(known_properties, key) == known_properties.end()) {
-        result_.message +=
-            fmt::format("W: Unknown property of sink '{}': {}\n", name, key);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Unknown property of sink '{}': {}\n", id, name, key);
+        res.has_warning = true;
       }
     }
 
@@ -907,24 +929,25 @@ namespace soralog {
     auto ident = ident_node.as<std::string>();
 
     // Check if the sink already exists
-    if (system_.getSink(name)) {
-      result_.message += fmt::format(
-          "W: Sink with name '{}' already exists; "
+    if (sys.getSink(name)) {
+      res.message += fmt::format(
+          "W:{}: Sink with name '{}' already exists; "
           "overriding previous version\n",
+          id,
           name);
-      result_.has_warning = true;
+      res.has_warning = true;
     }
 
     // Create the syslog sink
-    system_.makeSink<SinkToSyslog>(name,
-                                   level,
-                                   ident,
-                                   thread_info_type,
-                                   capacity,
-                                   max_message_length,
-                                   buffer_size,
-                                   latency,
-                                   at_fault);
+    sys.makeSink<SinkToSyslog>(name,
+                               level,
+                               ident,
+                               thread_info_type,
+                               capacity,
+                               max_message_length,
+                               buffer_size,
+                               latency,
+                               at_fault);
   }
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
@@ -935,14 +958,14 @@ namespace soralog {
     auto sinks_node = sink_node["sinks"];
     if (not sinks_node.IsDefined()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'sinks' of sink '{}'\n", name);
-      result_.has_error = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'sinks' of sink '{}'\n", id, name);
+      res.has_error = true;
     } else if (not sinks_node.IsSequence()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Property 'sinks' of sink '{}' is not a list\n", name);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'sinks' of sink '{}' is not a list\n", id, name);
+      res.has_error = true;
     }
 
     // Parse the logging level for this multisink
@@ -955,9 +978,9 @@ namespace soralog {
     for (const auto &it : sink_node) {
       auto key = it.first.as<std::string>();
       if (std::ranges::find(known_properties, key) == known_properties.end()) {
-        result_.message +=
-            fmt::format("W: Unknown property of sink '{}': {}\n", name, key);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Unknown property of sink '{}': {}\n", id, name, key);
+        res.has_warning = true;
       }
     }
 
@@ -970,31 +993,34 @@ namespace soralog {
 
     std::vector<std::shared_ptr<Sink>> sinks;
     for (auto &sink_name : sink_names) {
-      auto sink = system_.getSink(sink_name);
+      auto sink = sys.getSink(sink_name);
       if (not sink) {
-        result_.message += fmt::format(
-            "E: Sink '{}' must be defined before sink '{}'\n", sink_name, name);
-        result_.has_error = true;
+        res.message +=
+            fmt::format("E:{}: Sink '{}' must be defined before sink '{}'\n",
+                        id,
+                        sink_name,
+                        name);
+        res.has_error = true;
       } else {
         sinks.emplace_back(std::move(sink));
       }
     }
 
     // Create the multisink
-    system_.makeSink<Multisink>(name, level, std::move(sinks));
+    sys.makeSink<Multisink>(name, level, std::move(sinks));
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroups(
       const YAML::Node &groups, const std::optional<std::string> &parent) {
     if (groups.IsNull()) {
-      result_.message += fmt::format("E: Node 'groups' is empty\n");
-      result_.has_error = true;
+      res.message += fmt::format("E:{}: Node 'groups' is empty\n", id);
+      res.has_error = true;
       return;
     }
 
     if (not groups.IsSequence()) {
-      result_.message += fmt::format("E: Node 'groups' is not a sequence\n");
-      result_.has_error = true;
+      res.message += fmt::format("E:{}: Node 'groups' is not a sequence\n", id);
+      res.has_error = true;
       return;
     }
 
@@ -1002,9 +1028,9 @@ namespace soralog {
     for (size_t i = 0; i < groups.size(); ++i) {
       auto group = groups[i];
       if (not group.IsMap()) {
-        result_.message +=
-            fmt::format("E: Element #{} of 'groups' is not a map\n", i);
-        result_.has_error = true;
+        res.message +=
+            fmt::format("E:{}: Element #{} of 'groups' is not a map\n", id, i);
+        res.has_error = true;
         continue;
       }
       parseGroup(i, group, parent);
@@ -1023,14 +1049,14 @@ namespace soralog {
     std::string tmp_name = "node #" + std::to_string(number);
     if (not name_node.IsDefined()) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'name' of group {}\n", tmp_name);
-      result_.has_error = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'name' of group {}\n", id, tmp_name);
+      res.has_error = true;
     } else if (not name_node.IsScalar()) {
       fail = true;
-      result_.message += fmt::format(
-          "E: Property 'name' of group {} is not scalar\n", tmp_name);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Property 'name' of group {} is not scalar\n", id, tmp_name);
+      res.has_error = true;
     } else {
       tmp_name = "'" + name_node.as<std::string>() + "'";
     }
@@ -1040,9 +1066,11 @@ namespace soralog {
     if (fallback_node.IsDefined()) {
       if (not fallback_node.IsScalar()) {
         fail = true;
-        result_.message += fmt::format(
-            "E: Property 'is_fallback' of group {} is not scalar\n", tmp_name);
-        result_.has_error = true;
+        res.message += fmt::format(
+            "E:{}: Property 'is_fallback' of group {} is not scalar\n",
+            id,
+            tmp_name);
+        res.has_error = true;
       } else {
         is_fallback = fallback_node.as<bool>();
       }
@@ -1054,17 +1082,20 @@ namespace soralog {
     if (sink_node.IsDefined()) {
       if (not sink_node.IsScalar()) {
         fail = true;
-        result_.message += fmt::format(
-            "E: Property 'sink' of group {} is not scalar\n", tmp_name);
-        result_.has_error = true;
+        res.message += fmt::format(
+            "E:{}: Property 'sink' of group {} is not scalar\n", id, tmp_name);
+        res.has_error = true;
       } else {
         sink.emplace(sink_node.as<std::string>());
         // Validate the sink existence
-        if (not system_.getSink(sink.value())) {
+        if (not sys.getSink(sink.value())) {
           fail = true;
-          result_.message += fmt::format(
-              "E: Sink '{}' of group {} is undefined\n", *sink, tmp_name);
-          result_.has_error = true;
+          res.message +=
+              fmt::format("E:{}: Sink '{}' of group {} is undefined\n",
+                          id,
+                          *sink,
+                          tmp_name);
+          res.has_error = true;
         }
       }
     } else if (not parent) {
@@ -1075,9 +1106,9 @@ namespace soralog {
     auto level_node = group_node["level"];
     if (not level_node.IsDefined() and not parent) {
       fail = true;
-      result_.message +=
-          fmt::format("E: Not found 'level' of root group {}\n", tmp_name);
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Not found 'level' of root group {}\n", id, tmp_name);
+      res.has_error = true;
     }
     auto level = parseLevel(fmt::format("group {}", tmp_name), group_node);
 
@@ -1086,9 +1117,11 @@ namespace soralog {
     if (children_node.IsDefined()) {
       if (not children_node.IsNull() and not children_node.IsSequence()) {
         fail = true;
-        result_.message += fmt::format(
-            "E: Property 'children' of group {} is not sequence\n", tmp_name);
-        result_.has_error = true;
+        res.message += fmt::format(
+            "E:{}: Property 'children' of group {} is not sequence\n",
+            id,
+            tmp_name);
+        res.has_error = true;
       }
     }
 
@@ -1098,18 +1131,19 @@ namespace soralog {
     for (const auto &it : group_node) {
       auto key = it.first.as<std::string>();
       if (std::ranges::find(known_properties, key) == known_properties.end()) {
-        result_.message +=
-            fmt::format("W: Unknown property of group {}: {}\n", tmp_name, key);
-        result_.has_warning = true;
+        res.message += fmt::format(
+            "W:{}: Unknown property of group {}: {}\n", id, tmp_name, key);
+        res.has_warning = true;
       }
     }
 
     if (fail) {
-      result_.message += fmt::format(
-          "W: There are probably more bugs in the group {}; "
+      res.message += fmt::format(
+          "W:{}: There are probably more bugs in the group {}; "
           "Fix the existing ones first.\n",
+          id,
           tmp_name);
-      result_.has_warning = true;
+      res.has_warning = true;
       return;
     }
 
@@ -1117,31 +1151,32 @@ namespace soralog {
 
     // Reserved group name validation
     if (name == "*") {
-      result_.message += fmt::format(
-          "E: Group name '*' is reserved; "
-          "Try to use some other else\n");
-      result_.has_error = true;
+      res.message += fmt::format(
+          "E:{}: Group name '*' is reserved; "
+          "Try to use some other else\n",
+          id);
+      res.has_error = true;
       return;
     }
 
     // Apply the group configuration to the logging system
-    if (system_.getGroup(name)) {
+    if (sys.getGroup(name)) {
       if (parent.has_value()) {
-        system_.setParentOfGroup(name, parent.value());
+        sys.setParentOfGroup(name, parent.value());
       }
-      if (sink.has_value()) {
-        system_.setSinkOfGroup(name, sink.value());
+      if (sink.has_value() and sink.value() != "*") {
+        sys.setSinkOfGroup(name, sink.value());
       }
       if (level.has_value()) {
-        system_.setLevelOfGroup(name, level.value());
+        sys.setLevelOfGroup(name, level.value());
       }
     } else {
-      system_.makeGroup(name, parent, sink, level);
+      sys.makeGroup(name, parent, sink, level);
     }
 
     // Set the group as a fallback if specified
     if (is_fallback) {
-      system_.setFallbackGroup(name);
+      sys.setFallbackGroup(name);
     }
 
     // Recursively parse child groups

@@ -67,29 +67,53 @@ target_link_libraries(your_project PRIVATE soralog)
 
 ### Creating a Logger
 
+Before using any loggers, you must configure the logging system. The `LoggingSystem::configure()` method must be called, returning a `Configurator::Result` indicating success or failure.
+
 ```cpp
-    LoggingSystem logging_system(configurator); // See examples
-    soralog::Logger logger = logging_system.getLogger("loggger", "main_group");
+LoggingSystem logging_system(configurator); // See examples
+const auto result = logging_system.configure();
+if (result.has_error) {
+  std::cerr << result.message;
 }
+soralog::Logger logger = logging_system.getLogger("logger", "main_group");
 ```
 
 ### Using logger methods
 
 ```cpp
-    logger.debug("Hello, {}!", "world");
-    logger.info("Hello, {}!", "world");
+logger.debug("Hello, {}!", "world");
+logger.info("Hello, {}!", "world");
 ```
 
 ### Using Logging Macros
 
 ```cpp
-    SL_INFO(logger, "Hello, {}!", "world");
-    SL_WARN(logger, "Hello, {}!", "world");
+SL_INFO(logger, "Hello, {}!", "world");
+SL_WARN(logger, "Hello, {}!", "world");
 ```
+
+## Configuration model
+
+Soralog supports passing multiple configurators to the `LoggingSystem`. These configurators are applied sequentially, allowing flexible and incremental configuration.
+
+The configuration process occurs in four waves:
+
+1. **Prepare** – initial setup and validation.
+2. **Apply sinks** – creation and configuration of sinks.
+3. **Apply groups** – setup of logging groups with hierarchy.
+4. **Cleanup** – finalization and resource management.
+
+Later configurators may override or extend settings from earlier ones, enabling complex configurations via cascading.
 
 ## Configuration File
 
 Soralog uses a YAML-based configuration file. Below is a detailed breakdown of all available parameters.
+
+### Notes
+
+- The builtin sink `"*"` always exists and discards all output.
+- The `syslog` sink is process-global; only one sink of `type: syslog` may be defined.
+- The `latency` parameter controls flushing delay in milliseconds. Setting `latency: 0` forces immediate synchronous flush on every log event, which may increase overhead.
 
 ### Example YAML Configuration
 
@@ -117,22 +141,24 @@ groups:
 
 #### Common Sink Parameters
 
-| Parameter        | Type    | Required | Default    | Description                                                                          |
-|------------------|---------|----------|------------|--------------------------------------------------------------------------------------|
-| `name`           | string  | Yes      | N/A        | Unique identifier of the sink                                                        |
-| `type`           | string  | Yes      | N/A        | Sink type (`console`, `file`, `syslog`, `multisink`)                                 |
-| `thread`         | string  | No       | `none`     | Thread info mode (`name`, `id`, `none`)                                              |
-| `capacity`       | int     | No       | `64`       | Max lock-free buffered messages                                                      |
-| `buffer`         | int     | No       | `131072`   | Max buffer size in bytes                                                             |
-| `latency`        | int     | No       | `100`      | Max delay in milliseconds before flushing                                            |
-| `level`          | string  | No       | `trace`    | Minimum log level (`trace`, `debug`, `verbose`, `info`, `warn`, `error`, `critical`) |
+| Parameter        | Type    | Required | Default    | Description                                                                                                 |
+|------------------|---------|----------|------------|-------------------------------------------------------------------------------------------------------------|
+| `name`           | string  | Yes      | N/A        | Unique identifier of the sink                                                                               |
+| `type`           | string  | Yes      | N/A        | Sink type (`console`, `file`, `syslog`, `multisink`)                                                        |
+| `thread`         | string  | No       | `none`     | Thread info mode (`name`, `id`, `none`)                                                                     |
+| `capacity`       | int     | No       | `64`       | Number of buffered events in the lock-free circular buffer                                                  |
+| `buffer`         | int     | No       | `131072`   | Buffer size in bytes                                                                                         |
+| `latency`        | int     | No       | `100`      | Max delay in milliseconds before flushing. `0` means immediate synchronous flush (higher overhead).         |
+| `level`          | string  | No       | `trace`    | Minimum log level (`trace`, `debug`, `verbose`, `info`, `warn`, `error`, `critical`)                         |
+
+Flushing occurs when either the capacity or buffer size limits are exceeded, or when the latency timer expires.
 
 #### Console Sink (`type: console`)
 
-| Parameter | Type   | Required | Default  | Description                        |
-|-----------|--------|----------|----------|------------------------------------|
-| `stream`  | string | No       | `stdout` | Output stream (`stdout`, `stderr`) |
-| `color`   | bool   | No       | `false`  | Enables colored output             |
+| Parameter | Type   | Required | Default  | Description                         |
+|-----------|--------|----------|----------|-------------------------------------|
+| `stream`  | string | No       | `stdout` | Output stream (`stdout`, `stderr`)  |
+| `color`   | bool   | No       | `false`  | Enables colored output              |
 
 #### File Sink (`type: file`)
 
@@ -163,7 +189,10 @@ groups:
 | `is_fallback` | bool   | No                    | `false` | Marks this group as the default fallback                                             |
 | `children`    | array  | No                    | `[]`    | List of child groups                                                                 |
 
-## Examples
+## FATAL / CRITICAL Semantics
+
+- **CRITICAL** log level causes the current sink to flush immediately.
+- **FATAL** log level flushes all sinks and then aborts the process.
 
 ## Examples
 
@@ -176,7 +205,14 @@ Soralog provides various examples demonstrating different use cases and configur
 5. **05-two_sinks** – Example of logging to two different sinks (e.g., console and file).
 6. **06-multisink** – Uses a multisink to send log messages to multiple destinations.
 7. **07-multisink_with_different_level** – Extends the multisink example by setting different log levels for different sinks.
-8. **99-most_features** – A comprehensive example showcasing most of Soralog’s features, including advanced configuration, multi-threading, and custom loggers.
+8. **08-logfile** – Logging to file with buffering and latency control.
+9. **09-logfile_rotate** – Logfile rotation using `logrotate`.
+10. **99-most_features** – A comprehensive example showcasing most of Soralog’s features, including:
+    - multi configurators
+    - multisinks
+    - per-sink log levels
+    - thread naming and concurrent logging
+    - long message truncation
 
 ### Example Source Code
 
@@ -187,6 +223,7 @@ The source code for these examples is available in the [example](https://github.
 Soralog is utilized in several open-source projects, including:
 
 - [cpp-libp2p](https://github.com/libp2p/cpp-libp2p)
+- [qlean-mini](https://github.com/qdrvm/clean-mini)
 - [Kagome](https://github.com/qdrvm/kagome)
 - [cpp-jam](https://github.com/qdrvm/cpp-jam)
 
@@ -197,4 +234,3 @@ We welcome contributions! Feel free to submit issues and pull requests.
 ## License
 
 Soralog is licensed under the Apache-2.0 license. See the LICENSE file for details.
-

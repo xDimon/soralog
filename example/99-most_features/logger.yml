@@ -6,63 +6,153 @@
 #
 
 # Logging configuration defining sinks and groups
+#
+# Legend:
+# - Multiple configurators are applied in order; later settings override earlier ones.
+# - Groups inherit sink and level from parents unless explicitly overridden.
+# - Sink properties control output destination, formatting, buffering, and error handling.
 
 sinks:                             # List of available logging sinks (outputs)
-  - name: colored_stdout           # Unique identifier for this sink
-    type: console                  # Sink type: 'console' means output to stdout or stderr
-    stream: stdout                 # Output destination: 'stdout' (default) or 'stderr'
-    color: true                    # Enables colored output using ANSI escape codes
-    thread: name                   # Thread info: 'name' (thread name), 'id' (thread ID), 'none' (no thread info)
-    capacity: 64                   # Max buffered log messages before forced flush
-    max_message_length: 120        # Maximum length of each log message (longer messages are truncated)
-    buffer: 131072                 # Maximum buffer size in bytes before forced flush
-    latency: 100                   # Maximum delay (ms) before buffered messages are flushed (0 = immediate flush)
-    level: trace                   # Minimum log level handled by this sink (e.g., trace, debug, info, etc.)
 
-  - name: simple_stderr            # Unique identifier for this sink
-    type: console                  # Console output sink
-    stream: stderr                 # Redirect output to standard error stream
-    color: false                   # Disable ANSI color codes
-    thread: name                   # Include thread name in logs
-    capacity: 64                   # Buffer capacity in messages
-    max_message_length: 120        # Maximum allowed message length
-    buffer: 131072                 # Total buffer size before automatic flushing
-    latency: 100                   # Max delay before forced flush
-    level: info                    # Accept logs of level 'info' and higher
+  # Console sink with colored output to stdout, thread name, and full buffering options
+  - name: colored_stdout
+    type: console
+    stream: stdout                 # Output to standard output
+    color: true                   # Enable ANSI color codes for readability
+    thread: name                  # Include thread name in log lines
+    capacity: 64                  # Max buffered messages before flush
+    max_message_length: 120       # Truncate longer messages
+    buffer: 131072                # Buffer size in bytes before flush
+    latency: 100                  # Max delay (ms) before flush (0 = immediate)
+    level: trace                  # Accept all logs from trace level upwards
 
-  - name: file                     # Unique identifier for this sink
-    type: file                     # Log output to a file
-    path: /tmp/solalog_example.log # Path to the log file
-    thread: name                   # Include thread name in logs
-    capacity: 2048                 # Buffer capacity in messages
-    buffer: 4194304                # Max buffer size before automatic flushing
-    latency: 1000                  # Max delay before flushing logs to the file
-    at_fault: wait                 # Behavior on write failure:
-                                    # - 'terminate': exit process with IO error
-                                    # - 'wait': retry indefinitely (may freeze process)
-                                    # - 'ignore': discard logs and continue
+  # Console sink with no color, output to stderr, using thread id, minimal buffering
+  - name: simple_stderr
+    type: console
+    stream: stderr                # Output to standard error
+    color: false                  # Disable color codes
+    thread: id                   # Include thread ID instead of name
+    capacity: 32                 # Smaller buffer capacity
+    max_message_length: 80       # Shorter max message length
+    buffer: 65536                # Smaller buffer size in bytes
+    latency: 0                   # Immediate flush: disables buffering delay, every message is flushed synchronously
+    level: info                  # Accept info level and above
 
-  - name: syslog                   # Unique identifier for this sink
-    type: syslog                   # Sends logs to the system's syslog service
-    ident: solalog_example         # Identifier used in syslog entries
-    thread: name                   # Include thread name in logs
-    capacity: 2048                 # Buffer capacity in messages
-    buffer: 4194304                # Maximum buffer size before automatic flush
-    latency: 1000                  # Max delay before syslog messages are sent
+  # Console sink with default settings (demonstrates omitted optional properties)
+  - name: console_defaults
+    type: console
+    stream: stdout               # Default stream
+    # color defaults to false
+    # thread defaults to none
+    # capacity, max_message_length, buffer, latency use defaults
+    # level defaults to trace
 
-  - name: sink_to_everywhere       # Sink that broadcasts logs to multiple other sinks
-    type: multisink                # 'multisink' type aggregates multiple sinks
-    sinks:                         # List of sinks where messages should be forwarded
+  # File sink with thread name, large buffers, and 'wait' on fault (retry indefinitely)
+  - name: file
+    type: file
+    path: /tmp/solalog_example.log
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
+    at_fault: wait               # Retry indefinitely on write failure
+    level: info                 # File logs info and above
+
+  # File sink with 'ignore' on fault (discard logs on failure), thread id
+  - name: file_ignore_fault
+    type: file
+    path: /tmp/solalog_ignore.log
+    thread: id
+    capacity: 512
+    buffer: 1048576
+    latency: 500
+    at_fault: ignore             # Discard logs if write fails
+    level: trace                # Log all levels
+
+  # File sink demonstrating immediate flush (latency = 0)
+  - name: file_immediate
+    type: file
+    path: /tmp/solalog_immediate.log
+    thread: none
+    capacity: 128
+    buffer: 65536
+    latency: 0                   # Immediate flush: each entry is flushed right away (lowest latency, higher overhead)
+    at_fault: wait
+    level: trace
+
+  # File sink with 'terminate' on fault (exit process), no thread info
+  - name: file_terminate_fault
+    type: file
+    path: /tmp/solalog_terminate.log
+    thread: none
+    capacity: 1024
+    buffer: 2097152
+    latency: 200
+    at_fault: terminate          # Exit process on write failure
+    level: off                  # Disabled sink (no logs)
+
+  # Syslog sink with identifier and thread name, demonstrating buffering and latency
+  # Note: syslog is process-global; only one syslog sink can be created.
+  # To log without thread info, set `thread: none` here instead of adding a
+  # second syslog sink.
+  - name: syslog
+    type: syslog
+    ident: solalog_example
+    thread: name
+    capacity: 2048
+    buffer: 4194304
+    latency: 1000
+    level: info
+
+  # Multisink forwarding to multiple sinks
+  - name: sink_to_everywhere
+    type: multisink
+    sinks:
       - file
+      - file_immediate
       - colored_stdout
       - simple_stderr
       - syslog
+    level: trace
+
+  # Multisink forwarding to sinks with different levels to demonstrate split logging
+  - name: sink_split_levels
+    type: multisink
+    sinks:
+      - colored_stdout           # Accepts trace and above
+      - simple_stderr            # Accepts info and above
+    level: trace
 
 groups:                            # Log groups define hierarchical loggers
-  - name: main                     # Root group handling logs
-    sink: sink_to_everywhere       # Default sink for this group
-    level: trace                   # Minimum log level for this group
-    is_fallback: true              # This is the fallback group (only one allowed)
-    children:                      # Sub-groups inherit properties from this group
-      - name: example_group        # Example subgroup
-      - name: another_group        # Another subgroup
+
+  # Root fallback group with multisink forwarding to all sinks
+  - name: main
+    sink: sink_to_everywhere
+    level: trace
+    is_fallback: true
+    children:
+
+      # Child group inheriting both sink and level from 'main'
+      - name: example_group
+
+      # Child group overriding only level (inherits sink)
+      - name: another_group
+        level: info
+
+      # Child group overriding only sink (inherits level)
+      - name: split_levels_group
+        sink: sink_split_levels
+
+      # Child group overriding both sink and level
+      - name: verbose_group
+        sink: colored_stdout
+        level: trace
+
+      # Nested groups demonstrating deeper hierarchy and inheritance
+      - name: nested_group
+        children:
+          - name: nested_child_group
+            # inherits sink and level from nested_group (and ultimately main)
+          - name: nested_override_group
+            sink: simple_stderr
+            level: info

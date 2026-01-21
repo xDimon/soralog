@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <functional>
+#include <map>
 #include <ranges>
 #include <set>
 
@@ -40,7 +41,7 @@ namespace soralog {
     auto group =
         std::make_shared<Group>(*this, std::move(name), parent, sink, level);
 
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     // Ensure that the fallback group ("*") is always present
     if (groups_.find("*") == groups_.end()) {
@@ -53,7 +54,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::setFallbackGroup(const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     auto it = groups_.find(group_name);
     if (it == groups_.end()) {
       return false;
@@ -72,7 +73,7 @@ namespace soralog {
   }
 
   Configurator::Result LoggingSystem::configure() {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     if (is_configured_) {
       throw std::logic_error(
@@ -99,27 +100,37 @@ namespace soralog {
       result.message += "E: Configure failed: "s + exception.what() + "; "
                       + "Logging system is unworkable\n";
       result.has_error = true;
-      return result;
     }
 
-    // Ensure that at least one group is defined
-    if (groups_.empty()) {
-      result.message +=
-          "E: No group is defined; Logging system is unworkable\n";
-      result.has_error = true;
-      return result;
+    if (not result.has_error) {
+      // Ensure that at least one group is defined
+      if (groups_.empty()) {
+        result.message +=
+            "E: No group is defined; Logging system is unworkable\n";
+        result.has_error = true;
+      }
     }
 
-    // Check if any group has an undefined sink
-    for (auto &[name, group] : groups_) {
-      if (name == "*") {
-        continue;
+    if (not result.has_error) {
+      // Check if any group has an undefined sink
+      for (auto &[name, group] : groups_) {
+        if (name == "*") {
+          continue;
+        }
+        if (group->sink()->name() == "*") {
+          result.message += "W: Group '" + name + "' has undefined sink; "
+                          + "Sink to nowhere will be used\n";
+          result.has_warning = true;
+        }
       }
-      if (group->sink()->name() == "*") {
-        result.message += "W: Group '" + name + "' has undefined sink; "
-                        + "Sink to nowhere will be used\n";
-        result.has_warning = true;
-      }
+    }
+
+    if (result.has_error or result.has_warning) {
+      result.message = "I: Some problems are found during configuring:\n"
+                     + result.message
+                     + "I: See more details on "
+                       "https://github.com/xDimon/soralog/tree/update/"
+                       "documentation?tab=readme-ov-file#configuration-file";
     }
 
     return result;
@@ -130,7 +141,7 @@ namespace soralog {
       const std::string &group_name,
       const std::optional<std::string> &sink_name,
       const std::optional<Level> &level) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     if (not is_configured_) {
       throw std::logic_error("LoggerSystem is not yet configured");
@@ -150,10 +161,11 @@ namespace soralog {
           "be used anymore; Define an existing group explicitly";
 #ifndef NDEBUG
       throw std::runtime_error(warn_msg);
-#endif
+#else
       auto group = getFallbackGroup();
       auto logger = std::make_shared<Logger>(*this, "Soralog", group);
       logger->warn(warn_msg);
+#endif
     }
 
     // Get the specified group, or fall back to the default
@@ -188,7 +200,7 @@ namespace soralog {
 
   [[nodiscard]] std::shared_ptr<Sink> LoggingSystem::getSink(
       const std::string &sink_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     auto it = sinks_.find(sink_name);
     if (it == sinks_.end()) {
       return {};
@@ -198,7 +210,7 @@ namespace soralog {
 
   [[nodiscard]] std::shared_ptr<Group> LoggingSystem::getGroup(
       const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     auto it = groups_.find(group_name);
     if (it == groups_.end()) {
       return {};
@@ -247,7 +259,7 @@ namespace soralog {
       return ++n;
     };
 
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     // Identify groups that need to update their parent
     for (const auto &it : groups_) {
@@ -285,7 +297,7 @@ namespace soralog {
 
     // Apply the new sink to the group
     if (sink) {
-      group->setSink(*sink);
+      group->setSink(std::move(*sink));
     } else {
       group->resetSink();
     }
@@ -320,12 +332,12 @@ namespace soralog {
       return ++n;
     };
 
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     // Identify affected groups
-    for (const auto &it : groups_) {
-      auto n = fn(it.second);
-      passed_groups[it.second] = n;
+    for (const auto &grp : groups_ | std::views::values) {
+      auto n = fn(grp);
+      passed_groups[grp] = n;
     }
 
     // Update affected groups in order
@@ -394,12 +406,12 @@ namespace soralog {
       return ++n;
     };
 
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     // Identify affected groups
-    for (const auto &it : groups_) {
-      auto n = fn(it.second);
-      passed_groups[it.second] = n;
+    for (const auto &grp : groups_ | std::views::values) {
+      auto n = fn(grp);
+      passed_groups[grp] = n;
     }
 
     // Update affected groups in order
@@ -452,8 +464,8 @@ namespace soralog {
   }
 
   bool LoggingSystem::setParentOfGroup(const std::string &group_name,
-                                       const std::string &parent_name) {
-    std::lock_guard guard(mutex_);
+                                       const std::string &parent_group_name) {
+    std::scoped_lock guard(mutex_);
 
     auto it1 = groups_.find(group_name);
     if (it1 == groups_.end()) {
@@ -461,7 +473,7 @@ namespace soralog {
     }
     auto &group = it1->second;
 
-    auto it2 = groups_.find(parent_name);
+    auto it2 = groups_.find(parent_group_name);
     if (it2 == groups_.end()) {
       return false;
     }
@@ -483,7 +495,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::unsetParentOfGroup(const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     auto it = groups_.find(group_name);
     if (it == groups_.end()) {
@@ -498,7 +510,7 @@ namespace soralog {
 
   bool LoggingSystem::setSinkOfGroup(const std::string &group_name,
                                      const std::string &sink_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     auto sink = getSink(sink_name);
     if (not sink) {
       return false;
@@ -513,7 +525,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::resetSinkOfGroup(const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
 
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
@@ -526,7 +538,7 @@ namespace soralog {
 
   bool LoggingSystem::setLevelOfGroup(const std::string &group_name,
                                       Level level) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
       // Set new logging level for the group
@@ -537,7 +549,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::resetLevelOfGroup(const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto it = groups_.find(group_name); it != groups_.end()) {
       auto &group = it->second;
       // Reset logging level to inherit from parent
@@ -549,7 +561,7 @@ namespace soralog {
 
   bool LoggingSystem::setGroupOfLogger(const std::string &logger_name,
                                        const std::string &group_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto group = getGroup(group_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
         if (auto logger = it->second.lock()) {
@@ -565,7 +577,7 @@ namespace soralog {
 
   bool LoggingSystem::setSinkOfLogger(const std::string &logger_name,
                                       const std::string &sink_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto sink = getSink(sink_name)) {
       if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
         if (auto logger = it->second.lock()) {
@@ -580,7 +592,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::resetSinkOfLogger(const std::string &logger_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         // Reset the logger's sink to inherit from its group
@@ -593,7 +605,7 @@ namespace soralog {
 
   bool LoggingSystem::setLevelOfLogger(const std::string &logger_name,
                                        Level level) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         // Set a new log level for the logger
@@ -606,7 +618,7 @@ namespace soralog {
   }
 
   bool LoggingSystem::resetLevelOfLogger(const std::string &logger_name) {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     if (auto it = loggers_.find(logger_name); it != loggers_.end()) {
       if (auto logger = it->second.lock()) {
         // Reset the logger's level to inherit from its group
@@ -619,7 +631,7 @@ namespace soralog {
   }
 
   void LoggingSystem::callFlushForAllSinks() {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     std::ranges::for_each(sinks_, [](const auto &it) {
       const auto &sink = it.second;
       sink->flush();
@@ -627,7 +639,7 @@ namespace soralog {
   }
 
   void LoggingSystem::callRotateForAllSinks() {
-    std::lock_guard guard(mutex_);
+    std::scoped_lock guard(mutex_);
     std::ranges::for_each(sinks_, [](const auto &it) {
       const auto &sink = it.second;
       sink->rotate();
