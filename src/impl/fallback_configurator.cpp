@@ -14,7 +14,7 @@
 namespace soralog {
 
   void FallbackConfigurator::prepare(LoggingSystem &system,
-                                     int index,
+                                     size_t index,
                                      Result &result) {
     applicator_ =
         std::make_tuple(std::ref(system), index + 1, std::ref(result));

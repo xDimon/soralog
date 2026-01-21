@@ -29,7 +29,8 @@ namespace soralog::detail {
   // string literal
   template <typename Char, std::size_t N>
   constexpr fmt::basic_string_view<Char> compile_string_to_view(
-      const Char (&s)[N]) {
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
+  const Char (&s)[N]) {
     return {s, N > 0 ? N - 1 : 0};
   }
 
@@ -43,7 +44,7 @@ namespace soralog::detail {
   // const Char* / Char* (but NOT arrays)
   template <typename Ptr>
     requires(std::is_pointer_v<std::remove_reference_t<Ptr>>
-             && std::is_same_v<std::remove_cv_t<std::remove_pointer_t<
+             and std::is_same_v<std::remove_cv_t<std::remove_pointer_t<
                                    std::remove_reference_t<Ptr>>>,
                                char>)
   inline fmt::basic_string_view<char> compile_string_to_view(Ptr s) {

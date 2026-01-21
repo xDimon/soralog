@@ -79,7 +79,9 @@ namespace soralog {
      * avoid destructive changes that prevent later configurators from applying
      * overrides.
      */
-    virtual void prepare(LoggingSystem &system, int index, Result &result) = 0;
+    virtual void prepare(LoggingSystem &system,
+                         size_t index,
+                         Result &result) = 0;
 
     /**
      * @brief Applies sink configuration.

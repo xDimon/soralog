@@ -46,7 +46,7 @@ namespace soralog {
      */
     ~ConfiguratorFromYAML() override = default;
 
-    void prepare(LoggingSystem &system, int index, Result &result) override;
+    void prepare(LoggingSystem &system, size_t index, Result &result) override;
     void applySinks() const override;
     void applyGroups() const override;
     void cleanup() override;
@@ -71,11 +71,11 @@ namespace soralog {
        * @param result
        * @param config YAML configuration (file path, string, or node).
        */
-      Applicator(YAML::Node node,
+      Applicator(const YAML::Node &node,
                  LoggingSystem &system,
-                 int index,
+                 size_t index,
                  Result &result)
-          : sys(system), node(std::move(node)), id(index + 1), res(result) {}
+          : sys(system), node(node), id(index + 1), res(result) {}
 
       void parseSinks();
       void parseGroups();
@@ -107,7 +107,7 @@ namespace soralog {
        * reporting).
        * @param sink YAML node containing the sink configuration.
        */
-      void parseSink(int number, const YAML::Node &sink);
+      void parseSink(size_t number, const YAML::Node &sink);
 
       /**
        * @brief Parses a console sink configuration from a YAML node.
@@ -183,19 +183,22 @@ namespace soralog {
        * @param group_node YAML node containing the group definition.
        * @param parent Optional name of the parent group, if applicable.
        */
-      void parseGroup(int number,
+      void parseGroup(size_t number,
                       const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
       /// Parsed YAML node.
-      YAML::Node node;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+      const YAML::Node &node;
 
       /// Reference to the logging system being configured.
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &sys;
 
-      int id;
+      /// Index of configurator (as provided in constructor of LoggingSystem)
+      size_t id;
 
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       Result &res;
     };
   };

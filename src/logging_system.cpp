@@ -84,17 +84,18 @@ namespace soralog {
 
     Configurator::Result result;
     try {
-      for (int i = 0; i < configurators_.size(); ++i) {
-        configurators_[i]->prepare(*this, i, result);
+      size_t i = 0;
+      for (auto &configurator : configurators_) {
+        configurator->prepare(*this, i++, result);
       }
-      for (int i = 0; i < configurators_.size(); ++i) {
-        configurators_[i]->applySinks();
+      for (auto &configurator : configurators_) {
+        configurator->applySinks();
       }
-      for (int i = 0; i < configurators_.size(); ++i) {
-        configurators_[i]->applyGroups();
+      for (auto &configurator : configurators_) {
+        configurator->applyGroups();
       }
-      for (int i = 0; i < configurators_.size(); ++i) {
-        configurators_[i]->cleanup();
+      for (auto &configurator : configurators_) {
+        configurator->cleanup();
       }
     } catch (const std::exception &exception) {
       result.message += "E: Configure failed: "s + exception.what() + "; "

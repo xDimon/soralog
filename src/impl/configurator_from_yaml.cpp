@@ -53,7 +53,7 @@ namespace soralog {
   }  // namespace
 
   void ConfiguratorFromYAML::prepare(LoggingSystem &system,
-                                     int index,
+                                     size_t index,
                                      Result &result) {
     YAML::Node node;
     std::visit(
@@ -228,7 +228,7 @@ namespace soralog {
     return std::nullopt;
   }
 
-  void ConfiguratorFromYAML::Applicator::parseSink(int number,
+  void ConfiguratorFromYAML::Applicator::parseSink(size_t number,
                                                    const YAML::Node &sink) {
     bool fail = false;
 
@@ -1038,7 +1038,7 @@ namespace soralog {
   }
 
   void ConfiguratorFromYAML::Applicator::parseGroup(
-      int number,
+      size_t number,
       const YAML::Node &group_node,
       const std::optional<std::string> &parent) {
     bool fail = false;

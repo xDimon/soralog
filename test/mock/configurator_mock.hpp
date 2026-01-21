@@ -28,7 +28,7 @@ namespace soralog {
 
     MOCK_METHOD(void,
                 prepare,
-                (LoggingSystem & system, int index, Result &result),
+                (LoggingSystem & system, size_t index, Result &result),
                 (override));
     MOCK_METHOD(void, applySinks, (), (const, override));
     MOCK_METHOD(void, applyGroups, (), (const, override));
