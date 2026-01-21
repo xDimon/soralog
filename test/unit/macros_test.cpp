@@ -39,7 +39,7 @@ class MacrosTest : public ::testing::Test {
           ::fmt::vformat_to_n<OutputIt>(
               message_buf.begin(),
               message_buf.size(),
-              ::fmt::detail_exported::compile_string_to_view<char>(format),
+              detail::compile_string_to_view(format),
               ::fmt::make_format_args(args...))
               .size;
       last_message = std::string_view(message_buf.data(),
@@ -299,17 +299,17 @@ TEST_F(MacrosTest, CalculatedFormat) {
 
   // C-string format string
   static const char *c_string = "ping => {}";
-  SL_DEBUG_DF(logger(), c_string, "pong");
+  SL_DEBUG(logger(), c_string, "pong");
   EXPECT_TRUE(logger_->last_message == "ping => pong");
 
   // std::string_view format string
   std::string_view string_view("ping => {}");
-  SL_DEBUG_DF(logger(), string_view, "pong");
+  SL_DEBUG(logger(), string_view, "pong");
   EXPECT_TRUE(logger_->last_message == "ping => pong");
 
   // std::string format string
   std::string string("ping => {}");
-  SL_DEBUG_DF(logger(), string, "pong");
+  SL_DEBUG(logger(), string, "pong");
   EXPECT_TRUE(logger_->last_message == "ping => pong");
 }
 
@@ -360,6 +360,6 @@ TEST_F(MacrosTest, StructuredBinding) {
 
   // Using a dynamically formatted string
   static const char *df = "x: {}";
-  SL_DEBUG_DF(logger(), df, x);
+  SL_DEBUG(logger(), df, x);
   EXPECT_TRUE(logger_->last_message == "x: 1");
 }

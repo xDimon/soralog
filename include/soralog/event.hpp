@@ -15,6 +15,7 @@
 #include <fmt/format.h>
 #include <fmt/ostream.h>
 
+#include <soralog/internals.hpp>
 #include <soralog/level.hpp>
 #include <soralog/sink.hpp>
 #include <soralog/util.hpp>
@@ -113,13 +114,12 @@ namespace soralog {
 
       try {
         using OutputIt = decltype(it);
-        message_size_ =
-            ::fmt::vformat_to_n<OutputIt>(
-                it,
-                max_message_length,
-                ::fmt::detail_exported::compile_string_to_view<char>(format),
-                ::fmt::make_format_args(args...))
-                .size;
+        message_size_ = ::fmt::vformat_to_n<OutputIt>(
+                            it,
+                            max_message_length,
+                            detail::compile_string_to_view(format),
+                            ::fmt::make_format_args(args...))
+                            .size;
       } catch (const std::exception &exception) {
         message_size_ = fmt::format_to_n(it,
                                          max_message_length,

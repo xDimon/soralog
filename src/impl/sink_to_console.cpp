@@ -7,19 +7,17 @@
 
 #include <soralog/impl/sink_to_console.hpp>
 
-#include <chrono>
 #include <iostream>
 #include <string_view>
 
-#include <fmt/chrono.h>
 #include <fmt/color.h>
 #include <fmt/format.h>
+
+#include <soralog/internals.hpp>
 
 namespace soralog {
 
   namespace {
-
-    using namespace std::chrono_literals;
 
     // Separator used between logical parts of a log record.
     // A double space is chosen to distinguish from a single space.
@@ -278,7 +276,7 @@ namespace soralog {
 
         // Format timestamp only when the second changes.
         if (psec != sec) {
-          tm = fmt::localtime(sec);
+          tm = detail::localtime(sec);
           fmt::format_to_n(datetime.data(),
                            datetime.size(),
                            "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",

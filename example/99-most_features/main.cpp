@@ -190,7 +190,7 @@ int main() {
   // Example of formatted logging with a dynamically generated format string
   auto dynamic_format = "Custom made format: {} ==>"s + "<== {}"s;
   main_log->info(dynamic_format, 1, 2);
-  SL_INFO_DF(main_log, dynamic_format, 3, 4);
+  SL_INFO(main_log, dynamic_format, 3, 4);
 
   // Demonstration of logging from an object
   LoggingObject object(log_system);
