@@ -19,6 +19,7 @@ namespace soralog {
    */
   enum class Level : uint8_t {
     OFF = 0,   ///< No logging (for disabling logger)
+    FATAL,     ///< Logs only fatal messages
     CRITICAL,  ///< Logs only critical messages
     ERROR,     ///< Logs error messages
     WARN,      ///< Logs warning messages
@@ -37,6 +38,7 @@ namespace soralog {
         level_to_str_map = [] {
           std::array<const char *, static_cast<uint8_t>(Level::IGNORE) + 1> r{};
           r[static_cast<uint8_t>(Level::OFF)] = "?Off";
+          r[static_cast<uint8_t>(Level::FATAL)] = "Fatal";
           r[static_cast<uint8_t>(Level::CRITICAL)] = "Critical";
           r[static_cast<uint8_t>(Level::ERROR)] = "Error";
           r[static_cast<uint8_t>(Level::WARN)] = "Warning";

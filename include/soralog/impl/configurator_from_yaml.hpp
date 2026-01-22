@@ -42,54 +42,28 @@ namespace soralog {
         : config_(std::move(config_content)) {}
 
     /**
-     * @brief Constructs a configurator using a YAML file,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_path Path to the YAML configuration file.
+     * @brief Constructs a configurator using a YAML string.
+     * @param config_node YAML node preliminary prepared..
      */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  std::filesystem::path config_path)
-        : previous_(std::move(previous)), config_(std::move(config_path)) {}
-
-    /**
-     * @brief Constructs a configurator using a YAML string,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_content YAML configuration content as a string.
-     */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  std::string config_content)
-        : previous_(std::move(previous)), config_(std::move(config_content)) {}
-
-    /**
-     * @brief Constructs a configurator using a parsed YAML node,
-     *        applying a previous configurator first.
-     * @param previous Underlying configurator to apply first.
-     * @param config_yaml_node Parsed YAML configuration node.
-     */
-    explicit ConfiguratorFromYAML(std::shared_ptr<Configurator> previous,
-                                  YAML::Node config_yaml_node)
-        : previous_(std::move(previous)),
-          config_(std::move(config_yaml_node)) {}
+    explicit ConfiguratorFromYAML(YAML::Node config_node)
+        : config_(std::move(config_node)) {}
 
     /**
      * @brief Destroys the configurator.
      */
     ~ConfiguratorFromYAML() override = default;
 
-    /**
-     * @brief Applies the YAML-based configuration to the logging system.
-     * @param system The logging system instance.
-     * @return Configuration result, indicating errors or warnings.
-     */
-    Result applyOn(LoggingSystem &system) const override;
+    void prepare(LoggingSystem &system, size_t index, Result &result) override;
+    void applySinks() const override;
+    void applyGroups() const override;
+    void cleanup() override;
 
    private:
-    /// Optional previous configurator to apply before parsing the YAML config.
-    std::shared_ptr<Configurator> previous_;
-
     /// YAML configuration, which can be a file path, string, or parsed node.
     std::variant<std::filesystem::path, std::string, YAML::Node> config_;
+
+    class Applicator;
+    std::shared_ptr<Applicator> applicator_;
 
     /**
      * @class Applicator
@@ -99,31 +73,22 @@ namespace soralog {
      public:
       /**
        * @brief Constructs an applicator to process the YAML configuration.
-       * @param system Reference to the logging system.
        * @param config YAML configuration (file path, string, or node).
-       * @param previous Optional previous configurator.
+       * @param system Reference to the logging system.
+       * @param index Index of the configurator in the chain (0-based).
+       * @param result Reference to the result object for reporting
+       * errors/warnings.
        */
-      Applicator(
-          LoggingSystem &system,
-          std::variant<std::filesystem::path, std::string, YAML::Node> config,
-          std::shared_ptr<Configurator> previous = {})
-          : system_(system),
-            previous_(std::move(previous)),
-            config_(std::move(config)) {}
+      Applicator(YAML::Node node,
+                 LoggingSystem &system,
+                 size_t index,
+                 Result &result)
+          : sys(system), node(std::move(node)), id(index + 1), res(result) {}
 
-      /**
-       * @brief Executes the configuration parsing and application process.
-       * @return Result object containing status and messages about the process.
-       */
-      Result run() &&;
+      void parseSinks();
+      void parseGroups();
 
      private:
-      /**
-       * @brief Parses the root YAML node and applies configurations.
-       * @param node The root YAML node.
-       */
-      void parse(const YAML::Node &node);
-
       /**
        * @brief Parses and returns a log level from a YAML node.
        * @param target Description of the entity being parsed..
@@ -150,7 +115,7 @@ namespace soralog {
        * reporting).
        * @param sink YAML node containing the sink configuration.
        */
-      void parseSink(int number, const YAML::Node &sink);
+      void parseSink(size_t number, const YAML::Node &sink);
 
       /**
        * @brief Parses a console sink configuration from a YAML node.
@@ -226,28 +191,23 @@ namespace soralog {
        * @param group_node YAML node containing the group definition.
        * @param parent Optional name of the parent group, if applicable.
        */
-      void parseGroup(int number,
+      void parseGroup(size_t number,
                       const YAML::Node &group_node,
                       const std::optional<std::string> &parent);
 
+      /// Parsed YAML node.
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+      const YAML::Node node;
+
       /// Reference to the logging system being configured.
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
-      LoggingSystem &system_;
+      LoggingSystem &sys;
 
-      /// Optional previous configurator applied before parsing YAML.
-      std::shared_ptr<Configurator> previous_ = nullptr;
+      /// Index of configurator (as provided in constructor of LoggingSystem)
+      size_t id;
 
-      /// YAML configuration (file path, string, or parsed node).
-      std::variant<std::filesystem::path, std::string, YAML::Node> config_;
-
-      /// Flag indicating if a warning occurred during parsing.
-      bool has_warning_ = false;
-
-      /// Flag indicating if an error occurred during parsing.
-      bool has_error_ = false;
-
-      /// Stream for collecting error messages.
-      std::ostringstream errors_;
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
+      Result &res;
     };
   };
 

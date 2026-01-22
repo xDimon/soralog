@@ -11,19 +11,28 @@
 
 /**
  * @file log_macros.hpp
- * @brief Provides logging macros for different log levels.
+ * @brief Logging macros for different log levels.
  *
- * These macros simplify logging calls by automatically checking log levels
- * and formatting messages. Two sets of macros are available:
- * - Standard format (compile-time validation).
- * - Dynamic format (_DF suffix, runtime validation).
+ * This file defines a set of convenience macros for logging messages with
+ * automatic log level checking.
+ *
+ * The macros forward the provided format and arguments to the underlying
+ * logger implementation. The actual handling of format types
+ * (string literals, std::string, std::string_view, C-strings) and any
+ * format validation is performed by the logger, not by the macros themselves.
  *
  * Optionally, trace and debug logging can be disabled at compile time using:
  * - `WITHOUT_TRACE_LOG_LEVEL`
  * - `WITHOUT_DEBUG_LOG_LEVEL`
  */
 
-// Base macro that logs a message if the specified log level is enabled.
+/**
+ * @brief Base macro that logs a message if the specified log level is enabled.
+ *
+ * This macro evaluates the logger expression once, compares the current
+ * log level with the requested one, and forwards the call to
+ * `Logger::log(...)` if logging is enabled.
+ */
 #define _SL_LOG_IF_LEVEL(LOG, LVL, FMT, ...)                 \
   ({                                                         \
     auto &&_sl_log_log = (LOG);                              \
@@ -33,28 +42,28 @@
     }                                                        \
   })
 
-// Standard logging macro.
+/**
+ * @brief Internal logging macro.
+ *
+ * This macro is a thin wrapper around `_SL_LOG_IF_LEVEL` and does not
+ * impose any restrictions on the format argument type.
+ */
 #define _SL_LOG(LOG, LVL, FMT, ...) \
   _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
-// Public macro for general logging.
+/**
+ * @brief Public macro for generic logging with an explicit log level.
+ */
 #define SL_LOG(LOG, LVL, FMT, ...) _SL_LOG((LOG), (LVL), (FMT), ##__VA_ARGS__)
-
-// Dynamic format version (runtime format validation).
-#define _SL_LOG_DF(LOG, LVL, FMT, ...) \
-  _SL_LOG_IF_LEVEL((LOG), (LVL), (FMT), ##__VA_ARGS__)
-
-#define SL_LOG_DF(LOG, LVL, FMT, ...) \
-  _SL_LOG_DF((LOG), (LVL), (FMT), ##__VA_ARGS__)
 
 /**
  * @section Conditional Compilation for Debug and Trace Logs
  *
- * To disable trace/debug logs at compile time, define:
+ * Trace and debug logging can be removed at compile time by defining:
  * - `WITHOUT_TRACE_LOG_LEVEL`
  * - `WITHOUT_DEBUG_LOG_LEVEL`
  *
- * If trace logs are disabled, debug logs will be disabled automatically.
+ * If debug logging is disabled, trace logging is disabled automatically.
  */
 
 #if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
@@ -62,7 +71,12 @@
 #undef WITHOUT_DEBUG_LOG_LEVEL
 #endif
 
-// Macros for standard logging levels (compile-time format validation).
+/**
+ * @section Logging Macros by Level
+ *
+ * The following macros log messages at fixed log levels.
+ * They perform a runtime log level check and forward the call to the logger.
+ */
 
 #ifndef WITHOUT_TRACE_LOG_LEVEL
 #define SL_TRACE(LOG, FMT, ...) \
@@ -93,35 +107,5 @@
 #define SL_CRITICAL(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::CRITICAL, (FMT), ##__VA_ARGS__)
 
-// Macros for others () format, i.e. string, string-view, null-terminated-string
-// They are differs by suffix '_DF' (dynamic format).
-// Correctness of format will be validated in runtime
-
-#ifndef WITHOUT_TRACE_LOG_LEVEL
-#define SL_TRACE_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::TRACE, (FMT), ##__VA_ARGS__)
-#else
-#define SL_TRACE_DF(LOG, FMT, ...)
-#endif
-
-#ifndef WITHOUT_DEBUG_LOG_LEVEL
-#define SL_DEBUG_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::DEBUG, (FMT), ##__VA_ARGS__)
-#else
-#define SL_DEBUG_DF(LOG, FMT, ...)
-#endif
-
-#define SL_VERBOSE_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::VERBOSE, (FMT), ##__VA_ARGS__)
-
-#define SL_INFO_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::INFO, (FMT), ##__VA_ARGS__)
-
-#define SL_WARN_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::WARN, (FMT), ##__VA_ARGS__)
-
-#define SL_ERROR_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::ERROR, (FMT), ##__VA_ARGS__)
-
-#define SL_CRITICAL_DF(LOG, FMT, ...) \
-  _SL_LOG_DF((LOG), soralog::Level::CRITICAL, (FMT), ##__VA_ARGS__)
+#define SL_FATAL(LOG, FMT, ...) \
+  _SL_LOG((LOG), soralog::Level::FATAL, (FMT), ##__VA_ARGS__);

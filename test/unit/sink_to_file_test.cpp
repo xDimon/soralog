@@ -75,6 +75,7 @@ class SinkToFileTest : public ::testing::Test {
    */
   void TearDown() override {
     std::remove(path_.native().data());
+    sink_.reset();
   }
 
   /**
@@ -83,7 +84,7 @@ class SinkToFileTest : public ::testing::Test {
    * @return A shared pointer to a FakeLogger instance.
    */
   std::shared_ptr<FakeLogger> createLogger(std::chrono::milliseconds latency) {
-    auto sink = std::make_shared<SinkToFile>(
+    sink_ = std::make_shared<SinkToFile>(
         "file",
         Level::TRACE,
         path_,
@@ -92,11 +93,12 @@ class SinkToFileTest : public ::testing::Test {
         64,                          // Max message length: 64 bytes
         16384,                       // Buffer size: 16 KB
         latency.count());            // Log flush latency
-    return std::make_shared<FakeLogger>(std::move(sink));
+    return std::make_shared<FakeLogger>(sink_);
   }
 
- private:
+ protected:
   std::filesystem::path path_;
+  std::shared_ptr<SinkToFile> sink_;
 };
 
 /**
@@ -125,4 +127,39 @@ TEST_F(SinkToFileTest, Logging) {
 
   // Ensure all buffered logs are written to the file
   logger->flush();
+}
+
+/**
+ * @test Logging
+ * @brief Tests the logging behavior of SinkToFile under different delays.
+ *
+ * @given A logger writing to a file sink with a specified latency.
+ * @when Multiple messages are logged with varying delays.
+ * @then The messages are written to the file and can be flushed manually.
+ */
+TEST_F(SinkToFileTest, Rotating) {
+  std::filesystem::path path_to_old_file = path_.string() + ".old";
+
+  // ASSERT_TRUE(not std::filesystem::exists(path_));
+  ASSERT_TRUE(not std::filesystem::exists(path_to_old_file));
+
+  auto logger = createLogger(0ms);  // Create a logger with zero flush latency
+
+  logger->debug("Message to log-file #1");
+  logger->flush();
+
+  ASSERT_TRUE(std::filesystem::exists(path_));
+  ASSERT_TRUE(not std::filesystem::exists(path_to_old_file));
+
+  std::filesystem::rename(path_, path_to_old_file);
+  sink_->rotate();
+
+  logger->debug("Message to log-file #2");
+  logger->flush();
+
+  ASSERT_TRUE(std::filesystem::exists(path_));
+  ASSERT_TRUE(std::filesystem::exists(path_to_old_file));
+
+  std::filesystem::remove(path_);
+  std::filesystem::remove(path_to_old_file);
 }

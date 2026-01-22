@@ -5,16 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-add_executable(example_99
+add_executable(example_09
     main.cpp
-    logging_object.cpp
 )
-target_include_directories(example_99
+target_include_directories(example_09
     PRIVATE ${CMAKE_SOURCE_DIR}/include
 )
-target_link_libraries(example_99
+target_link_libraries(example_09
     soralog::soralog
     soralog::yaml
-    soralog::fallback
-    pthread
 )

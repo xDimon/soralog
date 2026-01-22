@@ -8,17 +8,14 @@
 #include <soralog/impl/sink_to_syslog.hpp>
 
 #include <chrono>
-#include <iomanip>
-#include <iostream>
 
-#include <fmt/chrono.h>
 #include <syslog.h>
+
+#include <soralog/internals.hpp>
 
 namespace soralog {
 
   namespace {
-
-    using namespace std::chrono_literals;
 
     // Separator used between logical parts of a log record.
     // It can be any substring or symbol: space, tab, etc.
@@ -172,7 +169,7 @@ namespace soralog {
 
         // Convert timestamp to a formatted datetime string
         if (psec != sec) {
-          tm = fmt::localtime(sec);
+          tm = detail::localtime(sec);
           fmt::format_to_n(datetime.data(),
                            datetime.size(),
                            "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",

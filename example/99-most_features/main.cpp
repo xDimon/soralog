@@ -5,6 +5,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <iostream>
+#include <thread>
+
 #include <soralog/impl/configurator_from_yaml.hpp>
 #include <soralog/impl/fallback_configurator.hpp>
 #include <soralog/macro.hpp>
@@ -37,7 +40,7 @@ std::shared_ptr<soralog::Configurator> customized_configurator = [] {
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> yaml_configurator_from_file =
     std::make_shared<soralog::ConfiguratorFromYAML>(
-        std::filesystem::path("../../../example/01-simple/logger.yml"));
+        std::filesystem::path("../../../example/99-most_features/logger.yml"));
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::shared_ptr<soralog::Configurator> yaml_configurator_by_content =
@@ -77,8 +80,7 @@ groups:
       - name: first-3
   )"));
 
-  return std::make_shared<soralog::ConfiguratorFromYAML>(std::move(prev),
-                                                         std::string(R"(
+  return std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 sinks:
   - name: console
     type: console
@@ -112,8 +114,15 @@ groups:
  */
 int main() {
   ConfiguratorType cfg_type = ConfiguratorType::YamlByPath;
+  // Change this value to switch between different configuration scenarios
+  // demonstrated below.
 
-  // Select a configurator based on the chosen type
+  // Each configurator type demonstrates different configuration approaches:
+  // - Fallback: minimal built-in configuration
+  // - Customized: manual configuration via code
+  // - YamlByPath: external YAML file
+  // - YamlByContent: embedded YAML string
+  // - Cascade: multiple YAML configurators applied sequentially
   // clang-format off
   std::shared_ptr<soralog::Configurator> configurator =
       cfg_type == ConfiguratorType::Cascade
@@ -127,9 +136,15 @@ int main() {
                   : std::make_shared<soralog::FallbackConfigurator>();
   // clang-format on
 
-  // Initialize logging system
+  // Create the logging system with one or more configurators.
+  // The logging system is not usable until configure() is called.
   soralog::LoggingSystem log_system(configurator);
 
+  // Perform the four-wave configuration process:
+  // 1. Prepare configuration
+  // 2. Configure sinks (where logs are output)
+  // 3. Configure groups (logger groups with levels and sinks)
+  // 4. Cleanup and finalize configuration
   auto r = log_system.configure();
   if (not r.message.empty()) {
     (r.has_error ? std::cerr : std::cout) << r.message << '\n';
@@ -140,16 +155,22 @@ int main() {
 
   soralog::util::setThreadName("MainThread");
 
-  // Obtain a logger
+  // Obtain a logger by name and group.
+  // Logger name identifies the source, group controls default sink and level.
   auto main_log = log_system.getLogger("main", "example_group");
 
-  // Example of incorrect logging (misuse of placeholders)
+  // Intentionally demonstrate runtime/format validation errors:
+  // - Too few arguments for placeholders
+  // - Unclosed placeholder
   main_log->info("Bad logging (one arg for two placeholders): {} {}", 1);
   main_log->info("Bad logging (unclosed placeholders): {", 1);
 
   main_log->info("Start");
 
-  // Example of lazy evaluated logging
+  // Lazy evaluation example:
+  // The lambda is only executed if the log level allows the message to be
+  // logged. This avoids expensive computations when the message would be
+  // filtered out.
   auto lambda = [](const auto &tag) {
     std::cout << "CALCULATED: " << tag << '\n';
     return tag;
@@ -163,7 +184,9 @@ int main() {
   main_log->debug("{}", lambda("logger: debug msg for info level"));
   SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
-  // Example of formatted logging with dynamic format strings
+  // This uses runtime-validated format strings,
+  // contrasting with compile-time checked macros that ensure format
+  // correctness.
   std::string generated_format = "<{}>";
   main_log->debug(generated_format, "works!");
 
@@ -172,7 +195,8 @@ int main() {
 
   std::vector<std::shared_ptr<std::thread>> threads;
 
-  // Launch multiple logging threads
+  // Demonstrate thread naming and concurrent logging by launching multiple
+  // threads.
   for (const auto &name :
        {"SecondThread", "ThirdThread", "FourthThread", "FifthThread"}) {
     threads.emplace_back(std::make_shared<std::thread>(std::thread([&] {
@@ -182,7 +206,8 @@ int main() {
     })));
   }
 
-  // Logging a long message
+  // Demonstrate truncation / max_message_length behavior depending on sink
+  // configuration.
   main_log->info(
       "Very long message  |.....30->|.....40->|.....50->|.....60->|.....70->|"
       ".....80->|.....90->|....100->|....110->|....120->|....130->|....140->|");
@@ -190,9 +215,9 @@ int main() {
   // Example of formatted logging with a dynamically generated format string
   auto dynamic_format = "Custom made format: {} ==>"s + "<== {}"s;
   main_log->info(dynamic_format, 1, 2);
-  SL_INFO_DF(main_log, dynamic_format, 3, 4);
+  SL_INFO(main_log, dynamic_format, 3, 4);
 
-  // Demonstration of logging from an object
+  // Show how logging is typically used from application objects.
   LoggingObject object(log_system);
   object.method();
 

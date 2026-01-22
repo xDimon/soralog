@@ -9,11 +9,14 @@
 
 #include <soralog/logger_factory.hpp>
 
-#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#include <unordered_map>
 
 #include <soralog/configurator.hpp>
 
@@ -25,11 +28,13 @@ namespace soralog {
 
   /**
    * @class LoggingSystem
-   * @brief Manages loggers, sinks, and groups, allowing dynamic configuration.
+   * @brief Manages loggers, sinks, and groups with dynamic configuration.
    *
-   * The logging system tracks loggers, groups, and sinks, ensuring their
-   * proper initialization and configuration. It provides methods to create,
-   * retrieve, and modify logging entities at runtime.
+   * The logging system can be configured using a chain of configurators,
+   * which are applied sequentially during configuration. It creates a builtin
+   * fallback sink named "*" (sink-to-nowhere) that is available before any
+   * configuration. Configuration is performed by calling `configure()`
+   * explicitly; it is not done automatically by constructors.
    */
   class LoggingSystem final : public LoggerFactory {
    public:
@@ -40,18 +45,42 @@ namespace soralog {
     LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
 
     /**
-     * @brief Constructs a non-configured logging system for manual configuring
+     * @brief Constructs a non-configured logging system.
+     *
+     * The system is created without any configurators applied. The caller
+     * should call `configure()` to apply any configurators if desired.
      */
     LoggingSystem();
 
     /**
-     * @brief Constructs a logging system with a configurator.
-     * @param configurator Shared pointer to a configurator instance.
+     * @brief Constructs a logging system with provided configurators.
+     *
+     * Configurators are stored in order and applied sequentially when
+     * `configure()` is called. This constructor does not automatically call
+     * `configure()`. The builtin fallback sink "*" is created during
+     * construction.
+     *
+     * @param configurators Shared pointers to configurator instances.
      */
-    explicit LoggingSystem(std::shared_ptr<Configurator> configurator);
+    template <typename... Ts>
+      requires(sizeof...(Ts) > 0
+               and (std::is_convertible_v<Ts, std::shared_ptr<Configurator>>
+                    and ...))
+    explicit LoggingSystem(Ts &&...configurators)
+        : configurators_{std::forward<Ts>(configurators)...} {
+      makeFallbackSink();
+    }
 
     /**
-     * @brief Configures the logging system.
+     * @brief Configures the logging system by applying configurators.
+     *
+     * The configuration proceeds in four waves, each iterating over the
+     * configurators in order:
+     * 1) Prepare
+     * 2) Configure sinks
+     * 3) Configure groups
+     * 4) Configure loggers
+     *
      * @return Result of the configuration process.
      */
     [[nodiscard]] Configurator::Result configure();
@@ -127,20 +156,24 @@ namespace soralog {
 
     /**
      * @brief Retrieves a sink by name.
-     * @param name Sink name.
+     * @param sink_name Sink name.
      * @return Shared pointer to the sink, or nullptr if not found.
      */
-    [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &name);
+    [[nodiscard]] std::shared_ptr<Sink> getSink(const std::string &sink_name);
 
     /**
      * @brief Retrieves a group by name.
-     * @param name Group name.
+     * @param group_name Group name.
      * @return Shared pointer to the group, or nullptr if not found.
      */
-    [[nodiscard]] std::shared_ptr<Group> getGroup(const std::string &name);
+    [[nodiscard]] std::shared_ptr<Group> getGroup(
+        const std::string &group_name);
 
     /**
      * @brief Creates a new sink of a specified type.
+     *
+     * If a sink with the same name already exists, it will be replaced.
+     *
      * @tparam SinkType Type of the sink.
      * @tparam Args Constructor argument types.
      * @param args Arguments for the sink constructor.
@@ -148,7 +181,7 @@ namespace soralog {
      */
     template <typename SinkType, typename... Args>
     std::shared_ptr<SinkType> makeSink(Args &&...args) {
-      std::lock_guard guard(mutex_);
+      std::scoped_lock guard(mutex_);
       auto sink = std::make_shared<SinkType>(std::forward<Args>(args)...);
       sinks_[sink->name()] = sink;
       return sink;
@@ -181,13 +214,13 @@ namespace soralog {
     std::shared_ptr<Group> getFallbackGroup() const;
 
     /**
-    * @brief Sets the parent of a group.
+     * @brief Sets the parent of a group.
      * @param group_name Name of the group.
-     * @param parent Name of the parent group.
+     * @param parent_group_name Name of the parent group.
      * @return True if successful.
      */
     bool setParentOfGroup(const std::string &group_name,
-                          const std::string &parent);
+                          const std::string &parent_group_name);
 
     /**
      * @brief Unsets the parent of a group.
@@ -271,11 +304,22 @@ namespace soralog {
     bool resetLevelOfLogger(const std::string &logger_name);
 
     /**
-     * @brief Calls `rotate()` on all registered sinks.
+     * @brief Calls `flush()` on all currently registered sinks.
+     *
+     * Iterates over all sinks that are registered at the time of the call.
+     */
+    void callFlushForAllSinks();
+
+    /**
+     * @brief Calls `rotate()` on all currently registered sinks.
+     *
+     * Iterates over all sinks that are registered at the time of the call.
      */
     void callRotateForAllSinks();
 
    private:
+    void makeFallbackSink();
+
     /**
      * @brief Retrieves or creates a logger with optional sink and level
      * overrides.
@@ -331,8 +375,8 @@ namespace soralog {
     static void setLevelOfLogger(const std::shared_ptr<Logger> &logger,
                                  std::optional<Level> level);
 
-    /// Logging system configurator.
-    std::shared_ptr<Configurator> configurator_;
+    /// Logging system configurators.
+    std::vector<std::shared_ptr<Configurator>> configurators_;
     /// Flag indicating if the system is configured.
     bool is_configured_ = false;
     /// Mutex for thread-safe access.

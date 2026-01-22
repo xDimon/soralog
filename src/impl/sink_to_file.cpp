@@ -11,13 +11,11 @@
 #include <chrono>
 #include <iostream>
 
-#include <fmt/chrono.h>
+#include <soralog/internals.hpp>
 
 namespace soralog {
 
   namespace {
-
-    using namespace std::chrono_literals;
 
     // Separator used between logical parts of a log record.
     // Can be any substring or character (space, tab, etc.).
@@ -208,7 +206,7 @@ namespace soralog {
         const auto usec = time % 1s / 1us;
 
         if (psec != sec) {  // Format timestamp only if second has changed
-          tm = fmt::localtime(sec);
+          tm = detail::localtime(sec);
           fmt::format_to_n(datetime.data(),
                            datetime.size(),
                            "{:0>2}.{:0>2}.{:0>2} {:0>2}:{:0>2}:{:0>2}",
@@ -353,6 +351,8 @@ namespace soralog {
       } else {
         std::swap(out_, out);
       }
+
+      push("Soralog", Level::INFO, "Log-file has been reopened");
     }
 
     flush_in_progress_.clear();  // Reset the flush flag

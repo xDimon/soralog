@@ -109,4 +109,9 @@ namespace soralog {
     }
   }
 
+  [[noreturn]] void Logger::doTerminate() const {
+    system_.callFlushForAllSinks();
+    std::abort();
+  }
+
 }  // namespace soralog

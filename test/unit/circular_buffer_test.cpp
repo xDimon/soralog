@@ -73,7 +73,7 @@ TEST_F(CircularBufferTest, Put) {
   CircularBuffer<Data> testee(capacity);
 
   // Fill for full
-  for (auto i = 0; i < capacity; ++i) {
+  for (size_t i = 0; i < capacity; ++i) {
     EXPECT_EQ(testee.size(), i);
     EXPECT_EQ(testee.avail(), capacity - i);
     EXPECT_EQ(testee.capacity(), capacity);
