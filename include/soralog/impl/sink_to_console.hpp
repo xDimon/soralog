@@ -74,7 +74,7 @@ namespace soralog {
     /**
      * @brief Rotates the log (not applicable for console output).
      */
-    void rotate() noexcept override {};
+    void rotate() noexcept override {}
 
     /**
      * @brief Immediately flushes buffered log messages to the console.
@@ -87,11 +87,21 @@ namespace soralog {
      */
     void async_flush() noexcept override;
 
+    /**
+     * @brief Flushes logs immediately in the main thread.
+     */
+    void sync_flush() noexcept override;
+
    private:
     /**
      * @brief Runs the background worker for log processing.
      */
     void run();
+
+    /**
+     * @brief Do flushing procedures implementation dependently.
+     */
+    void internal_flush() noexcept;
 
     /// Reference to the output stream (stdout or stderr).
     std::ostream &stream_;

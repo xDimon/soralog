@@ -64,7 +64,12 @@ namespace soralog {
     /**
      * @brief Asynchronous flushing is not supported for multisinks.
      */
-    void async_flush() noexcept override {};
+    void async_flush() noexcept override;
+
+    /**
+     * @brief Synchronous flushing is not supported for multisinks.
+     */
+    void sync_flush() noexcept override;
   };
 
 }  // namespace soralog

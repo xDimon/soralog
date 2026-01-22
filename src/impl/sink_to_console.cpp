@@ -30,6 +30,7 @@ namespace soralog {
     constexpr std::array<fmt::color, static_cast<size_t>(Level::TRACE) + 1>
         level_to_color_map{
             fmt::color::brown,         // OFF
+            fmt::color::red,           // FATAL
             fmt::color::red,           // CRITICAL
             fmt::color::orange_red,    // ERROR
             fmt::color::orange,        // WARNING
@@ -232,9 +233,13 @@ namespace soralog {
         sink_worker_.reset();
       }
     } else {
-      // If async logging is disabled, flush logs before destruction.
-      flush();
+      // If async logging is disabled, flush synchronously.
+      sync_flush();
     }
+  }
+
+  void SinkToConsole::flush() noexcept {
+    sync_flush();
   }
 
   void SinkToConsole::async_flush() noexcept {
@@ -244,11 +249,16 @@ namespace soralog {
       condvar_.notify_one();  // Wake up the worker thread for flushing.
     } else {
       // Otherwise, perform immediate flushing in the main thread.
-      flush();
+      internal_flush();
     }
   }
 
-  void SinkToConsole::flush() noexcept {
+  void SinkToConsole::sync_flush() noexcept {
+    need_to_flush_.store(true, std::memory_order_release);
+    internal_flush();
+  }
+
+  void SinkToConsole::internal_flush() noexcept {
     // Ensure that only one thread performs flushing at a time.
     if (flush_in_progress_.test_and_set()) {
       return;
@@ -366,11 +376,12 @@ namespace soralog {
         appended = true;
       }
 
-      // Flush buffer if it's full, if a message was added,
-      // or if it's time to flush.
-      if ((end - ptr) < sizeof(Event) or appended
+      // Flush buffer if it's full, if it's time to flush,
+      // or if there are no more events to process.
+      if ((end - ptr) < sizeof(Event)
           or std::chrono::steady_clock::now()
-                 >= next_flush_.load(std::memory_order_acquire)) {
+                 >= next_flush_.load(std::memory_order_acquire)
+          or (not appended)) {
         next_flush_.store(std::chrono::steady_clock::now() + latency_,
                           std::memory_order_release);
         stream_.write(begin, ptr - begin);  // Output to console.
@@ -384,9 +395,11 @@ namespace soralog {
                 true_v, false, std::memory_order_acq_rel)) {
           stream_.flush();  // Ensure logs are printed immediately.
         }
+        continue;
       }
 
-      break;  // Exit loop since all pending messages were processed.
+      // No event was appended, so the queue is empty and we're done.
+      break;
     }
 
     flush_in_progress_.clear();  // Allow other threads to flush.
@@ -418,7 +431,7 @@ namespace soralog {
       }
 
       // Perform flushing of accumulated log messages.
-      flush();
+      internal_flush();
 
       // If finalization is requested and all events are processed, exit the
       // loop.

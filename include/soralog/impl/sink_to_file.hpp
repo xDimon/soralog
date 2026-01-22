@@ -72,7 +72,7 @@ namespace soralog {
     /**
      * @brief Immediately writes buffered log messages to the file.
      */
-    void flush() noexcept override;
+   void flush() noexcept override;
 
    protected:
     /**
@@ -80,11 +80,21 @@ namespace soralog {
      */
     void async_flush() noexcept override;
 
+    /**
+     * @brief Synchronously flushes log messages in the main thread.
+     */
+    void sync_flush() noexcept override;
+
    private:
     /**
      * @brief Runs the background worker for log processing.
      */
     void run();
+
+    /**
+     * @brief Do flushing procedures implementation dependently.
+     */
+    void internal_flush() noexcept;
 
     /// Path to the log file.
     const std::filesystem::path path_;

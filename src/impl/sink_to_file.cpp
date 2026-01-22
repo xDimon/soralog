@@ -160,8 +160,12 @@ namespace soralog {
     } else {
       // If there's no latency-based flushing,
       // perform an immediate flush on destruction
-      flush();
+      sync_flush();
     }
+  }
+
+  void SinkToFile::flush() noexcept {
+    sync_flush();
   }
 
   void SinkToFile::async_flush() noexcept {
@@ -170,12 +174,17 @@ namespace soralog {
       need_to_flush_.store(true, std::memory_order_release);
       condvar_.notify_one();
     } else {
-      // Otherwise, flush immediately
-      flush();
+      // Otherwise, perform immediate flushing in the main thread.
+      internal_flush();
     }
   }
 
-  void SinkToFile::flush() noexcept {
+  void SinkToFile::sync_flush() noexcept {
+    need_to_flush_.store(true, std::memory_order_release);
+    internal_flush();
+  }
+
+  void SinkToFile::internal_flush() noexcept {
     if (flush_in_progress_.test_and_set()) {
       return;  // Prevents concurrent flushes by checking and setting the flag
     }
@@ -389,7 +398,7 @@ namespace soralog {
       }
 
       // Perform a flush of buffered log events
-      flush();
+      internal_flush();
 
       // If finalization is requested and the event queue is empty,
       // exit the loop

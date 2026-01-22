@@ -32,8 +32,6 @@ namespace soralog {
 
     // Writes the log level string representation to the buffer
     void put_level(char *&ptr, Level level) {
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-      const char *const end = ptr + 8;
       const char *str = levelToStr(level);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       while (auto c = *str++) {
@@ -128,10 +126,14 @@ namespace soralog {
         sink_worker_.reset();
       }
     } else {
-      flush();
+      sync_flush();
     }
     closelog();
-    syslog_is_opened_.store(true, std::memory_order_release);
+    syslog_is_opened_.store(false, std::memory_order_release);
+  }
+
+  void SinkToSyslog::flush() noexcept {
+    sync_flush();
   }
 
   void SinkToSyslog::async_flush() noexcept {
@@ -139,11 +141,16 @@ namespace soralog {
       need_to_flush_.store(true, std::memory_order_release);
       condvar_.notify_one();
     } else {
-      flush();
+      internal_flush();
     }
   }
 
-  void SinkToSyslog::flush() noexcept {
+  void SinkToSyslog::sync_flush() noexcept {
+    need_to_flush_.store(true, std::memory_order_release);
+    internal_flush();
+  }
+
+  void SinkToSyslog::internal_flush() noexcept {
     if (flush_in_progress_.test_and_set()) {
       return;
     }
@@ -161,6 +168,44 @@ namespace soralog {
       auto node = events_.get();
       if (node) {
         const auto &event = *node;
+
+        // Determine syslog priority based on log level
+        bool must_log = true;
+        int priority = 8;
+        switch (event.level()) {
+          case Level::OFF:
+            must_log = false;
+            break;
+          case Level::FATAL:
+          case Level::CRITICAL:
+            priority = LOG_EMERG;  // System is unusable
+            break;
+          case Level::ERROR:
+            priority = LOG_ALERT;  // Error conditions
+            break;
+          case Level::WARN:
+            priority = LOG_WARNING;  // Warning conditions
+            break;
+          case Level::INFO:
+            priority = LOG_NOTICE;  // Normal but significant condition
+            break;
+          case Level::VERBOSE:
+            priority = LOG_INFO;  // Informational
+            break;
+          case Level::DEBUG:
+            priority = LOG_DEBUG;  // Debug-level messages
+            break;
+          case Level::TRACE:  // syslog must not log trace messages
+            [[fallthrough]];
+          default:
+            must_log = false;
+            break;
+        }
+        if (not must_log) {
+          continue;
+        }
+
+        ptr = begin;
 
         // Extract timestamp
         const auto time = event.timestamp().time_since_epoch();
@@ -220,44 +265,8 @@ namespace soralog {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         *ptr++ = '\0';
 
-        // Determine syslog priority based on log level
-        bool must_log = true;
-        int priority = 8;
-        switch (event.level()) {
-          case Level::OFF:
-            must_log = false;
-            break;
-          case Level::CRITICAL:
-            priority = LOG_EMERG;  // System is unusable
-            break;
-          case Level::ERROR:
-            priority = LOG_ALERT;  // Error conditions
-            break;
-          case Level::WARN:
-            priority = LOG_WARNING;  // Warning conditions
-            break;
-          case Level::INFO:
-            priority = LOG_NOTICE;  // Normal but significant condition
-            break;
-          case Level::VERBOSE:
-            priority = LOG_INFO;  // Informational
-            break;
-          case Level::DEBUG:
-            priority = LOG_DEBUG;  // Debug-level messages
-            break;
-          case Level::TRACE:  // syslog must not log trace messages
-            [[fallthrough]];
-          default:
-            must_log = false;
-            break;
-        }
-
-        if (must_log) {
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
-          syslog(priority, "%s", begin);
-        }
-
-        size_ -= event.message().size();
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg,hicpp-vararg)
+        syslog(priority, "%s", begin);
       }
 
       if (not node) {
@@ -294,7 +303,7 @@ namespace soralog {
       }
 
       // Perform a flush operation to write logs to syslog
-      flush();
+      internal_flush();
 
       // If finalization is requested and there are
       // no pending events, exit the loop

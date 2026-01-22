@@ -69,7 +69,7 @@ namespace soralog {
     MOCK_METHOD(void,
                 mocked_push,
                 (std::string_view, Level, std::string_view),
-                (const));
+                (const, noexcept(IF_RELEASE)));
 
     /**
      * @brief Mocks the flush method.
@@ -95,7 +95,20 @@ namespace soralog {
     }
 
     /// Mock method for verifying calls to async_flush().
-    MOCK_METHOD(void, mocked_async_flush, (), (const));
+    MOCK_METHOD(void, mocked_async_flush, (), (const, noexcept));
+
+    /**
+     * @brief Mocks the sync_flush method.
+     *
+     * This does not perform synchronous flushing, but instead calls
+     * `mocked_sync_flush` to allow verification in tests.
+     */
+    void sync_flush() noexcept override {
+      mocked_sync_flush();
+    }
+
+    /// Mock method for verifying calls to async_flush().
+    MOCK_METHOD(void, mocked_sync_flush, (), (const, noexcept));
 
     /**
      * @brief Mocks the rotate method.

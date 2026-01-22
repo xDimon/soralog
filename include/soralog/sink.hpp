@@ -202,6 +202,11 @@ namespace soralog {
     virtual void async_flush() noexcept = 0;
 
     /**
+     * @brief Writes all events synchronously.
+     */
+    virtual void sync_flush() noexcept = 0;
+
+    /**
      * @brief Performs log data rotation (e.g., reopens log files).
      */
     virtual void rotate() noexcept = 0;

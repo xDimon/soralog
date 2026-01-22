@@ -50,6 +50,11 @@ namespace soralog {
     void async_flush() noexcept override;
 
     /**
+     * @brief Synchronously flushes the sink (no-op).
+     */
+    void sync_flush() noexcept override;
+
+    /**
      * @brief Rotates the sink (no-op).
      */
     void rotate() noexcept override;

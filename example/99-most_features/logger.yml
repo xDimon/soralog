@@ -12,12 +12,12 @@
 # - Groups inherit sink and level from parents unless explicitly overridden.
 # - Sink properties control output destination, formatting, buffering, and error handling.
 
-sinks:                             # List of available logging sinks (outputs)
+sinks:                            # List of available logging sinks (outputs)
 
   # Console sink with colored output to stdout, thread name, and full buffering options
   - name: colored_stdout
     type: console
-    stream: stdout                 # Output to standard output
+    stream: stdout                # Output to standard output
     color: true                   # Enable ANSI color codes for readability
     thread: name                  # Include thread name in log lines
     capacity: 64                  # Max buffered messages before flush
@@ -29,11 +29,11 @@ sinks:                             # List of available logging sinks (outputs)
   # Console sink with no color, output to stderr, using thread id, minimal buffering
   - name: simple_stderr
     type: console
-    stream: stderr                # Output to standard error
-    color: false                  # Disable color codes
+    stream: stderr               # Output to standard error
+    color: false                 # Disable color codes
     thread: id                   # Include thread ID instead of name
     capacity: 32                 # Smaller buffer capacity
-    max_message_length: 80       # Shorter max message length
+    max_message_length: 100      # Shorter max message length
     buffer: 65536                # Smaller buffer size in bytes
     latency: 0                   # Immediate flush: disables buffering delay, every message is flushed synchronously
     level: info                  # Accept info level and above
@@ -56,7 +56,7 @@ sinks:                             # List of available logging sinks (outputs)
     buffer: 4194304
     latency: 1000
     at_fault: wait               # Retry indefinitely on write failure
-    level: info                 # File logs info and above
+    level: info                  # File logs info and above
 
   # File sink with 'ignore' on fault (discard logs on failure), thread id
   - name: file_ignore_fault
@@ -67,7 +67,7 @@ sinks:                             # List of available logging sinks (outputs)
     buffer: 1048576
     latency: 500
     at_fault: ignore             # Discard logs if write fails
-    level: trace                # Log all levels
+    level: trace                 # Log all levels
 
   # File sink demonstrating immediate flush (latency = 0)
   - name: file_immediate
@@ -89,7 +89,7 @@ sinks:                             # List of available logging sinks (outputs)
     buffer: 2097152
     latency: 200
     at_fault: terminate          # Exit process on write failure
-    level: off                  # Disabled sink (no logs)
+    level: off                   # Disabled sink (no logs)
 
   # Syslog sink with identifier and thread name, demonstrating buffering and latency
   # Note: syslog is process-global; only one syslog sink can be created.
@@ -123,7 +123,7 @@ sinks:                             # List of available logging sinks (outputs)
       - simple_stderr            # Accepts info and above
     level: trace
 
-groups:                            # Log groups define hierarchical loggers
+groups:                          # Log groups define hierarchical loggers
 
   # Root fallback group with multisink forwarding to all sinks
   - name: main

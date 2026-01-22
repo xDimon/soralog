@@ -39,6 +39,11 @@ namespace soralog {
     flush();
   }
 
+  // Sync flush is identical to flush, as there is no background processing
+  void SinkToNowhere::sync_flush() noexcept {
+    flush();
+  }
+
   // Rotation is a no-op, but ensures that any pending events are discarded
   void SinkToNowhere::rotate() noexcept {
     flush();

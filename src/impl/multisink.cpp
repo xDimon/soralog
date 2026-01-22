@@ -19,11 +19,21 @@ namespace soralog {
       : Sink(std::move(name), level, std::move(sinks)) {}
 
   void Multisink::flush() noexcept {
+    sync_flush();
+  }
+
+  void Multisink::async_flush() noexcept {
+    for (const auto &sink : underlying_sinks_) {
+      sink->async_flush();  // Trigger async flush first
+    }
+  }
+
+  void Multisink::sync_flush() noexcept {
     for (const auto &sink : underlying_sinks_) {
       sink->async_flush();  // Trigger async flush first
     }
     for (const auto &sink : underlying_sinks_) {
-      sink->flush();  // Ensure all logs are written
+      sink->sync_flush();  // Ensure all logs are written
     }
   }
 

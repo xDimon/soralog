@@ -76,11 +76,21 @@ namespace soralog {
      */
     void async_flush() noexcept override;
 
+    /**
+     * @brief Flushes logs synchronously in the main thread.
+     */
+    void sync_flush() noexcept override;
+
    private:
     /**
      * @brief Runs the background worker for log processing.
      */
     void run();
+
+    /**
+     * @brief Do flushing procedures implementation dependently.
+     */
+    void internal_flush() noexcept;
 
     /// Flag to track whether syslog has been initialized.
     static std::atomic_bool syslog_is_opened_;
