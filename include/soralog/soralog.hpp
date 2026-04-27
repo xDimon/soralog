@@ -13,6 +13,6 @@ namespace soralog {
    * Some compilers issue warnings when a translation unit does not contain
    * any symbols. This extern constant ensures the object file is not empty.
    */
-  const char *__library_name;  // NOLINT
+  extern const char *__library_name;  // NOLINT
 
 }  // namespace soralog
