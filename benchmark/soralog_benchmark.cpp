@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <cinttypes>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -81,7 +82,7 @@ namespace {
   struct RunResult {
     double seconds = 0;
     size_t ops = 0;
-    std::vector<uint32_t> latencies;  // ns per operation
+    std::vector<uint64_t> latencies;  // ns per operation
     bool ok = true;
     std::string error;
   };
@@ -114,11 +115,10 @@ namespace {
     std::atomic_bool go_{false};
   };
 
-  inline uint32_t elapsedNs(Clock::time_point from, Clock::time_point to) {
-    auto ns =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(to - from).count();
-    return static_cast<uint32_t>(
-        std::min<int64_t>(ns, std::numeric_limits<uint32_t>::max()));
+  inline uint64_t elapsedNs(Clock::time_point from, Clock::time_point to) {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(to - from)
+            .count());
   }
 
   // ---------------------------------------------------------------- queue
@@ -138,7 +138,7 @@ namespace {
 
     RunResult result;
     result.ops = expected;
-    std::vector<std::vector<uint32_t>> latencies(producers);
+    std::vector<std::vector<uint64_t>> latencies(producers);
 
     std::thread consumer([&] {
       std::vector<uint64_t> last(producers, 0);
@@ -233,7 +233,7 @@ namespace {
 
     RunResult result;
     result.ops = expected;
-    std::vector<std::vector<uint32_t>> latencies(producers);
+    std::vector<std::vector<uint64_t>> latencies(producers);
 
     {
       auto sink = std::make_shared<soralog::SinkToFile>(
@@ -292,7 +292,7 @@ namespace {
 
   // -------------------------------------------------------------- report
 
-  uint32_t percentile(std::vector<uint32_t> &v, double q) {
+  uint64_t percentile(std::vector<uint64_t> &v, double q) {
     if (v.empty()) {
       return 0;
     }
@@ -330,7 +330,7 @@ namespace {
 
     for (auto producers : opt.threads) {
       std::vector<double> rates;
-      std::vector<uint32_t> latencies;
+      std::vector<uint64_t> latencies;
       for (size_t r = 0; r < opt.repeat; ++r) {
         auto res = run(producers, total_ops);
         if (not res.ok) {
@@ -358,10 +358,11 @@ namespace {
       auto p999 = percentile(latencies, 0.999);
       auto p9999 = percentile(latencies, 0.9999);
       auto max = latencies.empty()
-                   ? 0
+                   ? uint64_t{0}
                    : *std::max_element(latencies.begin(), latencies.end());
 
-      std::printf("%8zu %12.2f %21s %9u %9u %9u %9u %11u\n",
+      std::printf("%8zu %12.2f %21s %9" PRIu64 " %9" PRIu64 " %9" PRIu64
+                  " %9" PRIu64 " %11" PRIu64 "\n",
                   producers,
                   median,
                   range,
