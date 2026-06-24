@@ -7,6 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include <sys/resource.h>
+
+#include <algorithm>
+#include <fstream>
+#include <iterator>
+
 #include "soralog/impl/sink_to_file.hpp"
 
 using namespace soralog;
@@ -162,4 +168,63 @@ TEST_F(SinkToFileTest, Rotating) {
 
   std::filesystem::remove(path_);
   std::filesystem::remove(path_to_old_file);
+}
+
+namespace {
+  /// @brief Counts lines in the file
+  size_t countLines(const std::filesystem::path &path) {
+    std::ifstream in(path);
+    return std::count(std::istreambuf_iterator<char>(in),
+                      std::istreambuf_iterator<char>(),
+                      '\n');
+  }
+
+  /// @brief CPU time consumed by the whole process
+  std::chrono::microseconds processCpuTime() {
+    rusage usage{};
+    getrusage(RUSAGE_SELF, &usage);
+    return std::chrono::seconds(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec)
+         + std::chrono::microseconds(usage.ru_utime.tv_usec
+                                     + usage.ru_stime.tv_usec);
+  }
+}  // namespace
+
+/**
+ * @test FlushWritesAllEvents
+ * @brief Tests that a single flush drains the whole event buffer.
+ *
+ * @given A file sink with large latency, so the worker does not interfere.
+ * @when More events than the buffer capacity are logged, then flushed.
+ * @then Every event is written to the file.
+ */
+TEST_F(SinkToFileTest, FlushWritesAllEvents) {
+  auto logger = createLogger(1000ms);  // Capacity of buffer is 4 events
+  const size_t count = 10;
+
+  for (size_t i = 1; i <= count; ++i) {
+    logger->debug("message #{}", i);
+  }
+  logger->flush();
+
+  EXPECT_EQ(countLines(path_), count);
+}
+
+/**
+ * @test IdleWorkerDoesNotSpin
+ * @brief Tests that the worker thread of an idle sink sleeps.
+ *
+ * @given A file sink with small latency and nothing to log.
+ * @when Time passes.
+ * @then The process consumes almost no CPU time.
+ */
+TEST_F(SinkToFileTest, IdleWorkerDoesNotSpin) {
+  auto logger = createLogger(10ms);
+  std::this_thread::sleep_for(50ms);  // Let the worker start
+
+  auto wall = 500ms;
+  auto before = processCpuTime();
+  std::this_thread::sleep_for(wall);
+  auto spent = processCpuTime() - before;
+
+  EXPECT_LT(spent, wall / 5);
 }

@@ -270,17 +270,23 @@ namespace soralog {
         appended = true;
       }
 
-      // Check whether to flush buffer
-      if ((end - ptr) < sizeof(Event) or appended
+      // Write the buffer out when the next event might not fit into it
+      // (sizeof(Event) covers the line prefix, the message is added on top),
+      // when the queue is drained, or when the latency deadline has passed
+      if (static_cast<size_t>(end - ptr) < sizeof(Event) + max_message_length_
+          or not appended
           or std::chrono::steady_clock::now()
                  >= next_flush_.load(std::memory_order_acquire)) {
         std::chrono::seconds attempt_delay{1};
         auto *data_begin = begin;
         auto *data_end = ptr;
 
+        // Move the deadline even if there is nothing to write, otherwise
+        // the idle worker would wake up immediately again and again
+        next_flush_.store(std::chrono::steady_clock::now() + latency_,
+                          std::memory_order_release);
+
         while (data_end > data_begin) {  // Retry writing to log file on failure
-          next_flush_.store(std::chrono::steady_clock::now() + latency_,
-                            std::memory_order_release);
           auto pos_before_write = out_.tellp();
           out_.write(data_begin, data_end - data_begin);
 
@@ -328,15 +334,18 @@ namespace soralog {
           }
           break;  // Leave loop of trying to write an info log-file
         }
+        ptr = begin;  // Buffer is written out, start filling it anew
       }
 
-      // Flush log file if necessary
       if (appended) {
-        bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(
-                true_v, false, std::memory_order_acq_rel)) {
-          out_.flush();
-        }
+        continue;  // Take the next event
+      }
+
+      // Queue is drained: push written data to the file if requested
+      bool true_v = true;
+      if (need_to_flush_.compare_exchange_strong(
+              true_v, false, std::memory_order_acq_rel)) {
+        out_.flush();
       }
 
       break;

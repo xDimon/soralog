@@ -376,9 +376,10 @@ namespace soralog {
         appended = true;
       }
 
-      // Flush buffer if it's full, if it's time to flush,
-      // or if there are no more events to process.
-      if ((end - ptr) < sizeof(Event)
+      // Flush buffer if the next event might not fit into it (sizeof(Event)
+      // covers the line prefix, the message is added on top), if it's time
+      // to flush, or if there are no more events to process.
+      if (static_cast<size_t>(end - ptr) < sizeof(Event) + max_message_length_
           or std::chrono::steady_clock::now()
                  >= next_flush_.load(std::memory_order_acquire)
           or (not appended)) {
