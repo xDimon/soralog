@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstddef>
 #include <optional>
+#include <type_traits>
 #include <vector>
 
 #ifdef NDEBUG

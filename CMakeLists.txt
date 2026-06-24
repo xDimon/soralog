@@ -8,6 +8,7 @@
 cmake_minimum_required(VERSION 3.12)
 
 option(BUILD_TESTS  "Build tests"                                 OFF)
+option(BUILD_BENCHMARKS "Build benchmarks"                        OFF)
 option(EXAMPLES     "Build examples"                              ON)
 option(CLANG_FORMAT "Enable clang-format target"                  OFF)
 option(CLANG_TIDY   "Enable clang-tidy checks during compilation" OFF)
@@ -103,6 +104,10 @@ endif()
 
 if(EXAMPLES)
     add_subdirectory(example)
+endif()
+
+if(BUILD_BENCHMARKS)
+    add_subdirectory(benchmark)
 endif()
 
 if (COVERAGE)
