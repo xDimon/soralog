@@ -427,6 +427,9 @@ namespace {
         and opt.scenario != "sink" and opt.scenario != "sink-sync") {
       usage(argv[0]);
     }
+    if (opt.capacity == 0) {
+      usage(argv[0]);
+    }
     if (opt.threads.empty()
         or std::find(opt.threads.begin(), opt.threads.end(), 0)
                != opt.threads.end()) {

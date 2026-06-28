@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <fmt/format.h>
 
@@ -42,7 +43,7 @@ namespace soralog {
    * @class Sink
    * @brief Base class for all log sinks.
    *
-   * Accumulates events in a lock-free circular buffer and flushes them
+   * Accumulates events in a circular buffer without locks and flushes them
    * to the destination when needed.
    */
   class Sink {
@@ -124,7 +125,7 @@ namespace soralog {
           max_buffer_size_(),
           latency_(),
           at_fault_(),
-          events_(0, 0),
+          events_(1, 0),  // Unused: events go to the underlying sinks
           underlying_sinks_(std::move(sinks)) {};
 
     /**

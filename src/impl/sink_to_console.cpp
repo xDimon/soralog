@@ -259,11 +259,22 @@ namespace soralog {
   }
 
   void SinkToConsole::internal_flush() noexcept {
-    // Ensure that only one thread performs flushing at a time.
-    if (flush_in_progress_.test_and_set()) {
-      return;
-    }
+    do {
+      // Pairs with the fence below: either this call sees the flag cleared,
+      // or the call that clears it sees the events published before this one
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+      if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
+        return;  // Another thread is flushing
+      }
+      flush_events();
+      flush_in_progress_.clear(std::memory_order_release);
+      // An event published while the flag was held may have been missed both
+      // by flush_events() and by its own producer, which found the flag set
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+    } while (events_.has_ready());
+  }
 
+  void SinkToConsole::flush_events() noexcept {
     auto *const begin = buff_.data();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto *const end = buff_.data() + buff_.size();
@@ -402,8 +413,6 @@ namespace soralog {
       // No event was appended, so the queue is empty and we're done.
       break;
     }
-
-    flush_in_progress_.clear();  // Allow other threads to flush.
   }
 
   void SinkToConsole::run() {

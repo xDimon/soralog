@@ -185,10 +185,22 @@ namespace soralog {
   }
 
   void SinkToFile::internal_flush() noexcept {
-    if (flush_in_progress_.test_and_set()) {
-      return;  // Prevents concurrent flushes by checking and setting the flag
-    }
+    do {
+      // Pairs with the fence below: either this call sees the flag cleared,
+      // or the call that clears it sees the events published before this one
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+      if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
+        return;  // Another thread is flushing
+      }
+      flush_events();
+      flush_in_progress_.clear(std::memory_order_release);
+      // An event published while the flag was held may have been missed both
+      // by flush_events() and by its own producer, which found the flag set
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+    } while (events_.has_ready());
+  }
 
+  void SinkToFile::flush_events() noexcept {
     // Pointer to the begin of the buffer
     auto *const begin = buff_.data();
     // Pointer to the end of the buffer
@@ -372,8 +384,6 @@ namespace soralog {
 
       push("Soralog", Level::INFO, "Log-file has been reopened");
     }
-
-    flush_in_progress_.clear();  // Reset the flush flag
   }
 
   void SinkToFile::rotate() noexcept {

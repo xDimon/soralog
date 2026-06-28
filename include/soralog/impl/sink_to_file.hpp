@@ -96,6 +96,11 @@ namespace soralog {
      */
     void internal_flush() noexcept;
 
+    /**
+     * @brief Writes out queued events; called with flush_in_progress_ set.
+     */
+    void flush_events() noexcept;
+
     /// Path to the log file.
     const std::filesystem::path path_;
 

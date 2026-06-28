@@ -61,6 +61,17 @@ TEST_F(CircularBufferTest, Create) {
 }
 
 /**
+ * @brief Test creating a buffer of zero capacity.
+ *
+ * @given Zero capacity.
+ * @when A CircularBuffer is constructed.
+ * @then Construction fails with std::invalid_argument.
+ */
+TEST_F(CircularBufferTest, ZeroCapacity) {
+  EXPECT_THROW(CircularBuffer<Data> testee(0), std::invalid_argument);
+}
+
+/**
  * @brief Test inserting elements into the buffer.
  *
  * @given An empty CircularBuffer with limited capacity.

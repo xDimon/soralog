@@ -92,6 +92,11 @@ namespace soralog {
      */
     void internal_flush() noexcept;
 
+    /**
+     * @brief Writes out queued events; called with flush_in_progress_ set.
+     */
+    void flush_events() noexcept;
+
     /// Flag to track whether syslog has been initialized.
     static std::atomic_bool syslog_is_opened_;
 
