@@ -16,7 +16,7 @@ namespace soralog {
       : Sink(std::move(name),
              Level::OFF,  // No logging level, effectively disabling logging
              ThreadInfoType::NONE,  // No thread info required
-             1024,                  // Event queue capacity (not really used)
+             1,     // Event queue capacity: minimal, nothing is queued at OFF
              0,     // Max message length (irrelevant as messages are discarded)
              0,     // Buffer size (irrelevant)
              1000,  // Latency in milliseconds (not relevant for this sink)
