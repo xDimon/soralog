@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 
+#include <mutex>
+
 #if __cplusplus >= 202002L
 #include <latch>
 #endif
@@ -41,6 +43,16 @@ class CircularBufferTest : public ::testing::Test {
       return this->front();
     }
   };
+
+  /// @brief One for all instantiations of print().
+  inline static std::mutex print_mutex;
+
+  /// @brief Prints a line; serialized, as some tests print from two threads.
+  template <typename... Args>
+  static void print(const Args &...args) {
+    std::lock_guard lock(print_mutex);
+    (std::cout << ... << args) << '\n';
+  }
 };
 
 /**
@@ -230,12 +242,11 @@ TEST_F(CircularBufferTest, PutGetMt) {
     latch.arrive_and_wait();
 #endif
     while (i < n) {
-      std::cout << "w" << i << '\n';
+      print("w", i);
       if (auto ref = testee.put('0')) {
         ++i;
-        std::cout << "put " << ref->c()  //
-                  << " [" << testee.size() << " | " << testee.avail() << "]"
-                  << '\n';
+        print(
+            "put ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
     }
@@ -246,11 +257,10 @@ TEST_F(CircularBufferTest, PutGetMt) {
     latch.arrive_and_wait();
 #endif
     while (i < n) {
-      std::cout << "r" << '\n';
+      print("r");
       if (auto ref = testee.get()) {
-        std::cout << "get " << ref->c()  //
-                  << " [" << testee.size() << " | " << testee.avail() << "]"
-                  << '\n';
+        print(
+            "get ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
       }
       std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
     }
@@ -284,9 +294,7 @@ TEST_F(CircularBufferTest, Mutual) {
     latch.arrive_and_wait();
 #endif
     if (auto ref = testee.put('*')) {
-      std::cout << "put " << ref->c()  //
-                << " [" << testee.size() << " | " << testee.avail() << "]"
-                << '\n';
+      print("put ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
   });
@@ -297,9 +305,7 @@ TEST_F(CircularBufferTest, Mutual) {
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     if (auto ref = testee.get()) {
-      std::cout << "get " << ref->c()  //
-                << " [" << testee.size() << " | " << testee.avail() << "]"
-                << '\n';
+      print("get ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
     }
   });
 
