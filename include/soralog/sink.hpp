@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 #include <fmt/format.h>
@@ -162,7 +163,7 @@ namespace soralog {
         return;
       }
       if (underlying_sinks_.empty()) {
-        while (true) {
+        for (size_t attempt = 0;; ++attempt) {
           {
             auto node = events_.put(name,
                                     thread_info_type_,
@@ -173,16 +174,25 @@ namespace soralog {
 
             // Event is queued successfully
             LIKELY_IF((bool)node) {
-              size_ += node->message().size();
               break;
             }
           }
-          flush();  // Buffer full, flush immediately and retry.
+          // Buffer full, flush immediately and retry. If another thread is
+          // flushing already, flush() returns at once: after a short spin give
+          // way to it, it may need this CPU (64 is the best of 1, 64 and
+          // never, measured by benchmark/soralog_benchmark.cpp)
+          if (attempt >= 64) {
+            std::this_thread::yield();
+          }
+          flush();
         }
 
+        // Flush right away at zero latency. Otherwise wake the worker in
+        // advance, before the buffer is full and producers have to flush it
+        // themselves
         if (latency_ == std::chrono::milliseconds::zero()) {
           flush();
-        } else if (size_ >= max_buffer_size_ * 4 / 5) {
+        } else if (events_.size() >= events_.capacity() * 4 / 5) {
           async_flush();
         }
       } else {
@@ -222,7 +232,6 @@ namespace soralog {
     const std::chrono::milliseconds latency_;  ///< Max write delay.
     const AtFaultReactionType at_fault_;       ///< Behavior on write failure.
     CircularBuffer<Event> events_;             ///< Event buffer.
-    std::atomic_size_t size_ = 0;              ///< Current buffer size.
     const std::vector<std::shared_ptr<Sink>> underlying_sinks_{};  ///< Sinks.
     // NOLINTEND(cppcoreguidelines-non-private-member-variables-in-classes)
   };

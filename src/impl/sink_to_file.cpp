@@ -151,8 +151,12 @@ namespace soralog {
     if (latency_ != std::chrono::milliseconds::zero()) {
       // If latency-based flushing is enabled,
       // signal the worker thread to finalize
-      need_to_finalize_.store(true, std::memory_order_release);
-      async_flush();
+      {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        need_to_finalize_.store(true, std::memory_order_release);
+      }
+      condvar_.notify_one();
       if (sink_worker_ and sink_worker_->joinable()) {
         sink_worker_->join();
         sink_worker_.reset();
@@ -171,8 +175,14 @@ namespace soralog {
   void SinkToFile::async_flush() noexcept {
     if (latency_ != std::chrono::milliseconds::zero()) {
       // If latency is enabled, set the flush flag and notify the worker thread
-      need_to_flush_.store(true, std::memory_order_release);
-      condvar_.notify_one();
+      // Wake the worker only when the request appears: the flag is reset by
+      // the flush draining the queue, until then repeated requests are no-ops
+      if (not need_to_flush_.load(std::memory_order_relaxed)
+          and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        condvar_.notify_one();
+      }
     } else {
       // Otherwise, perform immediate flushing in the main thread.
       internal_flush();
@@ -278,7 +288,6 @@ namespace soralog {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         *ptr++ = '\n';
 
-        size_ -= event.message().size();  // Adjust buffer size
         appended = true;
       }
 
@@ -405,15 +414,11 @@ namespace soralog {
       {
         std::unique_lock lock(mutex_);
         // Wait until the next flush time or until a condition is notified
-        if (condvar_.wait_until(lock,
-                                next_flush_.load(std::memory_order_relaxed))
-            == std::cv_status::no_timeout) {
-          // If neither flushing nor finalization is needed, continue waiting
-          if (not need_to_flush_.load(std::memory_order_relaxed)
-              and not need_to_finalize_.load(std::memory_order_relaxed)) {
-            continue;
-          }
-        }
+        condvar_.wait_until(
+            lock, next_flush_.load(std::memory_order_relaxed), [this] {
+              return need_to_flush_.load(std::memory_order_relaxed)
+                  or need_to_finalize_.load(std::memory_order_relaxed);
+            });
       }
 
       // Perform a flush of buffered log events

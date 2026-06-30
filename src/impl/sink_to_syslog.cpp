@@ -119,8 +119,12 @@ namespace soralog {
 
   SinkToSyslog::~SinkToSyslog() {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_finalize_.store(true, std::memory_order_release);
-      async_flush();
+      {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        need_to_finalize_.store(true, std::memory_order_release);
+      }
+      condvar_.notify_one();
       if (sink_worker_ and sink_worker_->joinable()) {
         sink_worker_->join();
         sink_worker_.reset();
@@ -138,8 +142,14 @@ namespace soralog {
 
   void SinkToSyslog::async_flush() noexcept {
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_flush_.store(true, std::memory_order_release);
-      condvar_.notify_one();
+      // Wake the worker only when the request appears: the flag is reset by
+      // the flush draining the queue, until then repeated requests are no-ops
+      if (not need_to_flush_.load(std::memory_order_relaxed)
+          and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        condvar_.notify_one();
+      }
     } else {
       internal_flush();
     }
@@ -301,15 +311,11 @@ namespace soralog {
         std::unique_lock lock(mutex_);
 
         // Wait until the next scheduled flush time or until explicitly notified
-        if (condvar_.wait_until(lock,
-                                next_flush_.load(std::memory_order_relaxed))
-            == std::cv_status::no_timeout) {
-          // If no flush or finalization is needed, continue waiting
-          if (not need_to_flush_.load(std::memory_order_relaxed)
-              and not need_to_finalize_.load(std::memory_order_relaxed)) {
-            continue;
-          }
-        }
+        condvar_.wait_until(
+            lock, next_flush_.load(std::memory_order_relaxed), [this] {
+              return need_to_flush_.load(std::memory_order_relaxed)
+                  or need_to_finalize_.load(std::memory_order_relaxed);
+            });
       }
 
       // Perform a flush operation to write logs to syslog

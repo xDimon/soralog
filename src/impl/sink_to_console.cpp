@@ -226,8 +226,12 @@ namespace soralog {
   SinkToConsole::~SinkToConsole() {
     // If async logging is enabled, notify the worker thread to finalize.
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_finalize_.store(true, std::memory_order_release);
-      async_flush();
+      {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        need_to_finalize_.store(true, std::memory_order_release);
+      }
+      condvar_.notify_one();
       if (sink_worker_ and sink_worker_->joinable()) {
         sink_worker_->join();
         sink_worker_.reset();
@@ -245,8 +249,14 @@ namespace soralog {
   void SinkToConsole::async_flush() noexcept {
     // If latency is nonzero, request the worker thread to flush logs.
     if (latency_ != std::chrono::milliseconds::zero()) {
-      need_to_flush_.store(true, std::memory_order_release);
-      condvar_.notify_one();  // Wake up the worker thread for flushing.
+      // Wake the worker only when the request appears: the flag is reset by
+      // the flush draining the queue, until then repeated requests are no-ops
+      if (not need_to_flush_.load(std::memory_order_relaxed)
+          and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
+        // Under the lock: the worker checks the flags before it falls asleep
+        std::lock_guard lock(mutex_);
+        condvar_.notify_one();
+      }
     } else {
       // Otherwise, perform immediate flushing in the main thread.
       internal_flush();
@@ -383,7 +393,6 @@ namespace soralog {
 
         *ptr++ = '\n';  // NOLINT - Add a new line after the log entry.
 
-        size_ -= event.message().size();  // Reduce buffer size usage.
         appended = true;
       }
 
@@ -400,17 +409,16 @@ namespace soralog {
         ptr = begin;                        // Reset buffer pointer.
       }
 
-      // If at least one message was processed, check if flushing is needed.
       if (appended) {
-        bool true_v = true;
-        if (need_to_flush_.compare_exchange_weak(
-                true_v, false, std::memory_order_acq_rel)) {
-          stream_.flush();  // Ensure logs are printed immediately.
-        }
-        continue;
+        continue;  // Take the next event
       }
 
-      // No event was appended, so the queue is empty and we're done.
+      // Queue is drained: push written data out if requested
+      bool true_v = true;
+      if (need_to_flush_.compare_exchange_strong(
+              true_v, false, std::memory_order_acq_rel)) {
+        stream_.flush();  // Ensure logs are printed immediately.
+      }
       break;
     }
   }
@@ -428,16 +436,11 @@ namespace soralog {
         std::unique_lock lock(mutex_);
         // Wait until the next scheduled flush time or until a flush request is
         // received.
-        if (condvar_.wait_until(lock,
-                                next_flush_.load(std::memory_order_relaxed))
-            == std::cv_status::no_timeout) {
-          // If no flush is requested and no finalization is needed, continue
-          // waiting.
-          if (not need_to_flush_.load(std::memory_order_relaxed)
-              and not need_to_finalize_.load(std::memory_order_relaxed)) {
-            continue;
-          }
-        }
+        condvar_.wait_until(
+            lock, next_flush_.load(std::memory_order_relaxed), [this] {
+              return need_to_flush_.load(std::memory_order_relaxed)
+                  or need_to_finalize_.load(std::memory_order_relaxed);
+            });
       }
 
       // Perform flushing of accumulated log messages.
