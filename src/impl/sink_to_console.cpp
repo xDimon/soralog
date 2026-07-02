@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <string_view>
+#include <thread>
 
 #include <fmt/color.h>
 #include <fmt/format.h>
@@ -249,8 +250,8 @@ namespace soralog {
   void SinkToConsole::async_flush() noexcept {
     // If latency is nonzero, request the worker thread to flush logs.
     if (latency_ != std::chrono::milliseconds::zero()) {
-      // Wake the worker only when the request appears: the flag is reset by
-      // the flush draining the queue, until then repeated requests are no-ops
+      // Wake the worker only when the request appears: the flag is reset when
+      // a flush takes the request, until then repeated requests are no-ops
       if (not need_to_flush_.load(std::memory_order_relaxed)
           and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
         // Under the lock: the worker checks the flags before it falls asleep
@@ -265,26 +266,63 @@ namespace soralog {
 
   void SinkToConsole::sync_flush() noexcept {
     need_to_flush_.store(true, std::memory_order_release);
-    internal_flush();
+    internal_flush(true);
   }
 
-  void SinkToConsole::internal_flush() noexcept {
-    do {
-      // Pairs with the fence below: either this call sees the flag cleared,
-      // or the call that clears it sees the events published before this one
+  void SinkToConsole::internal_flush(bool wait, bool bounded) noexcept {
+    // Runs a flush; called with flush_in_progress_ set
+    auto flush_once = [this, bounded] {
+      const auto number =
+          flushes_started_.fetch_add(1, std::memory_order_relaxed) + 1;
+      // Pairs with the fence in the waiting branch: either the waiter sees
+      // this flush started, or this flush sees the events of the waiter
       std::atomic_thread_fence(std::memory_order_seq_cst);
-      if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
-        return;  // Another thread is flushing
+      // Take the request to flush the stream before counting the events: the
+      // requester has queued its events before, so they are counted
+      const bool flush_stream =
+          need_to_flush_.exchange(false, std::memory_order_acq_rel);
+      flush_events(bounded ? events_.size() : events_.capacity(), flush_stream);
+      flushes_done_.store(number, std::memory_order_release);
+    };
+    if (wait) {
+      // The caller wants its events written out on return. A flush takes the
+      // events queued before it started, so the first flush started after
+      // this point does it, whoever runs it: wait for one, or run it here.
+      // Pairs with the fence in flush_once()
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+      const auto started = flushes_started_.load(std::memory_order_relaxed);
+      for (size_t attempt = 0;
+           flush_in_progress_.test_and_set(std::memory_order_acquire);
+           ++attempt) {
+        if (flushes_done_.load(std::memory_order_acquire) > started) {
+          return;  // Done by another thread
+        }
+        if (attempt >= 64) {
+          std::this_thread::yield();
+        }
       }
-      flush_events();
+      flush_once();
       flush_in_progress_.clear(std::memory_order_release);
-      // An event published while the flag was held may have been missed both
-      // by flush_events() and by its own producer, which found the flag set
-      std::atomic_thread_fence(std::memory_order_seq_cst);
-    } while (events_.has_ready());
+    } else {
+      do {
+        // Pairs with the fence below: either this call sees the flag cleared,
+        // or the call that clears it sees the events published before this one
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
+          break;  // Another thread is flushing
+        }
+        flush_once();
+        flush_in_progress_.clear(std::memory_order_release);
+        // An event published while the flag was held may have been missed
+        // both by flush_events() and by its own producer, which found the flag
+        // set. The worker takes it; a bounded flush leaves it to the producer,
+        // which flushes synchronously after queueing anyway
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+      } while (not bounded and events_.has_ready());
+    }
   }
 
-  void SinkToConsole::flush_events() noexcept {
+  void SinkToConsole::flush_events(size_t limit, bool flush_stream) noexcept {
     auto *const begin = buff_.data();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto *const end = buff_.data() + buff_.size();
@@ -298,7 +336,7 @@ namespace soralog {
 
     while (true) {
       bool appended = false;
-      if (auto node = events_.get()) {  // Retrieve the next log event.
+      if (auto node = take_event(limit)) {  // Retrieve the next log event.
         const auto &event = *node;
 
         const auto time = event.timestamp().time_since_epoch();
@@ -414,9 +452,7 @@ namespace soralog {
       }
 
       // Queue is drained: push written data out if requested
-      bool true_v = true;
-      if (need_to_flush_.compare_exchange_strong(
-              true_v, false, std::memory_order_acq_rel)) {
+      if (flush_stream) {
         stream_.flush();  // Ensure logs are printed immediately.
       }
       break;
@@ -444,7 +480,7 @@ namespace soralog {
       }
 
       // Perform flushing of accumulated log messages.
-      internal_flush();
+      internal_flush(false, false);
 
       // If finalization is requested and all events are processed, exit the
       // loop.

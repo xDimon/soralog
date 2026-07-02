@@ -177,14 +177,19 @@ namespace soralog {
               break;
             }
           }
-          // Buffer full, flush immediately and retry. If another thread is
-          // flushing already, flush() returns at once: after a short spin give
-          // way to it, it may need this CPU (64 is the best of 1, 64 and
-          // never, measured by benchmark/soralog_benchmark.cpp)
-          if (attempt >= 64) {
-            std::this_thread::yield();
+          // Buffer full: get it drained and retry. async_flush() wakes the
+          // worker or, without one, drains here unless another thread does;
+          // after a short spin give way to the draining thread. The last
+          // resort is flush(): it waits for that thread and drains the rest
+          // here, which matters when the worker itself logs
+          if (attempt >= 1024) {
+            flush();
+          } else {
+            if (attempt >= 64) {
+              std::this_thread::yield();
+            }
+            async_flush();
           }
-          flush();
         }
 
         // Flush right away at zero latency. Otherwise wake the worker in
@@ -203,17 +208,19 @@ namespace soralog {
     }
 
     /**
-     * @brief Writes all events to the destination immediately.
+     * @brief Writes queued events to the destination; returns when those
+     * queued before the call are written.
      */
     virtual void flush() noexcept = 0;
 
     /**
-     * @brief Writes all events asynchronously.
+     * @brief Requests writing queued events, does not wait for it.
      */
     virtual void async_flush() noexcept = 0;
 
     /**
-     * @brief Writes all events synchronously.
+     * @brief Writes queued events; returns when those queued before the
+     * call are written.
      */
     virtual void sync_flush() noexcept = 0;
 
@@ -223,6 +230,22 @@ namespace soralog {
     virtual void rotate() noexcept = 0;
 
    protected:
+    /**
+     * @brief Takes the next event unless the limit is exhausted.
+     * @param limit Number of events still allowed to take; decremented on
+     * each call, even if nothing is taken.
+     * @return The event, or nothing if the limit is exhausted or there is no
+     * published event.
+     */
+    CircularBuffer<Event>::NodeRef take_event(size_t &limit) noexcept(
+        IF_RELEASE) {
+      if (limit == 0) {
+        return {};
+      }
+      --limit;
+      return events_.get();
+    }
+
     // NOLINTBEGIN(cppcoreguidelines-non-private-member-variables-in-classes)
     const std::string name_;                   ///< Sink name.
     Level level_;                              ///< Minimum accepted log level.

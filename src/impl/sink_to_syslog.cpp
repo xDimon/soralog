@@ -8,6 +8,7 @@
 #include <soralog/impl/sink_to_syslog.hpp>
 
 #include <chrono>
+#include <thread>
 
 #include <syslog.h>
 
@@ -157,26 +158,59 @@ namespace soralog {
 
   void SinkToSyslog::sync_flush() noexcept {
     need_to_flush_.store(true, std::memory_order_release);
-    internal_flush();
+    internal_flush(true);
   }
 
-  void SinkToSyslog::internal_flush() noexcept {
-    do {
-      // Pairs with the fence below: either this call sees the flag cleared,
-      // or the call that clears it sees the events published before this one
+  void SinkToSyslog::internal_flush(bool wait, bool bounded) noexcept {
+    // Runs a flush; called with flush_in_progress_ set
+    auto flush_once = [this, bounded] {
+      const auto number =
+          flushes_started_.fetch_add(1, std::memory_order_relaxed) + 1;
+      // Pairs with the fence in the waiting branch: either the waiter sees
+      // this flush started, or this flush sees the events of the waiter
       std::atomic_thread_fence(std::memory_order_seq_cst);
-      if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
-        return;  // Another thread is flushing
+      flush_events(bounded ? events_.size() : events_.capacity());
+      flushes_done_.store(number, std::memory_order_release);
+    };
+    if (wait) {
+      // The caller wants its events written out on return. A flush takes the
+      // events queued before it started, so the first flush started after
+      // this point does it, whoever runs it: wait for one, or run it here.
+      // Pairs with the fence in flush_once()
+      std::atomic_thread_fence(std::memory_order_seq_cst);
+      const auto started = flushes_started_.load(std::memory_order_relaxed);
+      for (size_t attempt = 0;
+           flush_in_progress_.test_and_set(std::memory_order_acquire);
+           ++attempt) {
+        if (flushes_done_.load(std::memory_order_acquire) > started) {
+          return;  // Done by another thread
+        }
+        if (attempt >= 64) {
+          std::this_thread::yield();
+        }
       }
-      flush_events();
+      flush_once();
       flush_in_progress_.clear(std::memory_order_release);
-      // An event published while the flag was held may have been missed both
-      // by flush_events() and by its own producer, which found the flag set
-      std::atomic_thread_fence(std::memory_order_seq_cst);
-    } while (events_.has_ready());
+    } else {
+      do {
+        // Pairs with the fence below: either this call sees the flag cleared,
+        // or the call that clears it sees the events published before this one
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+        if (flush_in_progress_.test_and_set(std::memory_order_acquire)) {
+          break;  // Another thread is flushing
+        }
+        flush_once();
+        flush_in_progress_.clear(std::memory_order_release);
+        // An event published while the flag was held may have been missed
+        // both by flush_events() and by its own producer, which found the flag
+        // set. The worker takes it; a bounded flush leaves it to the producer,
+        // which flushes synchronously after queueing anyway
+        std::atomic_thread_fence(std::memory_order_seq_cst);
+      } while (not bounded and events_.has_ready());
+    }
   }
 
-  void SinkToSyslog::flush_events() noexcept {
+  void SinkToSyslog::flush_events(size_t limit) noexcept {
     auto *const begin = buff_.data();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto *const end = buff_.data() + buff_.size();
@@ -187,7 +221,7 @@ namespace soralog {
     std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
 
     while (true) {
-      auto node = events_.get();
+      auto node = take_event(limit);
       if (node) {
         const auto &event = *node;
 
@@ -319,7 +353,7 @@ namespace soralog {
       }
 
       // Perform a flush operation to write logs to syslog
-      internal_flush();
+      internal_flush(false, false);
 
       // If finalization is requested and there are
       // no pending events, exit the loop

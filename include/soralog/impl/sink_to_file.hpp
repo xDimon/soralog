@@ -72,7 +72,7 @@ namespace soralog {
     /**
      * @brief Immediately writes buffered log messages to the file.
      */
-   void flush() noexcept override;
+    void flush() noexcept override;
 
    protected:
     /**
@@ -92,14 +92,22 @@ namespace soralog {
     void run();
 
     /**
-     * @brief Do flushing procedures implementation dependently.
+     * @brief Writes out queued events.
+     * @param wait Wait for the thread flushing now, if any, and write out the
+     * rest after it; otherwise leave the work to that thread.
+     * @param bounded Take only the events queued before the flush started, so
+     * that a producer flushing does not drain the events of others endlessly;
+     * otherwise up to the capacity, enough for the worker to batch writes.
      */
-    void internal_flush() noexcept;
+    void internal_flush(bool wait = false, bool bounded = true) noexcept;
 
     /**
      * @brief Writes out queued events; called with flush_in_progress_ set.
+     * @param limit Maximum number of events to write out.
+     * @param flush_stream Flush the output stream when done.
+     * @return True if the log file has been reopened.
      */
-    void flush_events() noexcept;
+    bool flush_events(size_t limit, bool flush_stream) noexcept;
 
     /// Path to the log file.
     const std::filesystem::path path_;
@@ -134,6 +142,11 @@ namespace soralog {
 
     /// Flag to prevent concurrent flushing operations.
     std::atomic_flag flush_in_progress_ = false;
+    /// Number of flushes started; changed only under flush_in_progress_.
+    std::atomic_size_t flushes_started_ = 0;
+    /// Number of the last finished flush; changed only under
+    /// flush_in_progress_.
+    std::atomic_size_t flushes_done_ = 0;
   };
 
 }  // namespace soralog
