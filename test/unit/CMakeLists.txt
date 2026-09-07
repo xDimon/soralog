@@ -55,6 +55,13 @@ target_link_libraries(sink_to_file_test
     sink_to_file
     )
 
+addtest(sink_to_syslog_test
+    sink_to_syslog_test.cpp
+    )
+target_link_libraries(sink_to_syslog_test
+    sink_to_syslog
+    )
+
 addtest(macros_test
     macros_test.cpp
     )

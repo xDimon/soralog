@@ -211,6 +211,11 @@ namespace soralog {
   }
 
   void SinkToSyslog::flush_events(size_t limit) noexcept {
+    // Move the deadline, otherwise the idle worker would wake up immediately
+    // again and again
+    next_flush_.store(std::chrono::steady_clock::now() + latency_,
+                      std::memory_order_release);
+
     auto *const begin = buff_.data();
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     auto *const end = buff_.data() + buff_.size();
