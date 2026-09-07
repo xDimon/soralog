@@ -42,8 +42,8 @@ namespace soralog {
      * @param path File path for log output.
      * @param thread_info_type Optional thread info inclusion.
      * @param capacity Optional event buffer capacity.
-     * @param buffer_size Optional total buffer size.
      * @param max_message_length Optional maximum log message length.
+     * @param buffer_size Optional total buffer size.
      * @param latency Optional max time before automatic flush.
      * @param at_fault Optional reaction type in case of failure.
      */
@@ -52,8 +52,8 @@ namespace soralog {
                std::filesystem::path path,
                std::optional<ThreadInfoType> thread_info_type = {},
                std::optional<size_t> capacity = {},
-               std::optional<size_t> buffer_size = {},
                std::optional<size_t> max_message_length = {},
+               std::optional<size_t> buffer_size = {},
                std::optional<size_t> latency = {},
                std::optional<AtFaultReactionType> at_fault = {});
 

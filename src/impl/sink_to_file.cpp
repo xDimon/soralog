@@ -431,9 +431,9 @@ namespace soralog {
                     << "': " << strerror(errno) << '\n';
         }
         std::cerr.flush();
-      } else {
-        std::swap(out_, out);
+        return false;
       }
+      std::swap(out_, out);
       return true;
     }
     return false;

@@ -242,8 +242,8 @@ namespace {
           opt.sink_path,
           soralog::Sink::ThreadInfoType::NONE,
           opt.capacity,
-          std::nullopt,  // buffer size: default
           opt.message_length,
+          std::nullopt,  // buffer size: default
           latency_ms);
 
       StartGate gate(producers);
