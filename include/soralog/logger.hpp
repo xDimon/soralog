@@ -110,7 +110,7 @@ namespace soralog {
       // Check whether this event is allowed by the current logger level
       if (level_ >= level) {
         // Ignore disabled levels explicitly
-        if (level_ != Level::OFF and level != Level::IGNORE) [[likely]] {
+        if (level != Level::OFF and level != Level::IGNORE) [[likely]] {
           // Forward the event to the sink
           sink_->push(name_, level, format, args...);
 
