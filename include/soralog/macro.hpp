@@ -68,7 +68,7 @@
 
 #if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
 #warning "Trace log level has been disabled because debug log level is off"
-#undef WITHOUT_DEBUG_LOG_LEVEL
+#define WITHOUT_TRACE_LOG_LEVEL
 #endif
 
 /**
