@@ -239,6 +239,7 @@ namespace soralog {
       res.message +=
           fmt::format("E:{}: Not found 'name' of sink node #{}\n", id, number);
       fail = true;
+      res.has_error = true;
     } else if (not name_node.IsScalar()) {
       fail = true;
       res.message += fmt::format(
@@ -415,7 +416,7 @@ namespace soralog {
         res.has_warning = true;
       } else {
         auto max_message_length_int = max_message_length_node.as<int>();
-        if (max_message_length_int > 64) {
+        if (max_message_length_int >= 64) {
           max_message_length.emplace(max_message_length_int);
         } else {
           res.message += fmt::format(
@@ -464,7 +465,9 @@ namespace soralog {
           at_fault = Sink::AtFaultReactionType::TERMINATE;
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
-        } else if (at_fault_str != "wait") {
+        } else if (at_fault_str == "wait") {
+          at_fault = Sink::AtFaultReactionType::WAIT;
+        } else {
           res.message +=
               fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
                           id,
@@ -674,7 +677,9 @@ namespace soralog {
           at_fault = Sink::AtFaultReactionType::TERMINATE;
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
-        } else if (at_fault_str != "wait") {
+        } else if (at_fault_str == "wait") {
+          at_fault = Sink::AtFaultReactionType::WAIT;
+        } else {
           res.message +=
               fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
                           id,
@@ -888,7 +893,9 @@ namespace soralog {
           at_fault = Sink::AtFaultReactionType::TERMINATE;
         } else if (at_fault_str == "ignore") {
           at_fault = Sink::AtFaultReactionType::IGNORE;
-        } else if (at_fault_str != "wait") {
+        } else if (at_fault_str == "wait") {
+          at_fault = Sink::AtFaultReactionType::WAIT;
+        } else {
           res.message +=
               fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
                           id,
