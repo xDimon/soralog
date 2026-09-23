@@ -24,8 +24,8 @@ namespace soralog {
    * @brief A sink that writes log messages to a file.
    *
    * This sink logs messages to a specified file, supporting buffering
-   * and asynchronous flushing. A background worker thread handles log
-   * processing to minimize performance impact.
+   * and asynchronous flushing. With nonzero latency a background worker
+   * thread handles log processing to minimize performance impact.
    */
   class SinkToFile final : public Sink {
    public:
@@ -76,12 +76,14 @@ namespace soralog {
 
    protected:
     /**
-     * @brief Asynchronously flushes log messages in a background thread.
+     * @brief Requests flushing without waiting: wakes the worker, or
+     * flushes in the calling thread at zero latency.
      */
     void async_flush() noexcept override;
 
     /**
-     * @brief Synchronously flushes log messages in the main thread.
+     * @brief Flushes in the calling thread; returns when the events
+     * queued before the call are written.
      */
     void sync_flush() noexcept override;
 
@@ -121,7 +123,7 @@ namespace soralog {
     /// Output file stream.
     std::ofstream out_{};
 
-    /// Mutex for synchronizing access to the log buffer.
+    /// Mutex for the worker to sleep on and to be woken up.
     std::mutex mutex_{};
 
     /// Condition variable for signaling the worker thread.
@@ -130,7 +132,8 @@ namespace soralog {
     /// Flag indicating that the sink is shutting down.
     std::atomic_bool need_to_finalize_ = false;
 
-    /// Flag indicating that a flush operation is required.
+    /// Request to flush: wakes the worker and makes the next flush flush the
+    /// output stream too.
     std::atomic_bool need_to_flush_ = false;
 
     /// Flag indicating that a log file rotation is needed.

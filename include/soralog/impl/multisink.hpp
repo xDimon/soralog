@@ -55,19 +55,19 @@ namespace soralog {
      * @brief Flushes all underlying sinks.
      *
      * This method first calls `async_flush()` on each sink to trigger
-     * asynchronous flushing, then calls `flush()` to ensure all pending logs
-     * are written.
+     * asynchronous flushing, then calls `sync_flush()` to ensure all pending
+     * logs are written.
      */
     void flush() noexcept override;
 
    private:
     /**
-     * @brief Asynchronous flushing is not supported for multisinks.
+     * @brief Requests asynchronous flushing of all underlying sinks.
      */
     void async_flush() noexcept override;
 
     /**
-     * @brief Synchronous flushing is not supported for multisinks.
+     * @brief Flushes all underlying sinks synchronously.
      */
     void sync_flush() noexcept override;
   };

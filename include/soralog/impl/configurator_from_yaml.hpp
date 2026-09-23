@@ -42,8 +42,8 @@ namespace soralog {
         : config_(std::move(config_content)) {}
 
     /**
-     * @brief Constructs a configurator using a YAML string.
-     * @param config_node YAML node preliminary prepared..
+     * @brief Constructs a configurator using a YAML node.
+     * @param config_node YAML node prepared beforehand.
      */
     explicit ConfiguratorFromYAML(YAML::Node config_node)
         : config_(std::move(config_node)) {}
@@ -73,7 +73,7 @@ namespace soralog {
      public:
       /**
        * @brief Constructs an applicator to process the YAML configuration.
-       * @param config YAML configuration (file path, string, or node).
+       * @param node YAML configuration node.
        * @param system Reference to the logging system.
        * @param index Index of the configurator in the chain (0-based).
        * @param result Reference to the result object for reporting
@@ -91,7 +91,7 @@ namespace soralog {
      private:
       /**
        * @brief Parses and returns a log level from a YAML node.
-       * @param target Description of the entity being parsed..
+       * @param target Description of the entity being parsed.
        * @param node YAML node containing the level.
        * @return Parsed log level or `std::nullopt` on failure.
        */
@@ -203,7 +203,7 @@ namespace soralog {
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
       LoggingSystem &sys;
 
-      /// Index of configurator (as provided in constructor of LoggingSystem)
+      /// Number of the configurator in the chain, 1-based (index + 1)
       size_t id;
 
       // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)

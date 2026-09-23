@@ -21,8 +21,8 @@ namespace soralog {
    * @class SinkToSyslog
    * @brief A sink that sends log messages to the system's syslog.
    *
-   * This sink asynchronously writes log messages to syslog, supporting
-   * optional buffering and controlled flushing. It operates in a separate
+   * This sink writes log messages to syslog, supporting optional buffering
+   * and controlled flushing. With nonzero latency it operates in a separate
    * worker thread to handle log events efficiently.
    */
   class SinkToSyslog final : public Sink {
@@ -43,7 +43,8 @@ namespace soralog {
      * @param max_message_length Optional max length of a log message.
      * @param buffer_size Optional total buffer size.
      * @param latency Optional max time before automatic flush.
-     * @param at_fault Optional reaction type in case of failure.
+     * @param at_fault Optional reaction type in case of failure (not used
+     * by this sink).
      */
     SinkToSyslog(std::string name,
                  Level level,
@@ -72,12 +73,14 @@ namespace soralog {
 
    protected:
     /**
-     * @brief Flushes logs asynchronously in a worker thread.
+     * @brief Requests flushing without waiting: wakes the worker, or
+     * flushes in the calling thread at zero latency.
      */
     void async_flush() noexcept override;
 
     /**
-     * @brief Flushes logs synchronously in the main thread.
+     * @brief Flushes in the calling thread; returns when the events
+     * queued before the call are written.
      */
     void sync_flush() noexcept override;
 
@@ -115,7 +118,7 @@ namespace soralog {
     /// Buffer for storing messages before writing to syslog.
     std::vector<char> buff_;
 
-    /// Mutex for synchronizing access to the log buffer.
+    /// Mutex for the worker to sleep on and to be woken up.
     std::mutex mutex_;
 
     /// Condition variable for signaling the worker thread.

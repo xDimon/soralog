@@ -242,7 +242,7 @@ namespace soralog {
             priority = LOG_EMERG;  // System is unusable
             break;
           case Level::ERROR:
-            priority = LOG_ALERT;  // Error conditions
+            priority = LOG_ALERT;  // Action must be taken immediately
             break;
           case Level::WARN:
             priority = LOG_WARNING;  // Warning conditions

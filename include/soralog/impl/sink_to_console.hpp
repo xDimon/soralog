@@ -53,7 +53,8 @@ namespace soralog {
      * @param max_message_length Optional max log message length.
      * @param buffer_size Optional total buffer size.
      * @param latency Optional max time before automatic flush.
-     * @param at_fault Optional reaction type in case of failure.
+     * @param at_fault Optional reaction type in case of failure (not used
+     * by this sink).
      */
     SinkToConsole(std::string name,
                   Level level,
@@ -83,12 +84,14 @@ namespace soralog {
 
    protected:
     /**
-     * @brief Flushes logs asynchronously in a worker thread.
+     * @brief Requests flushing without waiting: wakes the worker, or
+     * flushes in the calling thread at zero latency.
      */
     void async_flush() noexcept override;
 
     /**
-     * @brief Flushes logs immediately in the main thread.
+     * @brief Flushes in the calling thread; returns when the events
+     * queued before the call are written.
      */
     void sync_flush() noexcept override;
 
@@ -127,7 +130,7 @@ namespace soralog {
     /// Buffer for storing messages before writing to the console.
     std::vector<char> buff_;
 
-    /// Mutex for synchronizing access to the log buffer.
+    /// Mutex for the worker to sleep on and to be woken up.
     std::mutex mutex_;
 
     /// Condition variable for signaling the worker thread.
@@ -136,7 +139,8 @@ namespace soralog {
     /// Flag indicating that the sink is shutting down.
     std::atomic_bool need_to_finalize_ = false;
 
-    /// Flag indicating that a flush has been requested.
+    /// Request to flush: wakes the worker and makes the next flush flush the
+    /// output stream too.
     std::atomic_bool need_to_flush_ = false;
 
     /// Timestamp for the next scheduled flush.

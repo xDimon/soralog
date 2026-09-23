@@ -185,7 +185,7 @@ namespace soralog {
         condvar_.notify_one();
       }
     } else {
-      // Otherwise, perform immediate flushing in the main thread.
+      // Otherwise, flush in the calling thread.
       internal_flush();
     }
   }
@@ -399,7 +399,7 @@ namespace soralog {
                 break;  // Ignore the failure
             }
           }
-          break;  // Leave loop of trying to write an info log-file
+          break;  // Leave loop of trying to write into log-file
         }
         ptr = begin;  // Buffer is written out, start filling it anew
       }

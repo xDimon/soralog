@@ -40,22 +40,22 @@ namespace soralog {
     ~SinkToNowhere() override;
 
     /**
-     * @brief Flushes the sink (no-op).
+     * @brief Discards queued events.
      */
     void flush() noexcept override;
 
     /**
-     * @brief Asynchronously flushes the sink (no-op).
+     * @brief Discards queued events.
      */
     void async_flush() noexcept override;
 
     /**
-     * @brief Synchronously flushes the sink (no-op).
+     * @brief Discards queued events.
      */
     void sync_flush() noexcept override;
 
     /**
-     * @brief Rotates the sink (no-op).
+     * @brief Discards queued events; there is nothing to rotate.
      */
     void rotate() noexcept override;
   };

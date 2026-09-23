@@ -64,7 +64,7 @@ namespace soralog {
     }
 
     /**
-     * @brief Applies multiple text styles in sequence.
+     * @brief Applies multiple text styles (in no particular order).
      */
     template <typename... Args>
     void put_style(char *&ptr, Args &&...styles) {
@@ -85,7 +85,7 @@ namespace soralog {
     /**
      * @brief Sets the text style for a log level.
      *
-     * Critical and error levels are highlighted in bold colors.
+     * Every level is bold, in a color of its own.
      */
     void put_level_style(char *&ptr, Level level) {
       assert(level <= Level::TRACE);
@@ -259,7 +259,7 @@ namespace soralog {
         condvar_.notify_one();
       }
     } else {
-      // Otherwise, perform immediate flushing in the main thread.
+      // Otherwise, flush in the calling thread.
       internal_flush();
     }
   }
