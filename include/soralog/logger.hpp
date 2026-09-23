@@ -40,7 +40,8 @@ namespace soralog {
    *   LoggingSystem and then terminates the process (see doTerminate()).
    *
    * @warning
-   * Logging at Level::FATAL terminates the process unconditionally.
+   * Logging at Level::FATAL terminates the process, unless the logger is
+   * turned off (Level::OFF).
    */
   class Logger final {
    public:
@@ -264,7 +265,8 @@ namespace soralog {
      * The event is first pushed to the current sink, then all sinks are flushed
      * via the owning LoggingSystem, and finally the process is aborted.
      *
-     * @warning This function does not return.
+     * @warning This function does not return, unless the logger is turned
+     * off (Level::OFF).
      */
     template <typename... Args>
     void fatal(std::string_view format, const Args &...args) {

@@ -262,7 +262,7 @@ namespace soralog {
 
     std::scoped_lock guard(mutex_);
 
-    // Identify groups that need to update their parent
+    // Identify groups affected by the change and their order
     for (const auto &it : groups_) {
       auto n = fn(it.second);
       passed_groups[it.second] = n;

@@ -33,8 +33,10 @@ namespace soralog {
    * The logging system can be configured using a chain of configurators,
    * which are applied sequentially during configuration. It creates a builtin
    * fallback sink named "*" (sink-to-nowhere) that is available before any
-   * configuration. Configuration is performed by calling `configure()`
-   * explicitly; it is not done automatically by constructors.
+   * configuration. With configurators, configuration is performed by calling
+   * `configure()` explicitly; it is not done automatically by constructors.
+   * The default constructor makes a system configured already, to be set up
+   * manually.
    */
   class LoggingSystem final : public LoggerFactory {
    public:
@@ -45,10 +47,11 @@ namespace soralog {
     LoggingSystem &operator=(LoggingSystem &&tmp) noexcept = delete;
 
     /**
-     * @brief Constructs a non-configured logging system.
+     * @brief Constructs a logging system without configurators.
      *
-     * The system is created without any configurators applied. The caller
-     * should call `configure()` to apply any configurators if desired.
+     * The system is configured already: it has the builtin "*" sink and
+     * group and is set up manually (makeSink(), makeGroup() and so on).
+     * `configure()` must not be called on it.
      */
     LoggingSystem();
 
@@ -79,7 +82,7 @@ namespace soralog {
      * 1) Prepare
      * 2) Configure sinks
      * 3) Configure groups
-     * 4) Configure loggers
+     * 4) Cleanup
      *
      * @return Result of the configuration process.
      */
@@ -101,6 +104,9 @@ namespace soralog {
 
     /**
      * @brief Gets or creates a logger with an overridden log level.
+     *
+     * An existing logger is returned as is: the override applies only to a
+     * logger created by this call.
      * @param logger_name Logger name.
      * @param group_name Associated group name.
      * @param level Log level override.
@@ -118,6 +124,9 @@ namespace soralog {
 
     /**
      * @brief Gets or creates a logger with an overridden sink.
+     *
+     * An existing logger is returned as is: the override applies only to a
+     * logger created by this call.
      * @param logger_name Logger name.
      * @param group_name Associated group name.
      * @param sink_name Sink override.
@@ -135,6 +144,9 @@ namespace soralog {
 
     /**
      * @brief Gets or creates a logger with overridden sink and level.
+     *
+     * An existing logger is returned as is: the override applies only to a
+     * logger created by this call.
      * @param logger_name Logger name.
      * @param group_name Associated group name.
      * @param sink_name Sink override.
@@ -346,7 +358,7 @@ namespace soralog {
     /**
      * @brief Sets or unsets the sink for a given group.
      * @param group The group to modify.
-     * @param sink The new sink, or null to reset.
+     * @param sink The new sink, or std::nullopt to reset.
      */
     void setSinkOfGroup(const std::shared_ptr<Group> &group,
                         std::optional<std::shared_ptr<Sink>> sink);
@@ -354,7 +366,7 @@ namespace soralog {
     /**
      * @brief Sets or unsets the level for a given group.
      * @param group The group to modify.
-     * @param level The new log level, or null to reset.
+     * @param level The new log level, or std::nullopt to reset.
      */
     void setLevelOfGroup(const std::shared_ptr<Group> &group,
                          std::optional<Level> level);
@@ -362,7 +374,7 @@ namespace soralog {
     /**
      * @brief Sets or unsets the sink for a logger.
      * @param logger The logger to modify.
-     * @param sink The new sink, or null to reset.
+     * @param sink The new sink, or std::nullopt to reset.
      */
     static void setSinkOfLogger(const std::shared_ptr<Logger> &logger,
                                 std::optional<std::shared_ptr<Sink>> sink);
@@ -370,7 +382,7 @@ namespace soralog {
     /**
      * @brief Sets or unsets the level for a logger.
      * @param logger The logger to modify.
-     * @param level The new log level, or null to reset.
+     * @param level The new log level, or std::nullopt to reset.
      */
     static void setLevelOfLogger(const std::shared_ptr<Logger> &logger,
                                  std::optional<Level> level);

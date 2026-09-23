@@ -64,7 +64,7 @@ namespace soralog {
 
   void Group::setLevelFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    // Only override if the provided group differs from the current parent
+    // Overridden, unless taken from the parent group
     is_level_overridden_ = group != parent_group_;
     level_ = group->level();
   }
@@ -104,7 +104,7 @@ namespace soralog {
 
   void Group::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    // Only override if the provided group differs from the current parent
+    // Overridden, unless taken from the parent group
     is_sink_overridden_ = group != parent_group_;
     sink_ = group->sink();
   }

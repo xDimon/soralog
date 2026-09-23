@@ -84,7 +84,7 @@ namespace soralog {
      * @param max_events Max events in buffer.
      * @param max_message_length Max log message length.
      * @param max_buffer_size Max buffer size.
-     * @param latency Maximum write delay.
+     * @param latency Maximum write delay, in milliseconds.
      * @param at_fault Reaction on write failure.
      */
     Sink(std::string name,

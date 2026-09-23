@@ -74,7 +74,7 @@ namespace soralog {
 
   void Logger::setSinkFromGroup(const std::shared_ptr<const Group> &group) {
     assert(group);
-    // Only override if the group is different from the current one
+    // Overridden, unless taken from the own group
     if (auto sink = std::const_pointer_cast<Sink>(group->sink())) {
       is_sink_overridden_ = group != group_;
       sink_ = std::move(sink);

@@ -76,7 +76,8 @@ namespace soralog::util {
   /**
    * @brief Retrieves the name of the current thread as a string.
    *
-   * @return The thread name or a generated name if unavailable.
+   * @return The thread name as the system reports it; a generated name on
+   * platforms without thread names.
    */
   inline std::string getThreadName() {
     std::array<char, 16> buff{};

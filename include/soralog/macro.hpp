@@ -10,7 +10,7 @@
 #include <soralog/logger.hpp>
 
 /**
- * @file log_macros.hpp
+ * @file macro.hpp
  * @brief Logging macros for different log levels.
  *
  * This file defines a set of convenience macros for logging messages with

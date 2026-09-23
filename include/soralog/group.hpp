@@ -152,7 +152,7 @@ namespace soralog {
 
     /**
      * @brief Unsets the parent group.
-     * All properties become overridden.
+     * Properties keep their current values; nothing is inherited any more.
      */
     void unsetParentGroup();
 

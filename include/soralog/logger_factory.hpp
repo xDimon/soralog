@@ -23,8 +23,8 @@ namespace soralog {
    * @brief Abstract factory for creating and managing loggers.
    *
    * This factory provides methods to obtain loggers, creating them
-   * if they do not already exist. It supports setting logging levels
-   * and output sinks dynamically.
+   * if they do not already exist, optionally with the level or the sink
+   * overridden. An existing logger is returned as is.
    */
   class LoggerFactory {
    public:
