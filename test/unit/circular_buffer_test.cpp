@@ -7,13 +7,17 @@
 
 #include <gtest/gtest.h>
 
+#include <atomic>
+#include <chrono>
+#include <iostream>
 #include <mutex>
+#include <thread>
 
 #if __cplusplus >= 202002L
 #include <latch>
 #endif
 
-#include "soralog/impl/sink_to_file.hpp"
+#include "soralog/circular_buffer.hpp"
 
 using namespace soralog;
 using namespace testing;
@@ -223,7 +227,8 @@ TEST_F(CircularBufferTest, PutGet) {
  *
  * @given A CircularBuffer shared between producer and consumer threads.
  * @when The producer adds data while the consumer retrieves it.
- * @then The buffer should remain consistent and no data should be lost.
+ * @then Concurrent operations complete without errors (data races are
+ *       caught by sanitizers).
  */
 TEST_F(CircularBufferTest, PutGetMt) {
   size_t capacity = 10;
@@ -274,11 +279,12 @@ TEST_F(CircularBufferTest, PutGetMt) {
 }
 
 /**
- * @brief Test mutual exclusion during buffer operations.
+ * @brief Test that an element is not consumed before it is published.
  *
  * @given A CircularBuffer with a single producer and consumer.
- * @when The producer adds data and the consumer retrieves it with delays.
- * @then The buffer should correctly handle synchronization.
+ * @when The producer holds its element unpublished for a second, and the
+ *       consumer tries to get it meanwhile.
+ * @then The consumer gets nothing.
  */
 TEST_F(CircularBufferTest, Mutual) {
   size_t capacity = 10;
@@ -304,9 +310,8 @@ TEST_F(CircularBufferTest, Mutual) {
     latch.arrive_and_wait();
 #endif
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    if (auto ref = testee.get()) {
-      print("get ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
-    }
+    auto ref = testee.get();
+    EXPECT_FALSE(ref);  // Not published while the producer holds it
   });
 
 #if __cplusplus >= 202002L

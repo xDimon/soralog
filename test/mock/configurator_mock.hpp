@@ -19,7 +19,8 @@ namespace soralog {
    *
    * This class is used to simulate a Configurator in unit tests.
    * Instead of actually applying configuration to the logging system,
-   * it allows verification of calls to `applyOn()` with expected parameters.
+   * it allows verification of calls to `prepare()`, `applySinks()`,
+   * `applyGroups()` and `cleanup()`.
    */
   class ConfiguratorMock : public Configurator {
    public:

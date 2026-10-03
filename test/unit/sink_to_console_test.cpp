@@ -134,7 +134,7 @@ TEST_F(SinkToConsoleTest, DISABLED_NonZeroLatencyLogging) {
  * @given A sink with zero-latency.
  * @when Messages are logged every half-second.
  * @then Messages are written to the console immediately.
- * @note This test is disabled as it requires manual observation.
+ * @note The output is checked by manual observation only.
  */
 TEST_F(SinkToConsoleTest, ZeroLatencyLogging) {
   auto logger = createLogger(0ms);
@@ -169,11 +169,11 @@ TEST_F(SinkToConsoleTest, MultithreadLogging) {
   std::latch latch(threads_n);  // Synchronization barrier for thread start
 #endif
 
+  std::mutex m;  // Keeps the last messages of an iteration together
   auto task = [&] {
 #if __cplusplus >= 202002L
     latch.arrive_and_wait();  // Ensure all threads start simultaneously
 #endif
-    std::mutex m;
     for (size_t i = 0; i < iters_n; ++i) {
       logger->debug("iteration {}.1", i);
       logger->debug("iteration {}.2", i);

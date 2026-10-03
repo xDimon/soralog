@@ -74,7 +74,7 @@ class LoggingSystemTest : public ::testing::Test {
           result = Configurator::Result{};
         }));
 
-    // Expect the `applyOn` method to be called exactly once
+    // Expect each wave of the configurator to be applied exactly once
     EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
     EXPECT_CALL(*configurator_, applySinks()).Times(1);
     EXPECT_CALL(*configurator_, applyGroups()).Times(1);
@@ -441,7 +441,7 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   //
   // State of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
-  //  Group:   G1    G1    G2    G2    G3    G4
+  //  Group:   G1    G1    G2    G2    G3    G3
   //  Level:   @1=I  T     @2=I  D     @3=W  V
 
   expect_initial_state();
@@ -450,6 +450,7 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   system_->setLevelOfGroup("first", Level::CRITICAL);
 
   /// @Then the level change should propagate to dependent groups unless
+  ///       their level is overridden
   //
   // State of groups
   //  Group:   G1    G2    G3
@@ -458,16 +459,16 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   //           ^        ^
   // State of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
-  //  Group:   G1    G1    G2    G2    G3    G4
+  //  Group:   G1    G1    G2    G2    G3    G3
   //  Level:   @1=C  T     @2=C  D     @3=W  V
   //              ^           ^
 
-  // Properties not overridden because group doesn't have parent
+  // G1 has no parent, G2 inherits from G1: neither is overridden
   EXPECT_TRUE(group1->level() == Level::CRITICAL);  // *own
   EXPECT_FALSE(group1->isLevelOverridden());
   EXPECT_TRUE(group2->level() == Level::CRITICAL);  // *g1
-  EXPECT_FALSE(group2->isLevelOverridden());  // no overridden because no parent
-  EXPECT_TRUE(group3->level() == Level::WARN);  // own
+  EXPECT_FALSE(group2->isLevelOverridden());        // inherited from G1
+  EXPECT_TRUE(group3->level() == Level::WARN);      // own
   EXPECT_TRUE(group3->isLevelOverridden());
 
   EXPECT_TRUE(log1->level() == Level::CRITICAL);  // *g1
@@ -502,7 +503,7 @@ TEST_F(LoggingSystemTest, ChangeLevelOfGroup) {
   //                 ^
   // State of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
-  //  Group:   G1    G1    G2    G2    G3    G4
+  //  Group:   G1    G1    G2    G2    G3    G3
   //  Level:   @1=I  T     C     D     @3=W  V
   //                       ^
 
@@ -643,7 +644,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   //
   // State of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
-  //  Group:   G1    G1    G2    G2    G3    G4
+  //  Group:   G1    G1    G2    G2    G3    G3
   //  Sink:    @1=S1 S3    @2=S1 S4    @3=S2 S5
 
   expect_initial_state();
@@ -652,6 +653,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   system_->setSinkOfGroup("first", "sink6");
 
   /// @Then the sink change should propagate to dependent groups unless
+  ///       their sink is overridden
   ///       overridden
   //
   // State of groups
@@ -662,7 +664,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfGroup) {
   //
   // State of loggers
   //  Logger:  L1    L2    L3    L4    L5    L6
-  //  Group:   G1    G1    G2    G2    G3    G4
+  //  Group:   G1    G1    G2    G2    G3    G3
   //  Sink:    @1=S6 S3    @2=S6 S4    @3=S2 S5
   //              ^           ^
 
@@ -1077,9 +1079,9 @@ TEST_F(LoggingSystemTest, ChangeParentGroup) {
   //
   // State of groups
   //  Group:   G11    G12    G21    G22    G31    G32
-  //  Parent:  G32    -      G22    G11    -      G21
-  //  Level:   T      D      C      G11=T  D      @21=C
-  //  Sink:    S1     S2     @22=S1 @11=S1 S2     @21=S1
+  //  Parent:  -      -      G22    G11    -      G21
+  //  Level:   T      D      I      G11=T  D      =C
+  //  Sink:    S1     S2     @22=S1 @11=S1 =S3    @21=S1
   //                         ^                    ^
 
   EXPECT_TRUE(group11->parent() == nullptr);
@@ -1210,6 +1212,11 @@ TEST_F(LoggingSystemTest, ChangeLevelOfLogger) {
   //  Level:   C
   //           ^
 
+  EXPECT_TRUE(log1->level() == Level::WARN);  // own - Still overridden
+  EXPECT_TRUE(log1->isLevelOverridden());
+  EXPECT_TRUE(log2->level() == Level::ERROR);  // own - Still overridden
+  EXPECT_TRUE(log2->isLevelOverridden());
+
   /// @When resetting the log levels of the loggers
   system_->resetLevelOfLogger("Log1");
   system_->resetLevelOfLogger("Log2");
@@ -1287,7 +1294,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   // State of loggers
   //  Logger:  L1     L2
   //  Group:   G1     G1
-  //  Level:   @1=S1  S2
+  //  Sink:    @1=S1  S2
 
   EXPECT_TRUE(log1->sink() == sink1);  // g1 - Inherits from group
   EXPECT_FALSE(log1->isSinkOverridden());
@@ -1303,7 +1310,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   // State of loggers
   //  Logger:  L1    L2
   //  Group:   G1    G1
-  //  Level:   S3    S4
+  //  Sink:    S3    S4
   //           ^     ^
 
   EXPECT_TRUE(log1->sink() == sink3);  // *own - Explicitly set
@@ -1320,8 +1327,13 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   // State of groups
   //  Group:   G1
   //  Parent:  -
-  //  Level:   S5
+  //  Sink:    S5
   //           ^
+
+  EXPECT_TRUE(log1->sink() == sink3);  // own - Still overridden
+  EXPECT_TRUE(log1->isSinkOverridden());
+  EXPECT_TRUE(log2->sink() == sink4);  // own - Still overridden
+  EXPECT_TRUE(log2->isSinkOverridden());
 
   /// @When resetting the sinks of the loggers
   system_->resetSinkOfLogger("Log1");
@@ -1332,7 +1344,7 @@ TEST_F(LoggingSystemTest, ChangeSinkOfLogger) {
   // State of loggers
   //  Logger:  L1    L2
   //  Group:   G1    G1
-  //  Level:   S5    S5
+  //  Sink:    S5    S5
   //           ^     ^
 
   EXPECT_TRUE(log1->sink() == sink5);  // *g1 - Inherits from group
@@ -1423,7 +1435,7 @@ TEST_F(LoggingSystemTest, ChangeGroupOfLogger) {
   //  Logger:  L1    L2
   //  Group:   G2    G2
   //  Sink:    @2=S2 S3
-  //  Level:   @1=D  C
+  //  Level:   @2=D  C
   //             ^
 
   EXPECT_TRUE(log1->group() == group2);

@@ -277,14 +277,6 @@ TEST_F(MacrosTest, CustomLevel) {
 
 /**
  * @test CalculatedFormat
- * @brief Tests logging macros with dynamically computed format strings.
- *
- * @given A logger instance.
- * @when Logging macros are called with computed format strings.
- * @then The correct formatted message should be recorded.
- */
-/**
- * @test CalculatedFormat
  * @brief Tests logging macros with dynamically calculated format strings.
  *
  * @given A logger instance.

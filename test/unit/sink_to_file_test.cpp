@@ -136,12 +136,13 @@ TEST_F(SinkToFileTest, Logging) {
 }
 
 /**
- * @test Logging
- * @brief Tests the logging behavior of SinkToFile under different delays.
+ * @test Rotating
+ * @brief Tests reopening of the log file by rotate().
  *
- * @given A logger writing to a file sink with a specified latency.
- * @when Multiple messages are logged with varying delays.
- * @then The messages are written to the file and can be flushed manually.
+ * @given A logger writing to a file sink with zero latency.
+ * @when The log file is renamed and the sink is rotated.
+ * @then The next message goes to a new file at the original path, and the
+ *       renamed file stays.
  */
 TEST_F(SinkToFileTest, Rotating) {
   std::filesystem::path path_to_old_file = path_.string() + ".old";

@@ -123,7 +123,7 @@ TEST_F(LoggerTest, MakeLogger) {
  * @test ChangeLevel
  * @brief Tests changing and resetting logging levels in loggers.
  *
- * @given A logging system with a hierarchical group structure.
+ * @given A logging system with two root groups.
  * @when Levels are explicitly set for some loggers.
  * @then The new level is applied and marked as overridden.
  * @when The levels are reset.
@@ -167,7 +167,7 @@ TEST_F(LoggerTest, ChangeLevel) {
  * @test ChangeSink
  * @brief Tests changing and resetting sinks in loggers.
  *
- * @given A logging system with a hierarchical group structure.
+ * @given A logging system with two root groups.
  * @when A new sink is explicitly set for some loggers.
  * @then The new sink is applied and marked as overridden.
  * @when The sinks are reset.

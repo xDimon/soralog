@@ -45,10 +45,11 @@ namespace soralog {
     ~SinkMock() override = default;
 
     /**
-     * @brief Mocks the push method to capture logging events.
+     * @brief Shadows Sink::push for calls made on SinkMock directly.
      *
-     * Unlike a real sink, this method does not format or store messages.
-     * Instead, it calls `mocked_push` to allow validation in tests.
+     * Sink::push is not virtual: calls through a Sink (as Logger makes them)
+     * reach Sink::push, not this method. Unlike a real sink, this method does
+     * not format or store messages; it calls `mocked_push`.
      *
      * @param name Logger name.
      * @param level Logging level.
@@ -107,7 +108,7 @@ namespace soralog {
       mocked_sync_flush();
     }
 
-    /// Mock method for verifying calls to async_flush().
+    /// Mock method for verifying calls to sync_flush().
     MOCK_METHOD(void, mocked_sync_flush, (), (const, noexcept));
 
     /**
