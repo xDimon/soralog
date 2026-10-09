@@ -54,12 +54,14 @@ groups:
     is_fallback: true
     sink: console
     level: trace
-  - name: azaza
+    children:
+      - name: azaza
   )"));
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::shared_ptr<soralog::Configurator> cascade_configurator = [] {
-  auto prev = std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+// Base of the cascade, applied before cascade_configurator
+std::shared_ptr<soralog::Configurator> cascade_base_configurator =
+    std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 groups:
   - name: 3rd_party
     is_fallback: true
@@ -80,7 +82,9 @@ groups:
       - name: first-3
   )"));
 
-  return std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::shared_ptr<soralog::Configurator> cascade_configurator =
+    std::make_shared<soralog::ConfiguratorFromYAML>(std::string(R"(
 sinks:
   - name: console
     type: console
@@ -94,7 +98,6 @@ groups:
     children:
       - name: 3rd_party
   )"));
-}();
 
 /**
  * @brief Entry point of the example application.
@@ -119,7 +122,7 @@ int main() {
 
   // Each configurator type demonstrates different configuration approaches:
   // - Fallback: minimal built-in configuration
-  // - Customized: manual configuration via code
+  // - Customized: fallback configurator with custom level and colors
   // - YamlByPath: external YAML file
   // - YamlByContent: embedded YAML string
   // - Cascade: multiple YAML configurators applied sequentially
@@ -136,9 +139,15 @@ int main() {
                   : std::make_shared<soralog::FallbackConfigurator>();
   // clang-format on
 
-  // Create the logging system with one or more configurators.
+  // Create the logging system with one or more configurators; a cascade
+  // applies them in order, later ones extending and overriding earlier ones.
   // The logging system is not usable until configure() is called.
-  soralog::LoggingSystem log_system(configurator);
+  auto make_logging_system = [&] {
+    return cfg_type == ConfiguratorType::Cascade
+             ? soralog::LoggingSystem(cascade_base_configurator, configurator)
+             : soralog::LoggingSystem(configurator);
+  };
+  soralog::LoggingSystem log_system = make_logging_system();
 
   // Perform the four-wave configuration process:
   // 1. Prepare configuration
@@ -168,9 +177,10 @@ int main() {
   main_log->info("Start");
 
   // Lazy evaluation example:
-  // The lambda is only executed if the log level allows the message to be
-  // logged. This avoids expensive computations when the message would be
-  // filtered out.
+  // With a macro, the arguments (the lambda here) are evaluated only if the
+  // log level allows the message to be logged. This avoids expensive
+  // computations when the message would be filtered out. A logger method
+  // evaluates its arguments always.
   auto lambda = [](const auto &tag) {
     std::cout << "CALCULATED: " << tag << '\n';
     return tag;
@@ -184,13 +194,12 @@ int main() {
   main_log->debug("{}", lambda("logger: debug msg for info level"));
   SL_DEBUG(main_log, "{}", lambda("macro: debug msg for info level"));
 
-  // This uses runtime-validated format strings,
-  // contrasting with compile-time checked macros that ensure format
-  // correctness.
+  // Format strings are validated at runtime, both by logger methods and by
+  // macros, so a format may be computed.
   std::string generated_format = "<{}>";
   main_log->debug(generated_format, "works!");
 
-  // Example of invalid format in macros causes error in compile time
+  // An invalid format in a macro is reported at runtime, like above
   // SL_DEBUG(main_log, "{} {}", lambda("one value for two placeholder"));
 
   std::vector<std::shared_ptr<std::thread>> threads;

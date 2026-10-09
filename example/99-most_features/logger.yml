@@ -50,7 +50,7 @@ sinks:                            # List of available logging sinks (outputs)
   # File sink with thread name, large buffers, and 'wait' on fault (retry indefinitely)
   - name: file
     type: file
-    path: /tmp/solalog_example.log
+    path: /tmp/soralog_example.log
     thread: name
     capacity: 2048
     buffer: 4194304
@@ -61,7 +61,7 @@ sinks:                            # List of available logging sinks (outputs)
   # File sink with 'ignore' on fault (discard logs on failure), thread id
   - name: file_ignore_fault
     type: file
-    path: /tmp/solalog_ignore.log
+    path: /tmp/soralog_ignore.log
     thread: id
     capacity: 512
     buffer: 1048576
@@ -72,7 +72,7 @@ sinks:                            # List of available logging sinks (outputs)
   # File sink demonstrating immediate flush (latency = 0)
   - name: file_immediate
     type: file
-    path: /tmp/solalog_immediate.log
+    path: /tmp/soralog_immediate.log
     thread: none
     capacity: 128
     buffer: 65536
@@ -83,7 +83,7 @@ sinks:                            # List of available logging sinks (outputs)
   # File sink with 'terminate' on fault (exit process), no thread info
   - name: file_terminate_fault
     type: file
-    path: /tmp/solalog_terminate.log
+    path: /tmp/soralog_terminate.log
     thread: none
     capacity: 1024
     buffer: 2097152
@@ -97,7 +97,7 @@ sinks:                            # List of available logging sinks (outputs)
   # second syslog sink.
   - name: syslog
     type: syslog
-    ident: solalog_example
+    ident: soralog_example
     thread: name
     capacity: 2048
     buffer: 4194304

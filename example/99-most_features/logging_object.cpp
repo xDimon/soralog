@@ -19,7 +19,7 @@
 
 // Obtain a logger instance for this object from the logger factory.
 LoggingObject::LoggingObject(soralog::LoggerFactory &logger_factory)
-    : log_(logger_factory.getLogger("ObjectTag", "example")) {}
+    : log_(logger_factory.getLogger("ObjectTag", "example_group")) {}
 
 // Emit log messages at all supported levels to demonstrate filtering.
 void LoggingObject::method() const {

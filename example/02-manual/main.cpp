@@ -98,5 +98,5 @@ int main() {
   logger1->warn("Console pwned!");
 
   // Demonstrate an explicit per-logger level override.
-  logger3->trace("This trace is visible only if group/logger level allows it");
+  logger3->trace("This trace is filtered out by the level of sink1 (info)");
 }

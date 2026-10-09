@@ -23,8 +23,8 @@
 
 int main() {
   // Embedded YAML configuration.
-  // - Sink 'file' writes to /tmp/soralog_example.log
-  // - Group 'main' routes logs to sink 'file' with level 'info'
+  // - Sink 'to_file' writes to /tmp/soralog_example.log
+  // - Group 'main' routes logs to sink 'to_file' with level 'info'
   const auto yaml = std::string(R"(
 
 sinks:

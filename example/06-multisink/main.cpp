@@ -44,7 +44,7 @@ int main() {
           - name: main          # Root group handling logs
             sink: everywhere    # Default sink for this group
             level: trace        # Minimum log level for this group
-            is_fallback: true   # This is the fallback group (only one allowed)
+            is_fallback: true   # This is the fallback group (the last one marked wins)
       )"));
 
   // Create the logging system using the YAML configurator.

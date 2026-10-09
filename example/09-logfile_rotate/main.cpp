@@ -31,8 +31,8 @@
 
 int main() {
   // Ensure a clean start: remove any leftover files from previous runs.
-  std::filesystem::remove("/tmp/solalog_example.old.log");
-  std::filesystem::remove("/tmp/solalog_example.log");
+  std::filesystem::remove("/tmp/soralog_example.old.log");
+  std::filesystem::remove("/tmp/soralog_example.log");
 
   // Inline YAML configuration defining a single file sink and a main group.
   auto configurator =
@@ -40,7 +40,7 @@ int main() {
         sinks:                             # List of available logging sinks (outputs)
           - name: file                     # Unique identifier for this sink
             type: file                     # Log output to a file
-            path: /tmp/solalog_example.log # Path to the log file
+            path: /tmp/soralog_example.log # Path to the log file
             latency: 1000                  # Max delay before flushing logs to the file
 
         groups:                 # Log groups define hierarchical loggers
@@ -67,17 +67,19 @@ int main() {
   // Obtain a logger
   auto logger = log_system.getLogger("Greeter", "main");
 
-  // Write to the active log file (/tmp/solalog_example.log).
+  // Write to the active log file (/tmp/soralog_example.log).
   logger->info("First message");
 
   // Simulate rotation: move the current log to a backup name.
-  std::filesystem::remove("/tmp/solalog_example.old.log");
-  std::filesystem::rename("/tmp/solalog_example.log", "/tmp/solalog_example.old.log");
+  std::filesystem::remove("/tmp/soralog_example.old.log");
+  std::filesystem::rename("/tmp/soralog_example.log", "/tmp/soralog_example.old.log");
 
   // Ask all sinks to rotate (file sinks reopen the configured path).
   log_system.callRotateForAllSinks();
 
-  // This message goes to the newly reopened /tmp/solalog_example.log.
+  // The worker thread reopens the file after it writes out the queued
+  // events, so this message usually goes to the newly reopened
+  // /tmp/soralog_example.log, but may still go to the old one.
   logger->info("Second message");
 
   return 0;

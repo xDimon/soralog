@@ -77,7 +77,7 @@ int main() {
   auto logger = log_system.getLogger("Greeter", "external");
 
   // Log messages: debug is visible only after the override to 'debug'.
-  logger->info("Info is enabled by 'main' (level: info)");
+  logger->info("Info is enabled by 'external' (level: debug)");
   logger->debug("Debug is enabled only after the override (level: debug)");
   logger->trace("Trace is typically filtered out by default");
 }

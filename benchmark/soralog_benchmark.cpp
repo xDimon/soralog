@@ -24,7 +24,7 @@
  *
  * Usage:
  *   soralog_benchmark [--scenario queue|sink|sink-sync|all]
- *                     [--threads 1,2,4,8] [--ops N] [--repeat R]
+ *                     [--threads 1,2,4,8,12] [--ops N] [--repeat R]
  *                     [--capacity N] [--message-length N]
  *                     [--sink-path PATH]
  *
@@ -389,7 +389,7 @@ namespace {
   [[noreturn]] void usage(const char *argv0) {
     std::fprintf(stderr,
                  "Usage: %s [--scenario queue|sink|sink-sync|all] "
-                 "[--threads 1,2,4] [--ops N] [--repeat R] [--capacity N] "
+                 "[--threads 1,2,4,8,12] [--ops N] [--repeat R] [--capacity N] "
                  "[--message-length N] [--sink-path PATH]\n",
                  argv0);
     std::exit(2);
