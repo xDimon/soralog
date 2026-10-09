@@ -7,20 +7,20 @@ SPDX-License-Identifier: Apache-2.0
 
 # Git Hooks
 
-This folder _might_ contain some git-hooks to execute various checkup in Kagome.
+This folder _might_ contain some git-hooks to execute various checkup in soralog.
 
-To activate presented (_and all future_) hooks just execute **once** shell-script [activate_hooks.sh](./activate_hooks.sh) from Kagome project root path. 
+To activate presented (_and all future_) hooks just execute **once** shell-script [activate_hooks.sh](./activate_hooks.sh) from soralog project root path. 
 
 ## pre-commit
 
-This hook check existing `clang-format` and `cmake-format` and their versions.
-If they have recommended version, specific checkup is enabled.
+This hook checks that `clang-format` exists and has the recommended version (19).
+If it does, the checkup is enabled.
 
-Each changed C++ file (`.hpp` and `.cpp` extensions) gets processed by `clang-format`.
+Each staged C++ file (`.hpp` and `.cpp` extensions) gets processed by `clang-format`.
 
-Each changed CMake file (`CMakeLists.txt` and `.cmake` extension) gets processed by `cmake-format`
+Checking CMake files with `cmake-format` is disabled in the hook for now.
 
-Commit will be blocked while there are any differences between original files and `clang-format/cmake-format` output files.
+Commit will be blocked while there are any differences between original files and `clang-format` output files.
 
 ## etc.
 

@@ -14,7 +14,7 @@ Soralog is a high-performance, flexible logging library designed for C++ applica
 ## Features
 
 - Multiple log sinks: console, file, syslog, and more.
-- Efficient lock-free circular buffer for log messages.
+- Efficient circular buffer for log messages, without locks.
 - Thread-safe logging with minimal overhead.
 - Hierarchical logging groups with inheritance.
 - Configurable log levels and formats.
@@ -35,7 +35,8 @@ Soralog uses CMake as its build system and supports different configurations thr
 ### Build Options
 
 - `BUILD_TESTS` (default: `OFF`) – Build unit tests.
-- `EXAMPLES` (default: `OFF`) – Build example programs.
+- `EXAMPLES` (default: `ON`) – Build example programs.
+- `BUILD_BENCHMARKS` (default: `OFF`) – Build the benchmark of the event buffer and sinks.
 - `ASAN`, `LSAN`, `MSAN`, `TSAN`, `UBSAN` (default: `OFF`) – Enable sanitizers.
 
 ### Supported Package Managers
@@ -60,7 +61,7 @@ To include Soralog in your project, add the following to your CMakeLists.txt:
 
 ```cmake
 find_package(soralog REQUIRED)
-target_link_libraries(your_project PRIVATE soralog)
+target_link_libraries(your_project PRIVATE soralog::soralog)
 ```
 
 ## Basic Usage
@@ -75,14 +76,14 @@ const auto result = logging_system.configure();
 if (result.has_error) {
   std::cerr << result.message;
 }
-soralog::Logger logger = logging_system.getLogger("logger", "main_group");
+auto logger = logging_system.getLogger("logger", "main_group");  // std::shared_ptr<soralog::Logger>
 ```
 
 ### Using logger methods
 
 ```cpp
-logger.debug("Hello, {}!", "world");
-logger.info("Hello, {}!", "world");
+logger->debug("Hello, {}!", "world");
+logger->info("Hello, {}!", "world");
 ```
 
 ### Using Logging Macros
@@ -113,7 +114,7 @@ Soralog uses a YAML-based configuration file. Below is a detailed breakdown of a
 
 - The builtin sink `"*"` always exists and discards all output.
 - The `syslog` sink is process-global; only one sink of `type: syslog` may be defined.
-- The `latency` parameter controls flushing delay in milliseconds. Setting `latency: 0` forces immediate synchronous flush on every log event, which may increase overhead.
+- The `latency` parameter controls flushing delay in milliseconds. Setting `latency: 0` makes every log call write its event out before returning, which may increase overhead.
 
 ### Example YAML Configuration
 
@@ -146,12 +147,13 @@ groups:
 | `name`           | string  | Yes      | N/A        | Unique identifier of the sink                                                                               |
 | `type`           | string  | Yes      | N/A        | Sink type (`console`, `file`, `syslog`, `multisink`)                                                        |
 | `thread`         | string  | No       | `none`     | Thread info mode (`name`, `id`, `none`)                                                                     |
-| `capacity`       | int     | No       | `64`       | Number of buffered events in the lock-free circular buffer                                                  |
-| `buffer`         | int     | No       | `131072`   | Buffer size in bytes                                                                                         |
-| `latency`        | int     | No       | `100`      | Max delay in milliseconds before flushing. `0` means immediate synchronous flush (higher overhead).         |
+| `capacity`       | int     | No       | `64` / `2048`           | Number of buffered events (console / file and syslog)                                          |
+| `max_message_length` | int | No       | `1024`                  | Max length of a log message in bytes, at least 64                                              |
+| `buffer`         | int     | No       | `131072` / `4194304`    | Size of the write buffer in bytes (console / file and syslog)                                  |
+| `latency`        | int     | No       | `200` / `1000`          | Max delay in milliseconds before flushing (console / file and syslog). `0` means synchronous flush on every log event (higher overhead). |
 | `level`          | string  | No       | `trace`    | Minimum log level (`trace`, `debug`, `verbose`, `info`, `warn`, `error`, `critical`)                         |
 
-Flushing occurs when either the capacity or buffer size limits are exceeded, or when the latency timer expires.
+Events are written out by a worker thread at least every `latency` milliseconds, and earlier when the event buffer is 80% full. With `latency: 0` every log call writes its event out before returning.
 
 #### Console Sink (`type: console`)
 
@@ -201,7 +203,7 @@ Soralog provides various examples demonstrating different use cases and configur
 1. **01-hello_world** – A minimal example that initializes a logger and writes a simple message.
 2. **02-manual** – Demonstrates programmatic configuration of logging without using a YAML config file.
 3. **03-with_config_file** – Shows how to configure Soralog using a YAML configuration file.
-4. **04-cascade_config** – Demonstrates hierarchical logging groups with inherited settings.
+4. **04-multi_config** – Chains configurators: a later one overrides settings of a group declared by an earlier one.
 5. **05-two_sinks** – Example of logging to two different sinks (e.g., console and file).
 6. **06-multisink** – Uses a multisink to send log messages to multiple destinations.
 7. **07-multisink_with_different_level** – Extends the multisink example by setting different log levels for different sinks.
@@ -216,7 +218,7 @@ Soralog provides various examples demonstrating different use cases and configur
 
 ### Example Source Code
 
-The source code for these examples is available in the [example](https://github.com/xDimon/soralog/tree/main/example) directory.
+The source code for these examples is available in the [example](https://github.com/xDimon/soralog/tree/master/example) directory.
 
 ## Projects Using Soralog
 

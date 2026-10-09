@@ -130,8 +130,8 @@ namespace soralog {
       result.message = "I: Some problems are found during configuring:\n"
                      + result.message
                      + "I: See more details on "
-                       "https://github.com/xDimon/soralog/tree/update/"
-                       "documentation?tab=readme-ov-file#configuration-file";
+                       "https://github.com/xDimon/soralog/tree/master"
+                       "?tab=readme-ov-file#configuration-file";
     }
 
     return result;
