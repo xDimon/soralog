@@ -27,7 +27,7 @@ if (COVERAGE)
 endif ()
 
 if (PACKAGE_MANAGER)
-    if(PACKAGE_MANAGER NOT MATCHES "^(hunter|vcpkg)$")
+    if(NOT PACKAGE_MANAGER MATCHES "^(hunter|vcpkg)$")
         message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
     endif ()
 else ()
