@@ -439,7 +439,8 @@ namespace bench {
     Histogram service;   ///< Duration of push(), ns
     Histogram response;  ///< From the scheduled moment to the end of push()
     Histogram delivery;  ///< From the push to being readable from the file
-    double background_cpu = 0;  ///< CPU of the logger's own threads, cores
+    /// CPU of the logger's own threads and of the final flush, cores
+    double background_cpu = 0;
     uint64_t lines = 0;
     uint64_t foreign_lines = 0;
     uint64_t bytes = 0;

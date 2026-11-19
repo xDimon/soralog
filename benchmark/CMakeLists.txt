@@ -15,3 +15,7 @@ add_executable(soralog_benchmark
 target_link_libraries(soralog_benchmark
     sink_to_file
     )
+
+if(BUILD_BENCHMARK_COMPARE)
+    add_subdirectory(compare)
+endif()

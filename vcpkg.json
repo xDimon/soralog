@@ -11,6 +11,13 @@
       "dependencies": [
         "gtest"
       ]
+    },
+    "soralog-benchmark-compare": {
+      "description": "Comparison of soralog with other loggers in benchmarks",
+      "dependencies": [
+        "spdlog",
+        "quill"
+      ]
     }
   }
 }

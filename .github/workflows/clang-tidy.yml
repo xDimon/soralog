@@ -48,5 +48,5 @@ jobs:
         test ${VER_COUNT} -eq 0 && echo "no llvm version detected" && exit 1
         export LLVM_ROOT=$(ls -r -d -1 ${LLVM_DIR} | head -1)
         export PATH=${LLVM_ROOT}/bin:${LLVM_ROOT}/share/clang:${PATH}
-        cmake . -Bbuild -DBUILD_TESTS=ON
+        cmake . -Bbuild -DBUILD_TESTS=ON -DEXAMPLES=ON
         .github/aux/clang-tidy.sh build
