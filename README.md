@@ -17,9 +17,75 @@ Soralog is a high-performance, flexible logging library designed for C++ applica
 - Efficient circular buffer for log messages, without locks.
 - Thread-safe logging with minimal overhead.
 - Hierarchical logging groups with inheritance.
-- Configurable log levels and formats.
+- Configurable log levels and thread info (name or id) in the lines.
 - Configurable via YAML or programmatically.
 - Macro-based or object-based logging interface (up to user).
+
+## Why Soralog
+
+### Performance
+
+Measured against spdlog and quill under the same load, with the same line
+layout and nobody dropping events
+([method](docs/benchmark/README.md),
+[full results](docs/benchmark/results/apple-m4-max-macos-27.2/report.md);
+Apple M4 Max):
+
+- **Highest throughput.** From one thread Soralog writes 15 M events/s,
+  about 3× quill and 3.5–4.5× spdlog; from 4 threads it writes 8.3 M, where
+  quill does 4.6 M and spdlog 1.2–1.9 M.
+- **Cheap logging calls.** At a steady 100,000 events/s a call takes 0.04 µs
+  at the median and stays under 0.6 µs at p99.9; spdlog has tails
+  of 6–13 µs.
+- **Little CPU in the background.** At 100,000 events/s the worker takes
+  under 1% of a core, against ~6% for quill's backend and ~25% for spdlog's async
+  worker.
+- **Freshness is a setting.** How fresh the file is depends on `latency`:
+  with 1–10 ms lines reach the file within ~1.5–13 ms, and the calls cost
+  the same ([how settings affect
+  performance](docs/benchmark/soralog-settings.md)).
+- **Bounded memory.** The event queue is allocated once (2.25 MiB by
+  default) and never grows. When it is full, writers wait for room, so no
+  event is lost.
+
+### Convenience
+
+- **Hierarchical groups.** Loggers belong to groups, and groups form a tree:
+  a group takes its level and sink from its parent unless it sets its own.
+  Changing a group's level or sink at runtime applies to every group and
+  logger below it that does not override it.
+- **Configuration as data.** A YAML file, or several applied in order,
+  describes sinks and groups. The same can be done in code, and both ways
+  can be combined.
+- **Sinks for the usual destinations.** They cover console (optionally
+  colored), file (reopened on request, for external log rotation), syslog,
+  and multisinks fanning out to several of them. Each sink has its own level
+  and buffering.
+- **Details that save time.** Lines can carry thread names or ids, and
+  messages use `fmt`-style formatting. A sink reacts to a failing disk as
+  configured: it waits, ignores or terminates the process. Trace and debug
+  calls can be compiled out entirely.
+
+### When to choose it
+
+Soralog fits best where an application logs a lot from a few threads and
+must not slow down for it: servers, network nodes, processing pipelines,
+anything where logging sits on the hot path. There its throughput is
+higher and its background load lower than those of spdlog and quill, and
+its configuration can be changed without a restart.
+
+Look at the alternatives in three cases.
+
+1. **Many threads log at saturation.** quill keeps a queue per thread: with
+   4 threads its calls stay at ~0.2 µs at p99.9, while Soralog's reach
+   ~3 µs. With 8 threads both do ~4.4 M events/s.
+2. **Lines must reach the file within a millisecond without any tuning.**
+   spdlog's small stdio buffer delivers them in ~0.5 ms at 100,000 events/s,
+   paid for with microsecond tails in the calls. Soralog needs `latency: 1`
+   for that.
+3. **A custom line layout or ready-made sinks for every case are needed**,
+   such as rotation by size or date or network output: spdlog has more of
+   them.
 
 ## Performance
 
@@ -36,19 +102,22 @@ internal SSD, Homebrew clang 23. Median of 3 runs of 1,000,000 events each.
 | 4 | 8.3 M (6.3–8.7 M) | 0.43 µs | 1.7 µs | 2.8 µs |
 | 8 | 4.4 M | 0.86 µs | 15 µs | 33 µs |
 
-Throughput here is the saturation point: writers log as fast as they can and
-the sink worker writing the file is busy all the time; past it writers wait
-for free room in the buffer. At a steady 100,000 events/s the worker takes
-under 1% of a core, `push` stays at p99.9 below 0.6 µs (1 thread) or 3.4 µs
-(4 threads), and events reach the file within 20 ms: with this load the
-worker is woken by the buffer filling up rather than by the latency timer.
+Throughput here is the saturation point. Writers log as fast as they can,
+the sink worker is busy writing the file all the time, and past that point
+writers wait for room in the buffer.
+
+At a steady 100,000 events/s the worker takes under 1% of a core, and
+`push` stays at p99.9 below 0.6 µs with 1 thread or 3.4 µs with 4. Events
+reach the file within 20 ms: at this load the worker is woken by the
+buffer filling up, before the latency timer fires.
 
 Numbers depend on the machine, the file system and the settings; the clock of
 this machine ticks every 41.7 ns, so the shortest times are rounded to it. To
 measure on your hardware build with `-DBUILD_BENCHMARKS=ON` and run
 `soralog_benchmark --scenario load --sink-path <file>`; see its `--help` for
-the load and sink parameters. The method, the comparison with other loggers
-and its results are in [docs/benchmark](docs/benchmark/README.md).
+the load and sink parameters. The method, the comparison with other loggers,
+its results and how the settings affect performance are in
+[docs/benchmark](docs/benchmark/README.md).
 
 ## Installation
 
@@ -183,7 +252,7 @@ groups:
 | `latency`        | int     | No       | `200` / `1000`          | Max delay in milliseconds before flushing (console / file and syslog). `0` means synchronous flush on every log event (higher overhead). |
 | `level`          | string  | No       | `trace`    | Minimum log level (`trace`, `debug`, `verbose`, `info`, `warn`, `error`, `critical`)                         |
 
-Events are written out by a worker thread at least every `latency` milliseconds, and earlier when the event buffer is 80% full. With `latency: 0` every log call writes its event out before returning.
+Events are written out by a worker thread about every `latency` milliseconds, and earlier when the event buffer is 80% full. With small values the real period is longer than the setting: about 1.25× at 10 ms and 1.5× at 1 ms. With `latency: 0` every log call writes its event out before returning.
 
 #### Console Sink (`type: console`)
 

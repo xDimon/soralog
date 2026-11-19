@@ -1,0 +1,367 @@
+== soralog 0.3.0, capacity-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 256 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    11978.3      0.04      0.13      0.21     197.7       0.13       0.21      197.7         -         -         -    99.9     112
+      4     9226.5      0.34      1.60      3.07      2793       1.60       3.07       2793         -         -         -   100.2     112
+
+== soralog 0.3.0, capacity-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 1024 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    13870.4      0.04      0.09      0.17      79.5       0.09       0.17       79.5         -         -         -   100.0     112
+      4     8493.6      0.38      1.73      3.58     244.2       1.73       3.58      244.2         -         -         -   100.1     112
+
+== soralog 0.3.0, capacity-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    15011.8      0.04      0.09      0.17      33.1       0.09       0.17       33.1         -         -         -   100.1     112
+      4    11127.6      0.30      1.09      1.92     386.4       1.09       1.92      386.4         -         -         -   100.4     112
+
+== soralog 0.3.0, capacity-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 8192 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    15034.6      0.04      0.09      0.17      19.0       0.09       0.17       19.0         -         -         -    99.8     112
+      4    10159.3      0.34      1.34      2.17      23.0       1.34       2.17       23.0         -         -         -   100.9     112
+
+== soralog 0.3.0, capacity-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 32768 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14452.8      0.04      0.13      0.21      14.0       0.13       0.21       14.0         -         -         -    96.0     112
+      4     9556.9      0.34      1.41      2.30      22.0       1.41       2.30       22.0         -         -         -    93.2     112
+
+== soralog 0.3.0, capacity-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 256 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.13      0.43      0.96     962.9       3.33      524.3       2125      73.7     311.3      5655    97.1     112
+
+== soralog 0.3.0, capacity-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 1024 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.13      0.43      1.02      6569       0.73      10486      23203      81.9     950.3      7456    88.3     112
+
+== soralog 0.3.0, capacity-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.13      0.43      3.20      5132       0.43       15.4       5132      90.1      1769      5905    80.1     112
+
+== soralog 0.3.0, capacity-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 8192 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.13      0.43      4.35     373.6       0.46       5.63       3179     229.4      7078     10344    53.2     112
+
+== soralog 0.3.0, capacity-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 32768 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      999.5      0.17      0.43      3.33      62.2       0.43       5.12      118.3      9437     29360     30105    32.8     112
+
+== soralog 0.3.0, message-length: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 128 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14796.1      0.04      0.09      0.17      24.4       0.09       0.17       24.4         -         -         -    99.7     112
+      4     9423.5      0.34      1.60      3.07      44.5       1.60       3.07       44.5         -         -         -    99.7     112
+
+== soralog 0.3.0, message-length: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 256 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14874.9      0.04      0.09      0.17      73.5       0.09       0.17       73.5         -         -         -   100.0     112
+      4     8205.9      0.38      1.60      2.94      3477       1.60       2.94       3477         -         -         -    99.0     112
+
+== soralog 0.3.0, message-length: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14656.6      0.04      0.09      0.17      25.8       0.09       0.17       25.8         -         -         -   100.0     112
+      4     7683.2      0.43      1.73      2.81     350.6       1.73       2.81      350.6         -         -         -    99.4     112
+
+== soralog 0.3.0, message-length: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 4096 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14852.8      0.04      0.09      0.17      50.0       0.09       0.17       50.0         -         -         -   100.0     112
+      4     7015.4      0.43      2.30      4.86      81.1       2.30       4.86       81.1         -         -         -    99.5     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 16384 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     9147.1      0.08      0.13      3.84     704.7       0.13       3.84      704.7         -         -         -    98.9     112
+      4     7426.6      0.26      2.69      7.93     28482       2.69       7.93      28482         -         -         -   100.0     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 65536 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    13818.2      0.04      0.17      0.21     427.3       0.17       0.21      427.3         -         -         -    99.9     112
+      4     7336.6      0.43      1.73      2.94     357.5       1.73       2.94      357.5         -         -         -    99.9     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 262144 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14800.5      0.04      0.09      0.17      1751       0.09       0.17       1751         -         -         -   100.0     112
+      4     8228.9      0.38      1.66      2.81     427.5       1.66       2.81      427.5         -         -         -    99.5     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 1048576 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14831.6      0.04      0.09      0.17      39.5       0.09       0.17       39.5         -         -         -   100.1     112
+      4     7285.3      0.43      1.79      2.94     537.8       1.79       2.94      537.8         -         -         -    98.9     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 4194304 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14778.5      0.04      0.09      0.17     474.1       0.09       0.17      474.1         -         -         -    99.9     112
+      4     7853.0      0.43      1.79      3.07     423.7       1.79       3.07      423.7         -         -         -    99.5     112
+
+== soralog 0.3.0, buffer-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer 16777216 B, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14660.1      0.04      0.09      0.17      57.0       0.09       0.17       57.0         -         -         -   100.1     112
+      4     7553.3      0.38      1.73      2.81     375.6       1.73       2.81      375.6         -         -         -    99.6     112
+
+== soralog 0.3.0, latency-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 0 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      364.8      2.43      6.14      13.8      6597       6.14       13.8       6597         -         -         -     0.0     112
+      4      286.7      12.8      30.7      43.0     502.5       30.7       43.0      502.5         -         -         -     0.0     112
+
+== soralog 0.3.0, latency-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14728.4      0.04      0.09      0.21      72.5       0.09       0.21       72.5         -         -         -    99.9     112
+      4     7133.4      0.43      1.73      3.07     344.5       1.73       3.07      344.5         -         -         -    99.5     112
+
+== soralog 0.3.0, latency-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14834.4      0.04      0.09      0.17      27.8       0.09       0.17       27.8         -         -         -   100.1     112
+      4     7765.3      0.38      1.73      2.94     463.8       1.73       2.94      463.8         -         -         -    99.2     112
+
+== soralog 0.3.0, latency-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 100 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14818.0      0.04      0.09      0.17      44.0       0.09       0.17       44.0         -         -         -   100.1     112
+      4     8150.1      0.38      1.60      2.69     397.5       1.60       2.69      397.5         -         -         -   100.1     112
+
+== soralog 0.3.0, latency-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14755.0      0.04      0.09      0.17      60.7       0.09       0.17       60.7         -         -         -   100.0     112
+      4     8947.1      0.34      1.53      2.69     343.3       1.53       2.69      343.3         -         -         -   100.0     112
+
+== soralog 0.3.0, latency-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 0 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      2.43      5.63      15.4     879.2       9.21      589.8       1175      69.6     139.3      3277     0.0     112
+      4      100.0      3.97      11.8      36.9      1104       12.3      622.6       1106      69.6     139.3      1210     0.0     112
+
+== soralog 0.3.0, latency-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.26      0.46      47.8       0.30       8.70       1803     753.7      1507      6039     1.9     112
+      4      100.0      0.13      0.54      3.33      59.8       1.09       5.89       2020     753.7      1507      4045     2.2     112
+
+== soralog 0.3.0, latency-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.21      0.51      42.6       0.30       7.17      161.1      6029     12583     13566     0.7     112
+      4      100.0      0.09      0.96      3.33      21.7       3.07       5.38       1616      6029     12583     16795     0.9     112
+
+== soralog 0.3.0, latency-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 100 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.21      0.54     113.8       0.30       7.68      253.1      8389     16777     17668     0.7     112
+      4      100.0      0.08      0.54      3.33      22.5       1.73       5.12      114.1      8389     16777     19972     0.8     112
+
+== soralog 0.3.0, latency-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.26      0.67      17.6       0.30       7.42      203.5      8389     16777     27272     0.8     112
+      4      100.0      0.09      0.51      3.33      15.9       0.64       4.86       89.6      8389     16777     17834     0.9     112
+
+== soralog 0.3.0, message-size: closed loop, burst 1, message size 36, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14053.4      0.04      0.09      0.17      37.3       0.09       0.17       37.3         -         -         -   100.1      84
+      4     7747.0      0.38      1.66      3.58      1715       1.66       3.58       1715         -         -         -    98.8      84
+
+== soralog 0.3.0, message-size: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14825.8      0.04      0.09      0.17      32.7       0.09       0.17       32.7         -         -         -   100.1     112
+      4     7846.3      0.38      1.73      2.94     405.6       1.73       2.94      405.6         -         -         -    98.9     112
+
+== soralog 0.3.0, message-size: closed loop, burst 1, message size 256, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    12538.9      0.04      0.09      0.26      4480       0.09       0.26       4480         -         -         -    96.1     304
+      4     7357.4      0.46      1.60      2.69      1925       1.60       2.69       1925         -         -         -   100.5     304
+
+== soralog 0.3.0, message-size: closed loop, burst 1, message size 1000, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     6056.6      0.08      0.17      0.26      9018       0.17       0.26       9018         -         -         -    83.5    1048
+      4     5175.1      0.43      1.41      2.69      8727       1.41       2.69       8727         -         -         -    75.9    1048
+
+== soralog 0.3.0, writers-closed: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1    14870.7      0.04      0.09      0.17      32.9       0.09       0.17       32.9         -         -         -   100.1     112
+      2    11447.9      0.17      0.30      0.54      77.9       0.30       0.54       77.9         -         -         -   100.3     112
+      4     8416.2      0.34      1.66      2.81     446.9       1.66       2.81      446.9         -         -         -    99.1     112
+      8     4350.1      0.96      13.3      27.6     207.4       13.3       27.6      207.4         -         -         -    97.2     112
+     12     3053.6      2.30      21.5      45.1     437.5       21.5       45.1      437.5         -         -         -    90.8     112
+
+== soralog 0.3.0, writers-500k: open loop 500000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      500.0      0.04      0.13      0.30      77.0       0.21       7.17      341.6      1376      3539      4562    22.4     112
+      2      500.0      0.09      0.30      0.61      64.3       0.34       6.40       1005      1245      3539      5526    27.2     112
+      4      500.0      0.13      0.43      3.20      1029       0.46       8.19       3948      1507      3539      7260    18.7     112
+      8      500.0      0.21      0.46      0.54      48.4       0.46       3.58      173.9      1442      3539      4612    21.4     112
+     12      500.0      0.26      0.54      3.33     739.0       3.33       51.2       1359      1573      3932      7384    24.7     112
+
+== soralog 0.3.0, rate: open loop 10000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4       10.0      0.21      3.20      4.86      12.5       3.33       7.42       66.6     83886    164114    164114     0.2     112
+
+== soralog 0.3.0, rate: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      100.0      0.09      0.51      3.33      38.1       0.54       5.12      226.8      8389     16777     17767     0.7     112
+
+== soralog 0.3.0, rate: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.13      0.38      0.80      3839       0.38       5.38       3839      81.9      1704      4062    89.2     112
+
+== soralog 0.3.0, rate: open loop 3000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     3000.0      0.09      0.38      1.02     13702       2753      22020      28240      73.7     884.7     16214    95.5     112
+
+== soralog 0.3.0, rate: open loop 10000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     9685.2      0.26      1.28      2.30      6897     335544     352322     356085      86.0     884.7      7238    90.3     112
+
+== soralog 0.3.0, burst: open loop 100000 ev/s, burst 256, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.0      0.04      0.17      0.61      88.2       1112       1112       1112      7864     16777     17832     0.7     112
+
+== soralog 0.3.0, burst: open loop 100000 ev/s, burst 1024, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2       99.8      0.04      0.26      0.67     142.7       4974       4974       4974      1835     15204     15723     0.7     112
+
+== soralog 0.3.0, burst: open loop 100000 ev/s, burst 2048, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2       99.6      0.04      0.26      0.73      11.6       5227       5227       5227     229.4      1573     20624     0.6     112
+
+== soralog 0.3.0, burst: open loop 100000 ev/s, burst 4096, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.1      0.04      0.17      0.51      12.4       5243       5420       5420     204.8      1704     45863     0.7     112
+
+== soralog 0.3.0, burst: open loop 100000 ev/s, burst 16384, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2       96.2      0.04      0.17      0.30      1140       7340       7571       7571      94.2      1311    167577     0.9     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 512 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      1.09     437.1       0.17       7.68      437.1      2228      4194      8432     0.9     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 512 events, message limit 1024 B, write buffer default, latency 100 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      1.28     108.4       0.21       7.93      205.2      2228      4194      5679     1.0     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 512 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      1.09      15.1       0.21       7.93       2189      2228      4194      6782     1.0     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      0.30      92.8       0.21       6.91      214.9      6291     12583     13726     0.7     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 100 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      0.38      35.6       0.17       6.40      165.2      8389     16777     17450     0.6     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.17      1.02      52.5       0.17       9.73       3086      8389     16777     18251     0.7     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 8192 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.30      0.54      21.1       0.34       7.42      248.7      6029     12583     13555     0.8     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 8192 events, message limit 1024 B, write buffer default, latency 100 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.21      0.51      37.7       0.26       1.34      441.0     33554     67109     67397     0.6     112
+
+== soralog 0.3.0, capacity-x-latency: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 8192 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.00 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.30      0.54      42.6       0.30       7.68       2123     33554     67109     68199     0.7     112
+

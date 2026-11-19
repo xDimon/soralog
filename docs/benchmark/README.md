@@ -112,6 +112,8 @@ without more load: `writers-500k`).
 
 `soralog_benchmark --scenario load` takes all of these options for soralog
 alone, including those the comparison keeps at defaults.
+The suite `soralog-settings` of the runner varies them one at a time; its
+results and conclusions are in [soralog-settings.md](soralog-settings.md).
 
 ## Comparison with other loggers
 
@@ -226,8 +228,8 @@ idle machine and add the output directory under `docs/benchmark/results`.
   throughput varies between runs much more than that of a logger limited by
   formatting or its queue. On the Apple M4 Max, single-writer throughput
   with 1000-byte messages was 6.4–6.7 M events/s over the repeats of the
-  comparison suite, while an earlier run had a median of 4.4 M with an 83%
-  spread. The cause is not
+  comparison suite, but 3.4–6.6 M over those of the settings suite, and an
+  earlier run had a median of 4.4 M with an 83% spread. The cause is not
   established yet; the report shows the min–max range next to every median
   so that such rows are visible.
 - **Delivery resolution** is the poll interval of the reader, see above.
@@ -239,3 +241,6 @@ idle machine and add the output directory under `docs/benchmark/results`.
 ## Results
 
 - [Apple M4 Max, macOS 27.2](results/apple-m4-max-macos-27.2/report.md)
+
+How soralog depends on its settings and on the load, with recommendations:
+[soralog-settings.md](soralog-settings.md).
