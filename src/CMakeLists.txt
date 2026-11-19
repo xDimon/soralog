@@ -61,15 +61,16 @@ target_link_libraries(multisink
     sink
     )
 
-add_library(group
-    group.cpp
+# Groups, loggers and the logging system refer to each other, so they are
+# built as one library; the targets are kept for those who link to them by name
+add_library(group INTERFACE)
+target_link_libraries(group INTERFACE
+    logging_system
     )
 
-add_library(logger
-    logger.cpp
-    )
-target_link_libraries(logger
-    sink
+add_library(logger INTERFACE)
+target_link_libraries(logger INTERFACE
+    logging_system
     )
 
 add_library(configurator INTERFACE)
@@ -95,14 +96,15 @@ add_library(fallback_configurator
     )
 target_link_libraries(fallback_configurator
     configurator
+    logging_system
     )
 
 add_library(logging_system
     logging_system.cpp
+    group.cpp
+    logger.cpp
     )
 target_link_libraries(logging_system
-    group
-    logger
     sink
     sink_to_nowhere
     )
