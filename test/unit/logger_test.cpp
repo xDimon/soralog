@@ -33,7 +33,7 @@ class LoggerTest : public ::testing::Test {
         *configurator_,
         prepare(
             Truly([&](LoggingSystem &s) { return &s == system_.get(); }), _, _))
-        .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &result) {
+        .WillByDefault([&](LoggingSystem &system, int, auto &result) {
           system.makeSink<SinkMock>("sink1");
           system.makeSink<SinkMock>("sink2");
           system.makeSink<SinkMock>("sink3");
@@ -41,7 +41,7 @@ class LoggerTest : public ::testing::Test {
           system.makeGroup("first", {}, "sink1", Level::TRACE);
           system.makeGroup("second", {}, "sink2", Level::DEBUG);
           result = Configurator::Result{};
-        }));
+        });
     EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
     EXPECT_CALL(*configurator_, applySinks()).Times(1);
     EXPECT_CALL(*configurator_, applyGroups()).Times(1);

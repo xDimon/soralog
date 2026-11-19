@@ -31,7 +31,7 @@ class GroupTest : public ::testing::Test {
 
     ON_CALL(*configurator_,
             prepare(Truly([&](auto &s) { return &s == system_.get(); }), _, _))
-        .WillByDefault(Invoke([&](LoggingSystem &system, int, auto &) {
+        .WillByDefault([&](LoggingSystem &system, int, auto &) {
           system.makeSink<SinkMock>("sink1");
           system.makeSink<SinkMock>("sink2");
           system.makeSink<SinkMock>("sink3");
@@ -40,7 +40,7 @@ class GroupTest : public ::testing::Test {
           system.makeGroup("second", "first", {}, {});
           system.makeGroup("third", "second", "sink3", Level::DEBUG);
           system.makeGroup("four", {}, "sink4", Level::VERBOSE);
-        }));
+        });
     EXPECT_CALL(*configurator_, prepare(_, _, _)).Times(1);
     EXPECT_CALL(*configurator_, applySinks()).Times(1);
     EXPECT_CALL(*configurator_, applyGroups()).Times(1);
