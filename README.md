@@ -47,7 +47,8 @@ Numbers depend on the machine, the file system and the settings; the clock of
 this machine ticks every 41.7 ns, so the shortest times are rounded to it. To
 measure on your hardware build with `-DBUILD_BENCHMARKS=ON` and run
 `soralog_benchmark --scenario load --sink-path <file>`; see its `--help` for
-the load and sink parameters.
+the load and sink parameters. The method and the comparison with other
+loggers are in [docs/benchmark](docs/benchmark/README.md).
 
 ## Installation
 
