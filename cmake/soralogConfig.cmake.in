@@ -1,0 +1,21 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(fmt CONFIG)
+find_dependency(yaml-cpp CONFIG)
+
+include("${CMAKE_CURRENT_LIST_DIR}/soralogTargets.cmake")
+
+# Short names used inside the project, available to consumers as well
+if (NOT TARGET soralog::yaml)
+    add_library(soralog::yaml INTERFACE IMPORTED)
+    set_target_properties(soralog::yaml PROPERTIES
+        INTERFACE_LINK_LIBRARIES soralog::configurator_yaml)
+endif ()
+if (NOT TARGET soralog::fallback)
+    add_library(soralog::fallback INTERFACE IMPORTED)
+    set_target_properties(soralog::fallback PROPERTIES
+        INTERFACE_LINK_LIBRARIES soralog::fallback_configurator)
+endif ()
+
+check_required_components(soralog)

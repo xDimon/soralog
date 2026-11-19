@@ -154,7 +154,7 @@ install(
 
 install(
     TARGETS ${INSTALL_TARGETS}
-    EXPORT soralogConfig
+    EXPORT soralogTargets
     LIBRARY       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
     ARCHIVE       DESTINATION ${CMAKE_INSTALL_LIBDIR}/soralog
     RUNTIME       DESTINATION ${CMAKE_INSTALL_BINDIR}/soralog
@@ -163,14 +163,36 @@ install(
     FRAMEWORK     DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
 
+set(SORALOG_CONFIG_DIR ${CMAKE_INSTALL_LIBDIR}/cmake/soralog)
+
 install(
-    EXPORT soralogConfig
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/soralog
+    EXPORT soralogTargets
+    DESTINATION ${SORALOG_CONFIG_DIR}
     NAMESPACE soralog::
 )
 
 export(
-    EXPORT soralogConfig
-    FILE ${PROJECT_BINARY_DIR}/soralogConfig.cmake
+    EXPORT soralogTargets
+    FILE ${PROJECT_BINARY_DIR}/soralogTargets.cmake
     NAMESPACE soralog::
+)
+
+include(CMakePackageConfigHelpers)
+
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/cmake/soralogConfig.cmake.in
+    ${PROJECT_BINARY_DIR}/soralogConfig.cmake
+    INSTALL_DESTINATION ${SORALOG_CONFIG_DIR}
+)
+
+write_basic_package_version_file(
+    ${PROJECT_BINARY_DIR}/soralogConfigVersion.cmake
+    COMPATIBILITY SameMinorVersion
+)
+
+install(
+    FILES
+        ${PROJECT_BINARY_DIR}/soralogConfig.cmake
+        ${PROJECT_BINARY_DIR}/soralogConfigVersion.cmake
+    DESTINATION ${SORALOG_CONFIG_DIR}
 )
