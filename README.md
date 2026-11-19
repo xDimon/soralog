@@ -25,30 +25,30 @@ Soralog is a high-performance, flexible logging library designed for C++ applica
 
 Typical numbers for a file sink with default settings (event buffer of 2048
 events, message length limit 1024 bytes, write buffer 4 MB, latency 1000 ms),
-64-byte messages, 112-byte lines. Release build, Apple M4 Max (12 performance
-+ 4 efficiency cores), macOS 27.2, APFS on the internal SSD, Homebrew clang 23.
-Median of 5 runs of 2,000,000 events each.
+64-byte messages, 112-byte lines, logged through `Logger`. Release build,
+Apple M4 Max (12 performance + 4 efficiency cores), macOS 27.2, APFS on the
+internal SSD, Homebrew clang 23. Median of 3 runs of 1,000,000 events each.
 
 | Writer threads | Throughput, events/s | `push` p50 | `push` p99 | `push` p99.9 |
 |---:|---:|---:|---:|---:|
-| 1 | 15 M | < 0.05 µs | 0.09 µs | 0.17 µs |
-| 2 | 11 M | 0.17 µs | 0.34 µs | 0.54 µs |
-| 4 | 9–10 M | 0.30 µs | 1.3–1.5 µs | 2.2–2.4 µs |
-| 8 | 4.4 M | 0.93 µs | 13 µs | 27 µs |
+| 1 | 15.0 M | < 0.05 µs | 0.09 µs | 0.22 µs |
+| 2 | 11.1 M (9.7–11.3 M) | 0.17 µs | 0.43 µs | 0.64 µs |
+| 4 | 8.3 M (6.3–8.7 M) | 0.43 µs | 1.7 µs | 2.8 µs |
+| 8 | 4.4 M | 0.86 µs | 15 µs | 33 µs |
 
 Throughput here is the saturation point: writers log as fast as they can and
 the sink worker writing the file is busy all the time; past it writers wait
 for free room in the buffer. At a steady 100,000 events/s the worker takes
-under 1% of a core, `push` stays at p99.9 below 1 µs (1 thread) or 3.4 µs
-(4 threads), and events reach the file within 17 ms: with this load the
+under 1% of a core, `push` stays at p99.9 below 0.6 µs (1 thread) or 3.4 µs
+(4 threads), and events reach the file within 20 ms: with this load the
 worker is woken by the buffer filling up rather than by the latency timer.
 
 Numbers depend on the machine, the file system and the settings; the clock of
 this machine ticks every 41.7 ns, so the shortest times are rounded to it. To
 measure on your hardware build with `-DBUILD_BENCHMARKS=ON` and run
 `soralog_benchmark --scenario load --sink-path <file>`; see its `--help` for
-the load and sink parameters. The method and the comparison with other
-loggers are in [docs/benchmark](docs/benchmark/README.md).
+the load and sink parameters. The method, the comparison with other loggers
+and its results are in [docs/benchmark](docs/benchmark/README.md).
 
 ## Installation
 

@@ -1,0 +1,16 @@
+{
+  "os": "macOS 27.2.1",
+  "arch": "arm64",
+  "cpu": "Apple M4 Max",
+  "cores": "16 (12 performance + 4 efficiency)",
+  "memory_gb": 48,
+  "file_system": {
+    "type": "APFS",
+    "solid_state": "Yes"
+  },
+  "compiler": "Homebrew clang version 23.1.5",
+  "build_type": "Release",
+  "soralog_revision": "ae285be",
+  "suite": "standard",
+  "repeat": 3
+}

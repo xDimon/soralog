@@ -17,6 +17,7 @@ loggers, and how to repeat the measurements on your own hardware.
   ([adding a logger](adding-a-logger.md))
 - [Running it on your hardware](#running-it-on-your-hardware)
 - [Pitfalls](#pitfalls)
+- [Results](#results)
 
 ## What is measured
 
@@ -220,9 +221,21 @@ idle machine and add the output directory under `docs/benchmark/results`.
 - **Page cache, not the disk.** No logger syncs the file, so the numbers are
   for writing into the page cache. A long run may hit the writeback of
   dirty pages, which shows up as rare long stalls.
+- **Throughput bound by the file.** In the closed-loop scenarios soralog is
+  limited by its worker writing the file, at gigabytes per second, and its
+  throughput varies between runs much more than that of a logger limited by
+  formatting or its queue. On the Apple M4 Max, single-writer throughput
+  with 1000-byte messages was 6.4–6.7 M events/s over the repeats of the
+  comparison suite, while an earlier run had a median of 4.4 M with an 83%
+  spread. The cause is not
+  established yet; the report shows the min–max range next to every median
+  so that such rows are visible.
 - **Delivery resolution** is the poll interval of the reader, see above.
 - **Background activity** on the machine moves the tail percentiles first.
   Run on an idle machine, on AC power, and repeat.
 - **Debug builds** are reported as such in the output and are not
   representative.
 
+## Results
+
+- [Apple M4 Max, macOS 27.2](results/apple-m4-max-macos-27.2/report.md)
