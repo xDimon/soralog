@@ -7,6 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 
 # Soralog: High-Performance Logging Library
 
+[Русская версия](README.ru.md)
+
 ## Overview
 
 Soralog is a high-performance, flexible logging library designed for C++ applications. It provides robust logging features, supports multiple logging backends, and allows extensive customization. The library is designed to be lightweight, efficient, and easy to integrate into various projects.
