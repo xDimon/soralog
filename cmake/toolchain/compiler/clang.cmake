@@ -11,63 +11,8 @@ else()
     set(POLLY_COMPILER_CLANG_CMAKE 1)
 endif()
 
-if(XCODE_VERSION)
-    set(_err "This toolchain is not available for Xcode")
-    set(_err "${_err} because Xcode ignores CMAKE_C(XX)_COMPILER variable.")
-    set(_err "${_err} Use xcode.cmake toolchain instead.")
-    fatal_error(${_err})
-endif()
-
-find_program(CMAKE_C_COMPILER
-    clang
-    clang-20
-    clang-19
-    clang-18
-    clang-17
-    clang-16
-    clang-15
-    clang-14
-    clang-13
-    clang-12
-    clang-11)
-find_program(CMAKE_CXX_COMPILER
-    clang++
-    clang++-20
-    clang++-19
-    clang++-18
-    clang++-17
-    clang++-16
-    clang++-15
-    clang++-14
-    clang++-13
-    clang++-12
-    clang++-11)
-
-if(NOT CMAKE_C_COMPILER)
-    fatal_error("clang not found")
-endif()
-
-if(NOT CMAKE_CXX_COMPILER)
-    fatal_error("clang++ not found")
-endif()
-
-set(
-    CMAKE_C_COMPILER
-    "${CMAKE_C_COMPILER}"
-    CACHE
-    STRING
-    "C compiler"
-    FORCE
-)
-
-set(
-    CMAKE_CXX_COMPILER
-    "${CMAKE_CXX_COMPILER}"
-    CACHE
-    STRING
-    "C++ compiler"
-    FORCE
-)
+# The compiler is chosen before project() by the caller or its toolchain
+# file; only its capabilities are examined here.
 
 string(REGEX MATCH "([0-9]+).([0-9]+).([0-9]+)" v ${CMAKE_CXX_COMPILER_VERSION})
 if (${CMAKE_MATCH_1} LESS 15)

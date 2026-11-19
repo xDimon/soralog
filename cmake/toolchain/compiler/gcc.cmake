@@ -11,44 +11,8 @@ else()
     set(POLLY_COMPILER_GCC_CMAKE_ 1)
 endif()
 
-find_program(CMAKE_C_COMPILER
-    gcc
-    gcc-14
-    gcc-13
-    gcc-12
-    gcc-11
-    gcc-10
-    gcc-9)
-find_program(CMAKE_CXX_COMPILER
-    g++
-    g++-14
-    g++-13
-    g++-12
-    g++-11
-    g++-10
-    g++-9)
-
-if(NOT CMAKE_C_COMPILER)
-    fatal_error("gcc not found")
-endif()
-
-if(NOT CMAKE_CXX_COMPILER)
-    fatal_error("g++ not found")
-endif()
-
-set(
-    CMAKE_C_COMPILER
-    "${CMAKE_C_COMPILER}"
-    CACHE STRING "C compiler"
-    FORCE
-)
-
-set(
-    CMAKE_CXX_COMPILER
-    "${CMAKE_CXX_COMPILER}"
-    CACHE STRING "C++ compiler"
-    FORCE
-)
+# The compiler is chosen before project() by the caller or its toolchain
+# file; only its capabilities are examined here.
 
 string(REGEX MATCH "([0-9]+).([0-9]+).([0-9]+)" v ${CMAKE_CXX_COMPILER_VERSION})
 if (${CMAKE_MATCH_1} LESS 9)
