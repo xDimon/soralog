@@ -53,7 +53,7 @@ endif()
 
 cmake_policy(SET CMP0048 NEW)
 
-project(soralog VERSION 0.2.6 LANGUAGES CXX)
+project(soralog VERSION 0.3.0 LANGUAGES CXX)
 
 find_program(CCACHE_FOUND ccache)
 if (CCACHE_FOUND)
