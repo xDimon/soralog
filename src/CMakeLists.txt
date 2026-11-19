@@ -85,7 +85,7 @@ add_library(configurator_yaml
     impl/configurator_from_yaml.cpp
     )
 target_link_libraries(configurator_yaml
-    yaml-cpp::yaml-cpp
+    ${SORALOG_YAML_CPP_TARGET}
     configurator
     logging_system
     )

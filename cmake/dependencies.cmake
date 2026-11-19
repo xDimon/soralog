@@ -18,6 +18,12 @@ endfunction()
 
 
 reg_dependency(yaml-cpp)
+# yaml-cpp exports a namespaced target since 0.8.0, a plain one before
+if (TARGET yaml-cpp::yaml-cpp)
+    set(SORALOG_YAML_CPP_TARGET yaml-cpp::yaml-cpp)
+else ()
+    set(SORALOG_YAML_CPP_TARGET yaml-cpp)
+endif ()
 
 reg_dependency(fmt)
 
