@@ -31,6 +31,14 @@ set(
     CACHE STRING "Binary cache server"
 )
 
+# CMake 4 refuses projects declaring compatibility with CMake below 3.5, and
+# Hunter and some of its packages still do. The environment variable reaches
+# every CMake that Hunter runs to build them.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4.0
+    AND "$ENV{CMAKE_POLICY_VERSION_MINIMUM}" STREQUAL "")
+    set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)
+endif ()
+
 include(${CMAKE_CURRENT_LIST_DIR}/HunterGate.cmake)
 
 HunterGate(
