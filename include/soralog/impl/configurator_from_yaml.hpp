@@ -83,7 +83,7 @@ namespace soralog {
                  LoggingSystem &system,
                  size_t index,
                  Result &result)
-          : sys(system), node(std::move(node)), id(index + 1), res(result) {}
+          : node(std::move(node)), sys(system), id(index + 1), res(result) {}
 
       void parseSinks();
       void parseGroups();
