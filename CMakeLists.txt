@@ -27,8 +27,10 @@ if (COVERAGE)
 endif ()
 
 if (PACKAGE_MANAGER)
-    if(NOT PACKAGE_MANAGER MATCHES "^(hunter|vcpkg)$")
-        message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg' or isn't set")
+    # 'none': dependencies are found by find_package as they are, e.g. provided
+    # by CMAKE_PREFIX_PATH or another package manager
+    if(NOT PACKAGE_MANAGER MATCHES "^(hunter|vcpkg|none)$")
+        message(FATAL_ERROR "PACKAGE_MANAGER must be set to 'hunter', 'vcpkg', 'none' or isn't set")
     endif ()
 else ()
     set(PACKAGE_MANAGER "hunter")

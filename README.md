@@ -142,7 +142,7 @@ Soralog uses CMake as its build system and supports different configurations thr
 
 ### Supported Package Managers
 
-Soralog supports dependency management via `hunter` and `vcpkg`. By default, `hunter` is used unless a `vcpkg` toolchain file is detected.
+Soralog supports dependency management via `hunter` and `vcpkg`, or takes dependencies already installed (`PACKAGE_MANAGER=none`). By default, `hunter` is used unless a `vcpkg` toolchain file is detected.
 
 ```sh
 git clone https://github.com/xDimon/soralog.git
@@ -156,6 +156,12 @@ To use `vcpkg`, specify the toolchain file:
 
 ```sh
 cmake -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg.cmake ..
+```
+
+To build without a package manager, set `PACKAGE_MANAGER=none`; `fmt` and `yaml-cpp` (and `GTest` for tests) must then be found by `find_package` in config mode, e.g. through `CMAKE_PREFIX_PATH`:
+
+```sh
+cmake -DPACKAGE_MANAGER=none -DCMAKE_PREFIX_PATH=/path/to/deps ..
 ```
 
 To include Soralog in your project, add the following to your CMakeLists.txt:

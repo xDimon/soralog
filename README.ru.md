@@ -151,8 +151,9 @@ Soralog нужны:
 
 ### Менеджеры пакетов
 
-Зависимости ставятся через `hunter` или `vcpkg`. Если файл toolchain
-от `vcpkg` не задан, используется `hunter`.
+Зависимости ставятся через `hunter` или `vcpkg` либо берутся уже установленные
+(`PACKAGE_MANAGER=none`). Если файл toolchain от `vcpkg` не задан, используется
+`hunter`.
 
 ```sh
 git clone https://github.com/xDimon/soralog.git
@@ -166,6 +167,14 @@ make
 
 ```sh
 cmake -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg.cmake ..
+```
+
+Чтобы собрать без менеджера пакетов, задайте `PACKAGE_MANAGER=none`. Тогда
+`fmt` и `yaml-cpp` (и `GTest` для тестов) должны находиться через `find_package`
+в режиме config, например через `CMAKE_PREFIX_PATH`:
+
+```sh
+cmake -DPACKAGE_MANAGER=none -DCMAKE_PREFIX_PATH=/path/to/deps ..
 ```
 
 Чтобы подключить Soralog к своему проекту, добавьте в CMakeLists.txt:
