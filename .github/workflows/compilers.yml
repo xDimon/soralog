@@ -94,7 +94,9 @@ jobs:
         fetch-depth: 1
 
     - name: cmake
-      run: cmake -S . -B build -DBUILD_TESTS=ON -DEXAMPLES=ON
+      # Dependencies in Release only: with both configurations the Release
+      # build got fmt's Debug library (fmtd.lib) and failed to link
+      run: cmake -S . -B build -DBUILD_TESTS=ON -DEXAMPLES=ON -DHUNTER_CONFIGURATION_TYPES=Release
 
     - name: build
       run: cmake --build build --config Release --parallel 4
