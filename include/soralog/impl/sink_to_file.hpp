@@ -7,11 +7,11 @@
 
 #pragma once
 
+#include <soralog/impl/file_writer.hpp>
 #include <soralog/sink.hpp>
 
 #include <condition_variable>
 #include <filesystem>
-#include <fstream>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -106,10 +106,9 @@ namespace soralog {
     /**
      * @brief Writes out queued events; called with flush_in_progress_ set.
      * @param limit Maximum number of events to write out.
-     * @param flush_stream Flush the output stream when done.
      * @return True if the log file has been reopened.
      */
-    bool flush_events(size_t limit, bool flush_stream) noexcept;
+    bool flush_events(size_t limit) noexcept;
 
     /// Path to the log file.
     const std::filesystem::path path_;
@@ -120,8 +119,8 @@ namespace soralog {
     /// Buffer for storing log messages before writing to the file.
     std::vector<char> buff_;
 
-    /// Output file stream.
-    std::ofstream out_{};
+    /// Output file; unbuffered, the buffer is buff_.
+    FileWriter out_{};
 
     /// Mutex for the worker to sleep on and to be woken up.
     std::mutex mutex_{};
@@ -132,8 +131,7 @@ namespace soralog {
     /// Flag indicating that the sink is shutting down.
     std::atomic_bool need_to_finalize_ = false;
 
-    /// Request to flush: wakes the worker and makes the next flush flush the
-    /// output stream too.
+    /// Request to flush: wakes the worker.
     std::atomic_bool need_to_flush_ = false;
 
     /// Flag indicating that a log file rotation is needed.

@@ -162,10 +162,6 @@ TEST_F(SinkToFileTest, Logging) {
  *       renamed file stays.
  */
 TEST_F(SinkToFileTest, Rotating) {
-#ifdef _WIN32
-  // An open file can't be renamed: it is open without FILE_SHARE_DELETE
-  GTEST_SKIP() << "External rotation is not supported on Windows yet";
-#endif
   std::filesystem::path path_to_old_file = path_.string() + ".old";
 
   // ASSERT_TRUE(not std::filesystem::exists(path_));

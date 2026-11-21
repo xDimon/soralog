@@ -20,6 +20,13 @@ target_link_libraries(circular_buffer_test
     libs4test
     )
 
+addtest(file_writer_test
+    file_writer_test.cpp
+    )
+target_link_libraries(file_writer_test
+    sink_to_file
+    )
+
 addtest(group_test
     group_test.cpp
     )

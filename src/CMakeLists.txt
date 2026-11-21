@@ -39,6 +39,7 @@ target_link_libraries(sink_to_console
     )
 
 add_library(sink_to_file
+    impl/file_writer.cpp
     impl/sink_to_file.cpp
     )
 target_link_libraries(sink_to_file
