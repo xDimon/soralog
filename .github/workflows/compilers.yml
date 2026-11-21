@@ -42,7 +42,7 @@ jobs:
         fetch-depth: 1
 
     - name: venv
-      run: python3 -m venv --upgrade-deps ~/venv && .github/aux/github_venv.sh $_
+      run: python3 -m venv --upgrade-deps ~/venv && .github/scripts/github_venv.sh $_
 
     - name: install dependencies
       run: |
