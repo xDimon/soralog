@@ -81,3 +81,56 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
+
+  windows-msvc:
+    runs-on: windows-latest
+    env:
+      # Short path for Hunter's builds of dependencies
+      HUNTER_ROOT: C:\.hunter
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: cmake
+      run: cmake -S . -B build -DBUILD_TESTS=ON -DEXAMPLES=ON
+
+    - name: build
+      run: cmake --build build --config Release --parallel 4
+
+    - name: test
+      run: ctest --test-dir build -C Release --output-on-failure
+
+  windows-mingw:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: msys2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-cmake
+          mingw-w64-ucrt-x86_64-ninja
+          mingw-w64-ucrt-x86_64-fmt
+          mingw-w64-ucrt-x86_64-yaml-cpp
+          mingw-w64-ucrt-x86_64-gtest
+
+    - name: cmake
+      run: cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+
+    - name: build
+      run: cmake --build build --parallel 4
+
+    - name: test
+      run: ctest --test-dir build --output-on-failure
