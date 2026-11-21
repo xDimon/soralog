@@ -27,6 +27,10 @@ endif ()
 
 reg_dependency(fmt)
 
+# Portable thread linking: -pthread where needed, nothing where libc has it
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 if (BUILD_TESTS)
     reg_dependency(GTest)
 endif()
