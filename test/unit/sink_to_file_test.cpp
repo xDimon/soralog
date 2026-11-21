@@ -7,13 +7,27 @@
 
 #include <gtest/gtest.h>
 
-#include <sys/resource.h>
-
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <random>
+#include <system_error>
 
 #include "soralog/impl/sink_to_file.hpp"
+
+#ifdef _WIN32
+// After soralog headers: windows.h defines macros named like Level values
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef ERROR
+#undef IGNORE
+#else
+#include <sys/resource.h>
+#endif
 
 using namespace soralog;
 using namespace testing;
@@ -63,25 +77,28 @@ class SinkToFileTest : public ::testing::Test {
   /**
    * @brief Sets up the test environment by creating a temporary log file.
    *
-   * The file is created using `mkstemp` to ensure a unique and writable
-   * file path.
+   * The file gets a random name to be unique and is created empty to ensure
+   * the path is writable.
    */
   void SetUp() override {
-    std::string path(
-        (std::filesystem::temp_directory_path() / "soralog_test_XXXXXX")
-            .c_str());
-    if (mkstemp(path.data()) == -1) {
+    std::random_device random;
+    path_ = std::filesystem::temp_directory_path()
+          / ("soralog_test_" + std::to_string(random()) + "_"
+             + std::to_string(random()));
+    if (not std::ofstream(path_)) {
       FAIL() << "Can't create output file for test";
     }
-    path_ = std::filesystem::path(path);
   }
 
   /**
    * @brief Cleans up the test environment by removing the temporary log file.
+   *
+   * The sink goes first: Windows doesn't remove a file which is open.
    */
   void TearDown() override {
-    std::remove(path_.native().data());
     sink_.reset();
+    std::error_code ec;
+    std::filesystem::remove(path_, ec);
   }
 
   /**
@@ -145,6 +162,10 @@ TEST_F(SinkToFileTest, Logging) {
  *       renamed file stays.
  */
 TEST_F(SinkToFileTest, Rotating) {
+#ifdef _WIN32
+  // An open file can't be renamed: it is open without FILE_SHARE_DELETE
+  GTEST_SKIP() << "External rotation is not supported on Windows yet";
+#endif
   std::filesystem::path path_to_old_file = path_.string() + ".old";
 
   // ASSERT_TRUE(not std::filesystem::exists(path_));
@@ -182,11 +203,24 @@ namespace {
 
   /// @brief CPU time consumed by the whole process
   std::chrono::microseconds processCpuTime() {
+#ifdef _WIN32
+    FILETIME creation{}, exited{}, kernel{}, user{};
+    GetProcessTimes(GetCurrentProcess(), &creation, &exited, &kernel, &user);
+    // FILETIME counts 100-nanosecond intervals
+    auto to_us = [](const FILETIME &time) {
+      return std::chrono::microseconds(
+          ((static_cast<uint64_t>(time.dwHighDateTime) << 32)
+           | time.dwLowDateTime)
+          / 10);
+    };
+    return to_us(kernel) + to_us(user);
+#else
     rusage usage{};
     getrusage(RUSAGE_SELF, &usage);
     return std::chrono::seconds(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec)
          + std::chrono::microseconds(usage.ru_utime.tv_usec
                                      + usage.ru_stime.tv_usec);
+#endif
   }
 }  // namespace
 

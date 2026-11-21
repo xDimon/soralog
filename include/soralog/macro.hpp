@@ -33,14 +33,17 @@
  * log level with the requested one, and forwards the call to
  * `Logger::log(...)` if logging is enabled.
  */
+// do-while instead of a statement expression ({...}), which MSVC doesn't have
+// NOLINTBEGIN(cppcoreguidelines-avoid-do-while)
 #define _SL_LOG_IF_LEVEL(LOG, LVL, FMT, ...)                 \
-  ({                                                         \
+  do {                                                       \
     auto &&_sl_log_log = (LOG);                              \
     soralog::Level _sl_log_level = (LVL);                    \
     if (_sl_log_log->level() >= _sl_log_level) {             \
       _sl_log_log->log(_sl_log_level, (FMT), ##__VA_ARGS__); \
     }                                                        \
-  })
+  } while (false)
+// NOLINTEND(cppcoreguidelines-avoid-do-while)
 
 /**
  * @brief Internal logging macro.
@@ -67,7 +70,9 @@
  */
 
 #if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
-#warning "Trace log level has been disabled because debug log level is off"
+// #pragma message, not #warning: MSVC has no #warning
+#pragma message( \
+    "Trace log level has been disabled because debug log level is off")
 #define WITHOUT_TRACE_LOG_LEVEL
 #endif
 

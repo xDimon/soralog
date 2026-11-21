@@ -74,6 +74,23 @@ endif (CCACHE_FOUND)
 
 include(cmake/functions.cmake)
 
+# The syslog sink needs <syslog.h>, which Windows doesn't have
+if (WIN32)
+    set(SYSLOG_SINK_DEFAULT OFF)
+else ()
+    set(SYSLOG_SINK_DEFAULT ON)
+endif ()
+option(SYSLOG_SINK "Build the syslog sink" ${SYSLOG_SINK_DEFAULT})
+if (WIN32 AND SYSLOG_SINK)
+    fatal_error("SYSLOG_SINK is not supported on Windows")
+endif ()
+
+# Symbols aren't exported yet, so DLLs would be unusable
+if (WIN32 AND BUILD_SHARED_LIBS)
+    fatal_error("Shared libraries are not supported on Windows yet; \
+use BUILD_SHARED_LIBS=OFF")
+endif ()
+
 include(cmake/toolchain/compiler.cmake)
 
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE OR NOT DEFINED CMAKE_CXX_STANDARD)

@@ -46,7 +46,7 @@ namespace soralog {
     inline void pass(const Args...) {}
 
     // Dummy enum to use in template specialization.
-    enum V {};
+    enum class V {};
 
     /**
      * @brief Applies a text style to the log message.
@@ -76,8 +76,8 @@ namespace soralog {
      */
     void put_reset_style(char *&ptr) {
       const auto &style = reset_color;
-      auto size = std::end(style) - std::begin(style);
-      std::memcpy(ptr, std::begin(style), size);
+      auto size = style.size();
+      std::memcpy(ptr, style.data(), size);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       ptr = ptr + size;
     }
@@ -229,7 +229,7 @@ namespace soralog {
     if (latency_ != std::chrono::milliseconds::zero()) {
       {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         need_to_finalize_.store(true, std::memory_order_release);
       }
       condvar_.notify_one();
@@ -255,7 +255,7 @@ namespace soralog {
       if (not need_to_flush_.load(std::memory_order_relaxed)
           and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         condvar_.notify_one();
       }
     } else {
@@ -304,6 +304,7 @@ namespace soralog {
       flush_once();
       flush_in_progress_.clear(std::memory_order_release);
     } else {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
       do {
         // Pairs with the fence below: either this call sees the flag cleared,
         // or the call that clears it sees the events published before this one

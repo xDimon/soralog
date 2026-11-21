@@ -136,6 +136,7 @@ Soralog uses CMake as its build system and supports different configurations thr
 
 - `BUILD_TESTS` (default: `OFF`) – Build unit tests.
 - `EXAMPLES` (default: `OFF`) – Build example programs; enable with `-DEXAMPLES=ON`.
+- `SYSLOG_SINK` (default: `ON`, `OFF` on Windows) – Build the syslog sink; not available on Windows.
 - `BUILD_BENCHMARKS` (default: `OFF`) – Build the benchmark of the event buffer and sinks.
 - `BUILD_BENCHMARK_COMPARE` (default: `OFF`) – Build the comparison with other loggers (spdlog, quill); needs vcpkg, implies `BUILD_BENCHMARKS`.
 - `ASAN`, `LSAN`, `MSAN`, `TSAN`, `UBSAN` (default: `OFF`) – Enable sanitizers.

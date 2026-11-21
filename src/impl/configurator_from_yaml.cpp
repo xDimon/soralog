@@ -20,14 +20,18 @@
 #include <soralog/impl/sink_to_console.hpp>
 #include <soralog/impl/sink_to_file.hpp>
 #include <soralog/impl/sink_to_nowhere.hpp>
+#ifdef SORALOG_SYSLOG_SINK
 #include <soralog/impl/sink_to_syslog.hpp>
+#endif
 
 namespace soralog {
 
   namespace {
 
 #if defined(WITHOUT_DEBUG_LOG_LEVEL) and not defined(WITHOUT_TRACE_LOG_LEVEL)
-#warning "Trace log level has been switched off because debug log level is off"
+// #pragma message, not #warning: MSVC has no #warning
+#pragma message( \
+    "Trace log level has been switched off because debug log level is off")
 #define WITHOUT_TRACE_LOG_LEVEL
 #endif
 
@@ -63,7 +67,7 @@ namespace soralog {
           if constexpr (std::is_same_v<T, std::filesystem::path>) {
             // Load YAML from a file
             try {
-              node = YAML::LoadFile(arg);
+              node = YAML::LoadFile(arg.string());
             } catch (const std::exception &exception) {
               result.message +=
                   fmt::format("E:{}: Can't parse file '{}': {}\n",
@@ -282,7 +286,15 @@ namespace soralog {
     } else if (type == "file") {
       parseSinkToFile(name, sink);
     } else if (type == "syslog") {
+#ifdef SORALOG_SYSLOG_SINK
       parseSinkToSyslog(name, sink);
+#else
+      res.message += fmt::format(
+          "E:{}: Sink '{}' has type 'syslog', unsupported by this build\n",
+          id,
+          name);
+      res.has_error = true;
+#endif
     } else if (type == "multisink") {
       parseMultisink(name, sink);
     } else {
@@ -742,6 +754,7 @@ namespace soralog {
                              at_fault);
   }
 
+#ifdef SORALOG_SYSLOG_SINK
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
       const std::string &name, const YAML::Node &sink_node) {
     bool fail = false;
@@ -957,6 +970,7 @@ namespace soralog {
                                latency,
                                at_fault);
   }
+#endif
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
       const std::string &name, const YAML::Node &sink_node) {

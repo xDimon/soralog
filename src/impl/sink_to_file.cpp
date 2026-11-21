@@ -7,12 +7,15 @@
 
 #include <soralog/impl/sink_to_file.hpp>
 
-#include <sysexits.h>
 #include <chrono>
 #include <iostream>
 #include <thread>
 
 #include <soralog/internals.hpp>
+
+#if __has_include(<sysexits.h>)
+#include <sysexits.h>
+#endif
 
 namespace soralog {
 
@@ -22,6 +25,13 @@ namespace soralog {
     // Can be any substring or character (space, tab, etc.).
     // A double space is chosen to distinguish it from a single space.
     constexpr std::string_view separator = "  ";
+
+#ifdef EX_IOERR
+    constexpr int io_error_exit_code = EX_IOERR;
+#else
+    // Windows has no <sysexits.h>; the value of EX_IOERR from there
+    constexpr int io_error_exit_code = 74;
+#endif
 
     /**
      * @brief Inserts a separator into the buffer.
@@ -154,7 +164,7 @@ namespace soralog {
       // signal the worker thread to finalize
       {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         need_to_finalize_.store(true, std::memory_order_release);
       }
       condvar_.notify_one();
@@ -181,7 +191,7 @@ namespace soralog {
       if (not need_to_flush_.load(std::memory_order_relaxed)
           and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         condvar_.notify_one();
       }
     } else {
@@ -233,6 +243,7 @@ namespace soralog {
       reopened = flush_once();
       flush_in_progress_.clear(std::memory_order_release);
     } else {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
       do {
         // Pairs with the fence below: either this call sees the flag cleared,
         // or the call that clears it sees the events published before this one
@@ -369,7 +380,7 @@ namespace soralog {
               case AtFaultReactionType::TERMINATE:
                 out_ << "Fatal: " << msg;
                 out_.close();
-                exit(EX_IOERR);
+                exit(io_error_exit_code);
 
               case AtFaultReactionType::WAIT:
                 std::this_thread::sleep_for(attempt_delay);

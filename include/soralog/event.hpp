@@ -87,7 +87,8 @@ namespace soralog {
           break;
       }
 
-      struct {
+      // Named: MSVC rejects an alias of an unnamed class with member functions
+      struct OutputIt {
         using iterator_category = std::random_access_iterator_tag;
         using value_type = char;
         using reference = value_type &;
@@ -113,7 +114,6 @@ namespace soralog {
       } it{message_data_};
 
       try {
-        using OutputIt = decltype(it);
         message_size_ = ::fmt::vformat_to_n<OutputIt>(
                             it,
                             max_message_length,

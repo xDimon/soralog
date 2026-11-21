@@ -13,6 +13,16 @@
 #include <soralog/level.hpp>
 #include <soralog/sink.hpp>
 
+// MSVC has neither __attribute__ nor ThreadSanitizer
+#if defined(__has_attribute)
+#if __has_attribute(no_sanitize)
+#define SORALOG_NO_SANITIZE_THREAD __attribute__((no_sanitize("thread")))
+#endif
+#endif
+#ifndef SORALOG_NO_SANITIZE_THREAD
+#define SORALOG_NO_SANITIZE_THREAD
+#endif
+
 namespace soralog {
 
   class LoggingSystem;
@@ -105,9 +115,9 @@ namespace soralog {
      * @param args Formatting arguments.
      */
     template <typename Format, typename... Args>
-    void __attribute__((no_sanitize("thread"))) push(Level level,
-                                                     const Format &format,
-                                                     const Args &...args) {
+    void SORALOG_NO_SANITIZE_THREAD push(Level level,
+                                         const Format &format,
+                                         const Args &...args) {
       // Check whether this event is allowed by the current logger level
       if (level_ >= level) {
         // Ignore disabled levels explicitly

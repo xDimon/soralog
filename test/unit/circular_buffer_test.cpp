@@ -7,10 +7,12 @@
 
 #include <gtest/gtest.h>
 
+#include <array>
 #include <atomic>
 #include <chrono>
 #include <iostream>
 #include <mutex>
+#include <random>
 #include <thread>
 
 #if __cplusplus >= 202002L
@@ -22,6 +24,14 @@
 using namespace soralog;
 using namespace testing;
 using namespace std::chrono_literals;
+
+namespace {
+  /// Random delay between operations of the multi-threaded test
+  std::chrono::milliseconds randomDelay() {
+    thread_local std::minstd_rand rng(std::random_device{}());
+    return std::chrono::milliseconds(3 + rng() % 50);
+  }
+}  // namespace
 
 /**
  * @brief Tests for CircularBuffer implementation.
@@ -253,7 +263,7 @@ TEST_F(CircularBufferTest, PutGetMt) {
         print(
             "put ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
+      std::this_thread::sleep_for(randomDelay());
     }
   });
 
@@ -267,7 +277,7 @@ TEST_F(CircularBufferTest, PutGetMt) {
         print(
             "get ", ref->c(), " [", testee.size(), " | ", testee.avail(), "]");
       }
-      std::this_thread::sleep_for(std::chrono::milliseconds(3 + random() % 50));
+      std::this_thread::sleep_for(randomDelay());
     }
   });
 

@@ -21,6 +21,7 @@ Checks: "-*,
     -cppcoreguidelines-rvalue-reference-param-not-moved, \
     -cppcoreguidelines-avoid-magic-numbers, \
     -cppcoreguidelines-pro-bounds-array-to-pointer-decay, \
+    -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access, \
   google-*, \
     -google-readability-namespace-comments, \
     -google-readability-braces-around-statements, \
