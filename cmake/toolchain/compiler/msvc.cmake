@@ -16,6 +16,9 @@ if (MSVC_VERSION LESS 1929)
     print("Requires MSVC compiler at least version 19.29")
 endif()
 
+# Without it __cplusplus stays 199711L whatever the standard is
+add_compile_options(/Zc:__cplusplus)
+
 set(
     MAX_SUPPORTED_CXX_STANDARD 20
     CACHE STRING "Max supported C++ standard"
