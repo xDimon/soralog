@@ -85,6 +85,12 @@ if (WIN32 AND SYSLOG_SINK)
     fatal_error("SYSLOG_SINK is not supported on Windows")
 endif ()
 
+# Symbols aren't exported yet, so DLLs would be unusable
+if (WIN32 AND BUILD_SHARED_LIBS)
+    fatal_error("Shared libraries are not supported on Windows yet; \
+use BUILD_SHARED_LIBS=OFF")
+endif ()
+
 include(cmake/toolchain/compiler.cmake)
 
 if (NOT DEFINED CMAKE_TOOLCHAIN_FILE OR NOT DEFINED CMAKE_CXX_STANDARD)
