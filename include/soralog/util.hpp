@@ -7,13 +7,10 @@
 
 #pragma once
 
-#if !defined(_WIN32)
-#include <pthread.h>
-#endif
 #include <array>
-#include <atomic>
-#include <cstring>
+#include <cstddef>
 #include <string>
+#include <string_view>
 
 namespace soralog::util {
 
@@ -21,13 +18,11 @@ namespace soralog::util {
    * @brief Retrieves a unique thread number.
    *
    * Each thread receives a unique, incrementing identifier upon first call.
+   * Defined out of line: the counter and the number of a thread must be one
+   * for the whole process, also when soralog is a set of DLLs.
    * @return Unique thread number.
    */
-  inline size_t getThreadNumber() {
-    static std::atomic_size_t tid_counter = 0;
-    static thread_local size_t tid = ++tid_counter;
-    return tid;
-  }
+  size_t getThreadNumber();
 
   /**
    * @brief Sets the name of the current thread.
@@ -35,20 +30,7 @@ namespace soralog::util {
    * The thread name is truncated if it exceeds 15 characters.
    * @param name Desired thread name.
    */
-  inline void setThreadName(std::string_view name) {
-    std::array<char, 16> buff{};
-    memcpy(buff.data(), name.data(), std::min<size_t>(name.size(), 15));
-
-#if defined(__linux__)
-    pthread_setname_np(pthread_self(), buff.data());
-#elif defined(__APPLE__)
-    pthread_setname_np(buff.data());
-#elif !defined(_WIN32)
-#warning \
-    "Function setThreadName() is not implemented for this platform; \
-    An auto-generated name will be used instead"
-#endif
-  }
+  void setThreadName(std::string_view name);
 
   /**
    * @brief Retrieves the name of the current thread.
@@ -57,25 +39,7 @@ namespace soralog::util {
    * (e.g., "Thread#1") is used.
    * @param name Output parameter for the thread name.
    */
-  inline void getThreadName(std::array<char, 16> &name) {
-    static thread_local std::array<char, 16> thr_name{};
-    static thread_local bool initialized = [&] {
-#if defined(__linux__) or defined(__APPLE__)
-      pthread_getname_np(pthread_self(), thr_name.data(), thr_name.size());
-#else
-#if !defined(_WIN32)
-#warning \
-    "Function getThreadName() is not implemented for this platform; An auto-generated name will be used instead"
-#endif
-      auto generated = "Thread#" + std::to_string(getThreadNumber());
-      memcpy(thr_name.data(),
-             generated.data(),
-             std::min(generated.size(), thr_name.size()));
-#endif
-      return true;
-    }();
-    name = thr_name;
-  }
+  void getThreadName(std::array<char, 16> &name);
 
   /**
    * @brief Retrieves the name of the current thread as a string.
@@ -83,10 +47,6 @@ namespace soralog::util {
    * @return The thread name as the system reports it; a generated name on
    * platforms without thread names.
    */
-  inline std::string getThreadName() {
-    std::array<char, 16> buff{};
-    getThreadName(buff);
-    return buff.data();
-  }
+  std::string getThreadName();
 
 }  // namespace soralog::util

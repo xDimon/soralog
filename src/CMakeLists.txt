@@ -18,9 +18,16 @@ function (add_for_install target)
     set(INSTALL_TARGETS ${INSTALL_TARGETS} PARENT_SCOPE)
 endfunction()
 
-add_library(sink INTERFACE)
-target_link_libraries(sink INTERFACE
-    fmt::fmt
+# Not header-only: thread utilities keep per-process state, which must be in
+# one place, also when the libraries are DLLs
+add_library(sink
+    util.cpp
+    )
+target_link_libraries(sink
+    PUBLIC
+        fmt::fmt
+    PRIVATE
+        Threads::Threads
     )
 
 add_library(sink_to_nowhere
