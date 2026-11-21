@@ -154,7 +154,7 @@ namespace soralog {
       // signal the worker thread to finalize
       {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         need_to_finalize_.store(true, std::memory_order_release);
       }
       condvar_.notify_one();
@@ -181,7 +181,7 @@ namespace soralog {
       if (not need_to_flush_.load(std::memory_order_relaxed)
           and not need_to_flush_.exchange(true, std::memory_order_acq_rel)) {
         // Under the lock: the worker checks the flags before it falls asleep
-        std::lock_guard lock(mutex_);
+        std::scoped_lock lock(mutex_);
         condvar_.notify_one();
       }
     } else {
@@ -233,6 +233,7 @@ namespace soralog {
       reopened = flush_once();
       flush_in_progress_.clear(std::memory_order_release);
     } else {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
       do {
         // Pairs with the fence below: either this call sees the flag cleared,
         // or the call that clears it sees the events published before this one
