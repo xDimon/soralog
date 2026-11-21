@@ -142,6 +142,8 @@ Soralog нужны:
 
 - `BUILD_TESTS` (по умолчанию `OFF`): модульные тесты.
 - `EXAMPLES` (по умолчанию `OFF`): примеры; включаются `-DEXAMPLES=ON`.
+- `SYSLOG_SINK` (по умолчанию `ON`, на Windows `OFF`): синк syslog;
+  на Windows недоступен.
 - `BUILD_BENCHMARKS` (по умолчанию `OFF`): бенчмарк буфера событий
   и синков.
 - `BUILD_BENCHMARK_COMPARE` (по умолчанию `OFF`): сравнение с другими

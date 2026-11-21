@@ -20,7 +20,9 @@
 #include <soralog/impl/sink_to_console.hpp>
 #include <soralog/impl/sink_to_file.hpp>
 #include <soralog/impl/sink_to_nowhere.hpp>
+#ifdef SORALOG_SYSLOG_SINK
 #include <soralog/impl/sink_to_syslog.hpp>
+#endif
 
 namespace soralog {
 
@@ -282,7 +284,15 @@ namespace soralog {
     } else if (type == "file") {
       parseSinkToFile(name, sink);
     } else if (type == "syslog") {
+#ifdef SORALOG_SYSLOG_SINK
       parseSinkToSyslog(name, sink);
+#else
+      res.message += fmt::format(
+          "E:{}: Sink '{}' has type 'syslog', unsupported by this build\n",
+          id,
+          name);
+      res.has_error = true;
+#endif
     } else if (type == "multisink") {
       parseMultisink(name, sink);
     } else {
@@ -742,6 +752,7 @@ namespace soralog {
                              at_fault);
   }
 
+#ifdef SORALOG_SYSLOG_SINK
   void ConfiguratorFromYAML::Applicator::parseSinkToSyslog(
       const std::string &name, const YAML::Node &sink_node) {
     bool fail = false;
@@ -957,6 +968,7 @@ namespace soralog {
                                latency,
                                at_fault);
   }
+#endif
 
   void ConfiguratorFromYAML::Applicator::parseMultisink(
       const std::string &name, const YAML::Node &sink_node) {

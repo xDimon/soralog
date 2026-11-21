@@ -46,13 +46,15 @@ target_link_libraries(sink_to_file
     Threads::Threads
     )
 
-add_library(sink_to_syslog
-    impl/sink_to_syslog.cpp
-    )
-target_link_libraries(sink_to_syslog
-    sink
-    Threads::Threads
-    )
+if (SYSLOG_SINK)
+    add_library(sink_to_syslog
+        impl/sink_to_syslog.cpp
+        )
+    target_link_libraries(sink_to_syslog
+        sink
+        Threads::Threads
+        )
+endif ()
 
 add_library(multisink
     impl/multisink.cpp
@@ -78,9 +80,13 @@ target_link_libraries(configurator INTERFACE
     sink_to_nowhere
     sink_to_console
     sink_to_file
-    sink_to_syslog
     multisink
     )
+if (SYSLOG_SINK)
+    target_link_libraries(configurator INTERFACE
+        sink_to_syslog
+        )
+endif ()
 
 add_library(configurator_yaml
     impl/configurator_from_yaml.cpp
@@ -90,6 +96,11 @@ target_link_libraries(configurator_yaml
     configurator
     logging_system
     )
+if (SYSLOG_SINK)
+    target_compile_definitions(configurator_yaml PRIVATE
+        SORALOG_SYSLOG_SINK
+        )
+endif ()
 
 add_library(fallback_configurator
     impl/fallback_configurator.cpp
@@ -130,7 +141,6 @@ set(INSTALL_TARGETS
     sink_to_nowhere
     sink_to_console
     sink_to_file
-    sink_to_syslog
     multisink
 
     group
@@ -144,12 +154,19 @@ set(INSTALL_TARGETS
 
     soralog
     )
+if (SYSLOG_SINK)
+    list(APPEND INSTALL_TARGETS sink_to_syslog)
+    set(SORALOG_HEADERS_EXCLUDE)
+else ()
+    set(SORALOG_HEADERS_EXCLUDE PATTERN sink_to_syslog.hpp EXCLUDE)
+endif ()
 
 include(GNUInstallDirs)
 
 install(
     DIRECTORY ${CMAKE_SOURCE_DIR}/include/soralog
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    ${SORALOG_HEADERS_EXCLUDE}
 )
 
 install(
