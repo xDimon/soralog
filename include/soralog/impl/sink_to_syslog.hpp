@@ -135,7 +135,7 @@ namespace soralog {
         std::chrono::steady_clock::time_point();
 
     /// Flag to prevent concurrent flushing operations.
-    std::atomic_flag flush_in_progress_ = false;
+    std::atomic_flag flush_in_progress_{};
     /// Number of flushes started; changed only under flush_in_progress_.
     std::atomic_size_t flushes_started_ = 0;
     /// Number of the last finished flush; changed only under
