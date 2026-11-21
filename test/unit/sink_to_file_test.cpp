@@ -8,8 +8,11 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <random>
+#include <system_error>
 
 #include "soralog/impl/sink_to_file.hpp"
 
@@ -74,25 +77,28 @@ class SinkToFileTest : public ::testing::Test {
   /**
    * @brief Sets up the test environment by creating a temporary log file.
    *
-   * The file is created using `mkstemp` to ensure a unique and writable
-   * file path.
+   * The file gets a random name to be unique and is created empty to ensure
+   * the path is writable.
    */
   void SetUp() override {
-    std::string path(
-        (std::filesystem::temp_directory_path() / "soralog_test_XXXXXX")
-            .c_str());
-    if (mkstemp(path.data()) == -1) {
+    std::random_device random;
+    path_ = std::filesystem::temp_directory_path()
+          / ("soralog_test_" + std::to_string(random()) + "_"
+             + std::to_string(random()));
+    if (not std::ofstream(path_)) {
       FAIL() << "Can't create output file for test";
     }
-    path_ = std::filesystem::path(path);
   }
 
   /**
    * @brief Cleans up the test environment by removing the temporary log file.
+   *
+   * The sink goes first: Windows doesn't remove a file which is open.
    */
   void TearDown() override {
-    std::remove(path_.native().data());
     sink_.reset();
+    std::error_code ec;
+    std::filesystem::remove(path_, ec);
   }
 
   /**
