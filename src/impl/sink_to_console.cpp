@@ -76,8 +76,8 @@ namespace soralog {
      */
     void put_reset_style(char *&ptr) {
       const auto &style = reset_color;
-      auto size = std::end(style) - std::begin(style);
-      std::memcpy(ptr, std::begin(style), size);
+      auto size = style.size();
+      std::memcpy(ptr, style.data(), size);
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       ptr = ptr + size;
     }
