@@ -7,13 +7,24 @@
 
 #include <gtest/gtest.h>
 
-#include <sys/resource.h>
-
 #include <algorithm>
 #include <fstream>
 #include <iterator>
 
 #include "soralog/impl/sink_to_file.hpp"
+
+#ifdef _WIN32
+// After soralog headers: windows.h defines macros named like Level values
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef ERROR
+#undef IGNORE
+#else
+#include <sys/resource.h>
+#endif
 
 using namespace soralog;
 using namespace testing;
@@ -182,11 +193,24 @@ namespace {
 
   /// @brief CPU time consumed by the whole process
   std::chrono::microseconds processCpuTime() {
+#ifdef _WIN32
+    FILETIME creation{}, exited{}, kernel{}, user{};
+    GetProcessTimes(GetCurrentProcess(), &creation, &exited, &kernel, &user);
+    // FILETIME counts 100-nanosecond intervals
+    auto to_us = [](const FILETIME &time) {
+      return std::chrono::microseconds(
+          ((static_cast<uint64_t>(time.dwHighDateTime) << 32)
+           | time.dwLowDateTime)
+          / 10);
+    };
+    return to_us(kernel) + to_us(user);
+#else
     rusage usage{};
     getrusage(RUSAGE_SELF, &usage);
     return std::chrono::seconds(usage.ru_utime.tv_sec + usage.ru_stime.tv_sec)
          + std::chrono::microseconds(usage.ru_utime.tv_usec
                                      + usage.ru_stime.tv_usec);
+#endif
   }
 }  // namespace
 
