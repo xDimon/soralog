@@ -27,6 +27,13 @@ target_link_libraries(group_test
     libs4test
     )
 
+addtest(configurator_from_yaml_test
+    configurator_from_yaml_test.cpp
+    )
+target_link_libraries(configurator_from_yaml_test
+    configurator_yaml
+    )
+
 addtest(logger_test
     logger_test.cpp
     )

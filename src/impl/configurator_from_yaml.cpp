@@ -7,6 +7,7 @@
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -54,6 +55,18 @@ namespace soralog {
     /// Helper template for ensuring exhaustive type handling in `std::visit`
     template <typename>
     inline constexpr bool always_false_v = false;
+
+    /// Path as UTF-8; path::string() converts to the ANSI code page on Windows
+    std::string toUtf8(const std::filesystem::path &path) {
+      auto str = path.u8string();
+      return {str.begin(), str.end()};
+    }
+
+    /// Path from UTF-8, which YAML text is; a plain std::string would be taken
+    /// in the ANSI code page on Windows
+    std::filesystem::path fromUtf8(const std::string &str) {
+      return std::u8string(str.begin(), str.end());
+    }
   }  // namespace
 
   void ConfiguratorFromYAML::prepare(LoggingSystem &system,
@@ -65,14 +78,24 @@ namespace soralog {
           using T = std::decay_t<decltype(arg)>;
 
           if constexpr (std::is_same_v<T, std::filesystem::path>) {
-            // Load YAML from a file
+            // Load YAML from a file. Not YAML::LoadFile(): it takes the path
+            // as a narrow string, which can't hold every path on Windows
             try {
-              node = YAML::LoadFile(arg.string());
+              std::ifstream in(arg);
+              if (not in) {
+                result.message +=
+                    fmt::format("E:{}: Can't open file '{}'\n",
+                                index + 1,
+                                toUtf8(std::filesystem::weakly_canonical(arg)));
+                result.has_error = true;
+              } else {
+                node = YAML::Load(in);
+              }
             } catch (const std::exception &exception) {
               result.message +=
                   fmt::format("E:{}: Can't parse file '{}': {}\n",
                               index + 1,
-                              std::filesystem::weakly_canonical(arg).string(),
+                              toUtf8(std::filesystem::weakly_canonical(arg)),
                               exception.what());
               result.has_error = true;
             }
@@ -730,7 +753,7 @@ namespace soralog {
       return;
     }
 
-    auto path = path_node.as<std::string>();
+    auto path = fromUtf8(path_node.as<std::string>());
 
     // Check if the sink already exists
     if (sys.getSink(name)) {
