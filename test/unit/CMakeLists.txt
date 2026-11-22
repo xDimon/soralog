@@ -78,6 +78,16 @@ if (SYSLOG_SINK)
         )
 endif ()
 
+if (EVENTLOG_SINK)
+    addtest(sink_to_eventlog_test
+        sink_to_eventlog_test.cpp
+        )
+    target_link_libraries(sink_to_eventlog_test
+        sink_to_eventlog
+        configurator_yaml
+        )
+endif ()
+
 addtest(macros_test
     macros_test.cpp
     )

@@ -157,6 +157,19 @@ namespace soralog {
                              const YAML::Node &sink_node);
 
       /**
+       * @brief Parses a Windows Event Log sink configuration from a YAML node.
+       *
+       * This method extracts and validates properties for an Event Log sink,
+       * including the event source name, the event ID, thread info, buffer
+       * settings, latency, and fault handling.
+       *
+       * @param name Name of the sink being configured.
+       * @param sink_node YAML node containing the Event Log sink configuration.
+       */
+      void parseSinkToEventLog(const std::string &name,
+                               const YAML::Node &sink_node);
+
+      /**
        * @brief Parses a multisink configuration from a YAML node.
        *
        * This method reads and validates a multisink configuration from YAML,

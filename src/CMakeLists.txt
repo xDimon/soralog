@@ -64,6 +64,17 @@ if (SYSLOG_SINK)
         )
 endif ()
 
+if (EVENTLOG_SINK)
+    add_library(sink_to_eventlog
+        impl/sink_to_eventlog.cpp
+        )
+    target_link_libraries(sink_to_eventlog
+        sink
+        Threads::Threads
+        advapi32
+        )
+endif ()
+
 add_library(multisink
     impl/multisink.cpp
     )
@@ -95,6 +106,11 @@ if (SYSLOG_SINK)
         sink_to_syslog
         )
 endif ()
+if (EVENTLOG_SINK)
+    target_link_libraries(configurator INTERFACE
+        sink_to_eventlog
+        )
+endif ()
 
 add_library(configurator_yaml
     impl/configurator_from_yaml.cpp
@@ -107,6 +123,11 @@ target_link_libraries(configurator_yaml
 if (SYSLOG_SINK)
     target_compile_definitions(configurator_yaml PRIVATE
         SORALOG_SYSLOG_SINK
+        )
+endif ()
+if (EVENTLOG_SINK)
+    target_compile_definitions(configurator_yaml PRIVATE
+        SORALOG_EVENTLOG_SINK
         )
 endif ()
 
@@ -162,11 +183,16 @@ set(INSTALL_TARGETS
 
     soralog
     )
+set(SORALOG_HEADERS_EXCLUDE)
 if (SYSLOG_SINK)
     list(APPEND INSTALL_TARGETS sink_to_syslog)
-    set(SORALOG_HEADERS_EXCLUDE)
 else ()
-    set(SORALOG_HEADERS_EXCLUDE PATTERN sink_to_syslog.hpp EXCLUDE)
+    list(APPEND SORALOG_HEADERS_EXCLUDE PATTERN sink_to_syslog.hpp EXCLUDE)
+endif ()
+if (EVENTLOG_SINK)
+    list(APPEND INSTALL_TARGETS sink_to_eventlog)
+else ()
+    list(APPEND SORALOG_HEADERS_EXCLUDE PATTERN sink_to_eventlog.hpp EXCLUDE)
 endif ()
 
 include(GNUInstallDirs)

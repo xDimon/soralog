@@ -137,6 +137,7 @@ Soralog uses CMake as its build system and supports different configurations thr
 - `BUILD_TESTS` (default: `OFF`) – Build unit tests.
 - `EXAMPLES` (default: `OFF`) – Build example programs; enable with `-DEXAMPLES=ON`.
 - `SYSLOG_SINK` (default: `ON`, `OFF` on Windows) – Build the syslog sink; not available on Windows.
+- `EVENTLOG_SINK` (default: `ON` on Windows, `OFF` elsewhere) – Build the Windows Event Log sink; available on Windows only.
 - `BUILD_BENCHMARKS` (default: `OFF`) – Build the benchmark of the event buffer and sinks.
 - `BUILD_BENCHMARK_COMPARE` (default: `OFF`) – Build the comparison with other loggers (spdlog, quill); needs vcpkg, implies `BUILD_BENCHMARKS`.
 - `ASAN`, `LSAN`, `MSAN`, `TSAN`, `UBSAN` (default: `OFF`) – Enable sanitizers.
@@ -288,6 +289,20 @@ Events are written out by a worker thread about every `latency` milliseconds, an
 | Parameter | Type   | Required | Default | Description                    |
 |-----------|--------|----------|---------|--------------------------------|
 | `ident`   | string | No       | N/A     | Identifier for syslog messages |
+
+#### Event Log Sink (`type: eventlog`, Windows)
+
+| Parameter  | Type    | Required | Default | Description                                  |
+|------------|---------|----------|---------|----------------------------------------------|
+| `source`   | string  | Yes      | N/A     | Event source name, as Event Viewer shows it  |
+| `event_id` | integer | No       | `0`     | Event ID of the records, 0 to 65535          |
+
+Records go to the Application log: fatal, critical and error as errors,
+warnings as warnings, info, verbose and debug as information; trace is not
+logged. The sink registers nothing, so Event Viewer prefixes the text with a
+note that the description of the event ID is not found. To drop the note, the
+installer of the application registers the source with a message file whose
+message of that event ID is `%1`.
 
 #### Multisink (`type: multisink`)
 
