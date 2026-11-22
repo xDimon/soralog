@@ -22,7 +22,8 @@ Soralog is a high-performance, flexible logging library designed for C++ applica
 - Configurable log levels and thread info (name or id) in the lines.
 - Configurable via YAML or programmatically.
 - Macro-based or object-based logging interface (up to user).
-- Platforms: Linux, macOS and Windows (MSVC, MinGW); static or shared libraries.
+- Platforms: Linux, macOS, Windows (MSVC, MinGW), FreeBSD 14 and 15, OpenBSD 7.8,
+  NetBSD 10 and DragonFly BSD 6.4; static or shared libraries.
 
 ## Why Soralog
 
