@@ -79,11 +79,11 @@ namespace soralog {
        * @param result Reference to the result object for reporting
        * errors/warnings.
        */
-      Applicator(YAML::Node node,
+      Applicator(const YAML::Node &node,
                  LoggingSystem &system,
                  size_t index,
                  Result &result)
-          : node(std::move(node)), sys(system), id(index + 1), res(result) {}
+          : node(node), sys(system), id(index + 1), res(result) {}
 
       void parseSinks();
       void parseGroups();

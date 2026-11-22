@@ -80,6 +80,8 @@ namespace soralog {
      */
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
     struct Node final {
+      // item_ is raw storage: the element is constructed in place later
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
       explicit Node(size_t seq) noexcept : seq(seq) {}
 
       /**
@@ -331,6 +333,7 @@ namespace soralog {
         ::operator delete(ptr, std::align_val_t{kSlotAlignment});
       }
     };
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-c-arrays,hicpp-avoid-c-arrays,modernize-avoid-c-arrays)
     using Storage = std::unique_ptr<std::byte[], Deleter>;
 
     static size_t checkCapacity(size_t capacity) {
