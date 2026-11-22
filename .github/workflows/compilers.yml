@@ -83,6 +83,29 @@ jobs:
         CTEST_OUTPUT_ON_FAILURE: 1
       run: cmake --build build --target test
 
+  linux-system:
+    runs-on: ubuntu-latest
+    name: linux-system (shared ON)
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build libfmt-dev libyaml-cpp-dev libgtest-dev libgmock-dev
+
+    - name: cmake
+      run: cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=ON
+
+    - name: build
+      run: cmake --build build --parallel 4
+
+    - name: test
+      run: ctest --test-dir build --output-on-failure
+
   windows-msvc:
     runs-on: windows-latest
     strategy:
