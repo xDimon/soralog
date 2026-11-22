@@ -145,3 +145,93 @@ jobs:
 
     - name: test
       run: ctest --test-dir build --output-on-failure
+
+  freebsd:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        release: ['14.5', '15.1']
+        shared: ['OFF', 'ON']
+    name: freebsd ${{ matrix.release }} (shared ${{ matrix.shared }})
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: build and test
+      uses: vmactions/freebsd-vm@v1
+      with:
+        release: ${{ matrix.release }}
+        usesh: true
+        prepare: pkg install -y cmake ninja libfmt yaml-cpp googletest
+        run: |
+          set -e
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
+
+  openbsd:
+    runs-on: ubuntu-latest
+    name: openbsd 7.8 (shared OFF)
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: build and test
+      uses: vmactions/openbsd-vm@v1
+      with:
+        release: '7.8'
+        usesh: true
+        prepare: pkg_add -I cmake ninja fmt yaml-cpp gtest
+        run: |
+          set -e
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
+
+  netbsd:
+    runs-on: ubuntu-latest
+    name: netbsd 10.1 (shared OFF)
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: build and test
+      uses: vmactions/netbsd-vm@v1
+      with:
+        release: '10.1'
+        usesh: true
+        prepare: /usr/sbin/pkg_add pkgin && pkgin -y install cmake ninja-build fmtlib yaml-cpp googletest gcc13
+        run: |
+          set -e
+          export CC=/usr/pkg/gcc13/bin/gcc CXX=/usr/pkg/gcc13/bin/g++
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
+
+  dragonflybsd:
+    runs-on: ubuntu-latest
+    name: dragonflybsd 6.4.2 (shared OFF)
+    steps:
+    - name: checkout
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 1
+
+    - name: build and test
+      uses: vmactions/dragonflybsd-vm@v1
+      with:
+        release: '6.4.2'
+        usesh: true
+        prepare: pkg install -y cmake ninja libfmt yaml-cpp googletest
+        run: |
+          set -e
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake --build build --parallel 4
+          ctest --test-dir build --output-on-failure
