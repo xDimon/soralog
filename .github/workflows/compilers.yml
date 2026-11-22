@@ -207,10 +207,9 @@ jobs:
       with:
         release: '10.1'
         usesh: true
-        prepare: /usr/sbin/pkg_add pkgin && pkgin -y install cmake ninja-build fmtlib yaml-cpp googletest gcc13
+        prepare: /usr/sbin/pkg_add pkgin && pkgin -y install cmake ninja-build fmtlib yaml-cpp googletest
         run: |
           set -e
-          export CC=/usr/pkg/gcc13/bin/gcc CXX=/usr/pkg/gcc13/bin/g++
           cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
