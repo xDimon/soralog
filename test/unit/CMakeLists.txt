@@ -55,6 +55,13 @@ target_link_libraries(logging_system_test
     libs4test
     )
 
+addtest(soralog_test
+    soralog_test.cpp
+    )
+target_link_libraries(soralog_test
+    soralog
+    )
+
 addtest(sink_to_console_test
     sink_to_console_test.cpp
     )

@@ -5,11 +5,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <soralog/soralog.hpp>
+
 namespace soralog {
 
   // to suppress warning about no symbols in cpp
 
   // NOLINTNEXTLINE(bugprone-reserved-identifier)
   extern const char *const __library_name = "soralog";
+
+  const char *libraryName() {
+    return __library_name;
+  }
 
 }  // namespace soralog
