@@ -88,7 +88,8 @@ jobs:
       fail-fast: false
       matrix:
         shared: ['OFF', 'ON']
-    name: windows-msvc (shared ${{ matrix.shared }})
+        config: [Release, Debug]
+    name: windows-msvc (shared ${{ matrix.shared }}, ${{ matrix.config }})
     env:
       # Short path for Hunter's builds of dependencies
       HUNTER_ROOT: C:\.hunter
@@ -99,15 +100,13 @@ jobs:
         fetch-depth: 1
 
     - name: cmake
-      # Dependencies in Release only: with both configurations the Release
-      # build got fmt's Debug library (fmtd.lib) and failed to link
-      run: cmake -S . -B build -DBUILD_TESTS=ON -DEXAMPLES=ON -DHUNTER_CONFIGURATION_TYPES=Release -DBUILD_SHARED_LIBS=${{ matrix.shared }}
+      run: cmake -S . -B build -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
 
     - name: build
-      run: cmake --build build --config Release --parallel 4
+      run: cmake --build build --config ${{ matrix.config }} --parallel 4
 
     - name: test
-      run: ctest --test-dir build -C Release --output-on-failure
+      run: ctest --test-dir build -C ${{ matrix.config }} --output-on-failure
 
   windows-mingw:
     runs-on: windows-latest
