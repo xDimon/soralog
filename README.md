@@ -201,6 +201,12 @@ SL_INFO(logger, "Hello, {}!", "world");
 SL_WARN(logger, "Hello, {}!", "world");
 ```
 
+On Windows `<windows.h>` defines macros `ERROR` and `IGNORE`. Soralog headers
+and macros work with either include order, but `Level::ERROR`,
+`Level::IGNORE` and `AtFaultReactionType::IGNORE` written in your own code
+after `<windows.h>` don't compile: include `<windows.h>` after them or
+`#undef ERROR` and `#undef IGNORE`.
+
 ## Configuration model
 
 Soralog supports passing multiple configurators to the `LoggingSystem`. These configurators are applied sequentially, allowing flexible and incremental configuration.

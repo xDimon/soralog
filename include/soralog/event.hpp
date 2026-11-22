@@ -20,6 +20,13 @@
 #include <soralog/sink.hpp>
 #include <soralog/util.hpp>
 
+// <windows.h> defines macros ERROR and IGNORE, named like values used here:
+// hide them for this header and restore after, whatever the include order
+#pragma push_macro("ERROR")
+#pragma push_macro("IGNORE")
+#undef ERROR
+#undef IGNORE
+
 /**
  * @brief Defines the Event class, which represents a single logging event.
  *
@@ -201,3 +208,6 @@ namespace soralog {
   };
 
 }  // namespace soralog
+
+#pragma pop_macro("IGNORE")
+#pragma pop_macro("ERROR")

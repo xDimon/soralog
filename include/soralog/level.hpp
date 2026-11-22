@@ -11,6 +11,13 @@
 #include <cstddef>
 #include <cstdint>
 
+// <windows.h> defines macros ERROR and IGNORE, named like values used here:
+// hide them for this header and restore after, whatever the include order
+#pragma push_macro("ERROR")
+#pragma push_macro("IGNORE")
+#undef ERROR
+#undef IGNORE
+
 namespace soralog {
 
   /**
@@ -49,6 +56,10 @@ namespace soralog {
           r[static_cast<uint8_t>(Level::IGNORE)] = "?Ignore";
           return r;
         }();
+
+    /// Level::ERROR for macros, which expand in user code, where ERROR may be
+    /// a macro of <windows.h>
+    inline constexpr Level level_error = Level::ERROR;
   }  // namespace detail
 
   /**
@@ -72,3 +83,6 @@ namespace soralog {
   }
 
 }  // namespace soralog
+
+#pragma pop_macro("IGNORE")
+#pragma pop_macro("ERROR")

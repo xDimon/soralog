@@ -84,3 +84,11 @@ addtest(macros_test
 target_link_libraries(macros_test
     fmt::fmt
     )
+
+addtest(windows_macros_test
+    windows_macros_test.cpp
+    )
+target_link_libraries(windows_macros_test
+    soralog
+    fallback_configurator
+    )

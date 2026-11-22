@@ -217,6 +217,12 @@ SL_INFO(logger, "Hello, {}!", "world");
 SL_WARN(logger, "Hello, {}!", "world");
 ```
 
+На Windows `<windows.h>` определяет макросы `ERROR` и `IGNORE`. Заголовки
+и макросы Soralog работают при любом порядке подключения, но `Level::ERROR`,
+`Level::IGNORE` и `AtFaultReactionType::IGNORE`, написанные в своём коде
+после `<windows.h>`, не компилируются: подключайте `<windows.h>` после них
+или делайте `#undef ERROR` и `#undef IGNORE`.
+
 ## Как устроена настройка
 
 `LoggingSystem` принимает несколько конфигураторов и применяет их по

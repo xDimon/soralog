@@ -13,6 +13,13 @@
 #include <soralog/level.hpp>
 #include <soralog/sink.hpp>
 
+// <windows.h> defines macros ERROR and IGNORE, named like values used here:
+// hide them for this header and restore after, whatever the include order
+#pragma push_macro("ERROR")
+#pragma push_macro("IGNORE")
+#undef ERROR
+#undef IGNORE
+
 // MSVC has neither __attribute__ nor ThreadSanitizer
 #if defined(__has_attribute)
 #if __has_attribute(no_sanitize)
@@ -396,3 +403,6 @@ namespace soralog {
   };
 
 }  // namespace soralog
+
+#pragma pop_macro("IGNORE")
+#pragma pop_macro("ERROR")
