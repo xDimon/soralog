@@ -13,6 +13,7 @@
  */
 
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,16 +22,29 @@
 #include <soralog/logger.hpp>
 #include <soralog/logging_system.hpp>
 
+namespace {
+  // Path as UTF-8, the encoding of YAML text
+  std::string toUtf8(const std::filesystem::path &path) {
+    auto str = path.u8string();
+    return {str.begin(), str.end()};
+  }
+}  // namespace
+
 int main() {
+  // The log file goes to the temporary directory of the system
+  const auto log_path =
+      std::filesystem::temp_directory_path() / "soralog_example.log";
+
   // Embedded YAML configuration.
-  // - Sink 'to_file' writes to /tmp/soralog_example.log
+  // - Sink 'to_file' writes to soralog_example.log in the temp directory
   // - Group 'main' routes logs to sink 'to_file' with level 'info'
   const auto yaml = std::string(R"(
 
 sinks:
   - name: to_file
     type: file
-    path: /tmp/soralog_example.log
+    path: ')") + toUtf8(log_path)
+                  + R"('
     thread: name
     capacity: 2048
     buffer: 4194304
@@ -44,7 +58,7 @@ groups:
     level: info
     is_fallback: true
 
-)");
+)";
 
   // Create a YAML configurator that loads configuration from a string.
   auto cfg = std::make_shared<soralog::ConfiguratorFromYAML>(yaml);
@@ -70,7 +84,7 @@ groups:
   // This debug is typically filtered by group 'main' level=info.
   log->debug("This debug is likely filtered out by group level=info");
 
-  // These messages are written to /tmp/soralog_example.log.
+  // These messages are written to the log file.
   log->info("Started: mode={}, answer={}", "embedded_yaml", 42);
   log->warn("Disk logging example warning: code={}", 777);
 
