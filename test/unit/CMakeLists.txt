@@ -95,6 +95,13 @@ target_link_libraries(macros_test
     fmt::fmt
     )
 
+addtest(util_test
+    util_test.cpp
+    )
+target_link_libraries(util_test
+    sink
+    )
+
 addtest(windows_macros_test
     windows_macros_test.cpp
     )
