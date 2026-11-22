@@ -29,6 +29,7 @@ jobs:
           "cc": "clang",
           "cxx": "clang++"
          }]
+        shared: ['OFF', 'ON']
         exclude:
           - os: macOS-latest
             compiler:
@@ -72,7 +73,7 @@ jobs:
       env:
         CC: ${{ matrix.compiler.cc }}
         CXX: ${{ matrix.compiler.cxx }}
-      run: cmake . -Bbuild -DBUILD_TESTS=ON -DEXAMPLES=ON
+      run: cmake . -Bbuild -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
 
     - name: build
       run: cmake --build build -- -j4
@@ -174,7 +175,11 @@ jobs:
 
   openbsd:
     runs-on: ubuntu-latest
-    name: openbsd 7.8 (shared OFF)
+    strategy:
+      fail-fast: false
+      matrix:
+        shared: ['OFF', 'ON']
+    name: openbsd 7.8 (shared ${{ matrix.shared }})
     steps:
     - name: checkout
       uses: actions/checkout@v5
@@ -189,13 +194,17 @@ jobs:
         prepare: pkg_add -I cmake ninja fmt yaml-cpp gtest
         run: |
           set -e
-          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
 
   netbsd:
     runs-on: ubuntu-latest
-    name: netbsd 10.1 (shared OFF)
+    strategy:
+      fail-fast: false
+      matrix:
+        shared: ['OFF', 'ON']
+    name: netbsd 10.1 (shared ${{ matrix.shared }})
     steps:
     - name: checkout
       uses: actions/checkout@v5
@@ -210,13 +219,17 @@ jobs:
         prepare: /usr/sbin/pkg_add pkgin && pkgin -y install cmake ninja-build fmtlib yaml-cpp googletest
         run: |
           set -e
-          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
 
   dragonflybsd:
     runs-on: ubuntu-latest
-    name: dragonflybsd 6.4.2 (shared OFF)
+    strategy:
+      fail-fast: false
+      matrix:
+        shared: ['OFF', 'ON']
+    name: dragonflybsd 6.4.2 (shared ${{ matrix.shared }})
     steps:
     - name: checkout
       uses: actions/checkout@v5
@@ -233,6 +246,6 @@ jobs:
         run: |
           set -e
           export CC=gcc13 CXX=g++13 LDFLAGS=-Wl,-rpath=/usr/local/lib/gcc13
-          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON
+          cmake -S . -B build -G Ninja -DPACKAGE_MANAGER=none -DBUILD_TESTS=ON -DEXAMPLES=ON -DBUILD_SHARED_LIBS=${{ matrix.shared }}
           cmake --build build --parallel 4
           ctest --test-dir build --output-on-failure
