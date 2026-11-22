@@ -16,6 +16,22 @@
 
 #include <soralog/internals.hpp>
 
+#ifdef _WIN32
+// After soralog headers: windows.h defines macros named like Level values
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#undef ERROR
+#undef IGNORE
+#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+#endif
+#endif
+
 namespace soralog {
 
   namespace {
@@ -192,6 +208,33 @@ namespace soralog {
       }
     }
 
+    /**
+     * @brief Makes the console show ANSI escape sequences as colors.
+     *
+     * Windows console prints them as text unless switched to the virtual
+     * terminal mode; the mode belongs to the console and stays switched.
+     * @param stream_type Output stream of the sink.
+     * @return False if the stream is a console that can't show colors.
+     * Output redirected to a file or a pipe gets the sequences, as on POSIX.
+     */
+    bool enableColors([[maybe_unused]] SinkToConsole::Stream stream_type) {
+#ifdef _WIN32
+      HANDLE handle = GetStdHandle(stream_type == SinkToConsole::Stream::STDERR
+                                       ? STD_ERROR_HANDLE
+                                       : STD_OUTPUT_HANDLE);
+      DWORD mode = 0;
+      if (handle == nullptr or handle == INVALID_HANDLE_VALUE
+          or not GetConsoleMode(handle, &mode)) {
+        return true;  // Not a console
+      }
+      return (mode & ENABLE_VIRTUAL_TERMINAL_PROCESSING) != 0
+          or SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)
+                 != 0;
+#else
+      return true;
+#endif
+    }
+
   }  // namespace
 
   SinkToConsole::SinkToConsole(std::string name,
@@ -216,7 +259,8 @@ namespace soralog {
         stream_(stream_type == Stream::STDERR
                     ? std::cerr
                     : std::cout),  // Selects output stream
-        with_color_(with_color),   // Enables or disables colored output
+        // Enables or disables colored output
+        with_color_(with_color and enableColors(stream_type)),
         buff_(max_buffer_size_) {  // Allocates buffer memory
     // If a nonzero latency is set, start a worker thread for async logging.
     if (latency_ != std::chrono::milliseconds::zero()) {

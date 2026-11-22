@@ -15,13 +15,14 @@ Soralog is a high-performance, flexible logging library designed for C++ applica
 
 ## Features
 
-- Multiple log sinks: console, file, syslog, and more.
+- Multiple log sinks: console, file, syslog, Windows Event Log, and more.
 - Efficient circular buffer for log messages, without locks.
 - Thread-safe logging with minimal overhead.
 - Hierarchical logging groups with inheritance.
 - Configurable log levels and thread info (name or id) in the lines.
 - Configurable via YAML or programmatically.
 - Macro-based or object-based logging interface (up to user).
+- Platforms: Linux, macOS and Windows (MSVC, MinGW); static or shared libraries.
 
 ## Why Soralog
 
@@ -61,8 +62,8 @@ Apple M4 Max):
   can be combined.
 - **Sinks for the usual destinations.** They cover console (optionally
   colored), file (reopened on request, for external log rotation), syslog,
-  and multisinks fanning out to several of them. Each sink has its own level
-  and buffering.
+  Windows Event Log, and multisinks fanning out to several of them. Each
+  sink has its own level and buffering.
 - **Details that save time.** Lines can carry thread names or ids, and
   messages use `fmt`-style formatting. A sink reacts to a failing disk as
   configured: it waits, ignores or terminates the process. Trace and debug
@@ -136,7 +137,9 @@ Soralog uses CMake as its build system and supports different configurations thr
 
 - `BUILD_TESTS` (default: `OFF`) – Build unit tests.
 - `EXAMPLES` (default: `OFF`) – Build example programs; enable with `-DEXAMPLES=ON`.
+- `BUILD_SHARED_LIBS` (default: `OFF`) – Build shared libraries instead of static ones; on Windows the DLLs export all their functions.
 - `SYSLOG_SINK` (default: `ON`, `OFF` on Windows) – Build the syslog sink; not available on Windows.
+- `EVENTLOG_SINK` (default: `ON` on Windows, `OFF` elsewhere) – Build the Windows Event Log sink; available on Windows only.
 - `BUILD_BENCHMARKS` (default: `OFF`) – Build the benchmark of the event buffer and sinks.
 - `BUILD_BENCHMARK_COMPARE` (default: `OFF`) – Build the comparison with other loggers (spdlog, quill); needs vcpkg, implies `BUILD_BENCHMARKS`.
 - `ASAN`, `LSAN`, `MSAN`, `TSAN`, `UBSAN` (default: `OFF`) – Enable sanitizers.
@@ -201,6 +204,12 @@ SL_INFO(logger, "Hello, {}!", "world");
 SL_WARN(logger, "Hello, {}!", "world");
 ```
 
+On Windows `<windows.h>` defines macros `ERROR` and `IGNORE`. Soralog headers
+and macros work with either include order, but `Level::ERROR`,
+`Level::IGNORE` and `AtFaultReactionType::IGNORE` written in your own code
+after `<windows.h>` don't compile: include `<windows.h>` after them or
+`#undef ERROR` and `#undef IGNORE`.
+
 ## Configuration model
 
 Soralog supports passing multiple configurators to the `LoggingSystem`. These configurators are applied sequentially, allowing flexible and incremental configuration.
@@ -253,12 +262,12 @@ groups:
 | Parameter        | Type    | Required | Default    | Description                                                                                                 |
 |------------------|---------|----------|------------|-------------------------------------------------------------------------------------------------------------|
 | `name`           | string  | Yes      | N/A        | Unique identifier of the sink                                                                               |
-| `type`           | string  | Yes      | N/A        | Sink type (`console`, `file`, `syslog`, `multisink`)                                                        |
+| `type`           | string  | Yes      | N/A        | Sink type (`console`, `file`, `syslog`, `eventlog`, `multisink`)                                            |
 | `thread`         | string  | No       | `none`     | Thread info mode (`name`, `id`, `none`)                                                                     |
-| `capacity`       | int     | No       | `64` / `2048`           | Number of buffered events (console / file and syslog)                                          |
+| `capacity`       | int     | No       | `64` / `2048`           | Number of buffered events (console / file, syslog and eventlog)                                |
 | `max_message_length` | int | No       | `1024`                  | Max length of a log message in bytes, at least 64                                              |
-| `buffer`         | int     | No       | `131072` / `4194304`    | Size of the write buffer in bytes (console / file and syslog)                                  |
-| `latency`        | int     | No       | `200` / `1000`          | Max delay in milliseconds before flushing (console / file and syslog). `0` means synchronous flush on every log event (higher overhead). |
+| `buffer`         | int     | No       | `131072` / `4194304`    | Size of the write buffer in bytes (console / file, syslog and eventlog)                        |
+| `latency`        | int     | No       | `200` / `1000`          | Max delay in milliseconds before flushing (console / file, syslog and eventlog). `0` means synchronous flush on every log event (higher overhead). |
 | `level`          | string  | No       | `trace`    | Minimum log level (`trace`, `debug`, `verbose`, `info`, `warn`, `error`, `critical`)                         |
 
 Events are written out by a worker thread about every `latency` milliseconds, and earlier when the event buffer is 80% full. With small values the real period is longer than the setting: about 1.25× at 10 ms and 1.5× at 1 ms. With `latency: 0` every log call writes its event out before returning.
@@ -270,18 +279,35 @@ Events are written out by a worker thread about every `latency` milliseconds, an
 | `stream`  | string | No       | `stdout` | Output stream (`stdout`, `stderr`)  |
 | `color`   | bool   | No       | `false`  | Enables colored output              |
 
+On Windows a colored sink switches the console to the virtual terminal mode;
+if the console doesn't support it, the output goes without colors.
+
 #### File Sink (`type: file`)
 
 | Parameter  | Type   | Required | Default | Description                                       |
 |------------|--------|----------|---------|---------------------------------------------------|
-| `path`     | string | Yes      | N/A     | Path to the log file                              |
+| `path`     | string | Yes      | N/A     | Path to the log file, UTF-8                       |
 | `at_fault` | string | No       | `wait`  | Action on failure (`terminate`, `wait`, `ignore`) |
 
 #### Syslog Sink (`type: syslog`)
 
 | Parameter | Type   | Required | Default | Description                    |
 |-----------|--------|----------|---------|--------------------------------|
-| `ident`   | string | No       | N/A     | Identifier for syslog messages |
+| `ident`   | string | Yes      | N/A     | Identifier for syslog messages |
+
+#### Event Log Sink (`type: eventlog`, Windows)
+
+| Parameter  | Type    | Required | Default | Description                                  |
+|------------|---------|----------|---------|----------------------------------------------|
+| `source`   | string  | Yes      | N/A     | Event source name, as Event Viewer shows it  |
+| `event_id` | integer | No       | `0`     | Event ID of the records, 0 to 65535          |
+
+Records go to the Application log: fatal, critical and error as errors,
+warnings as warnings, info, verbose and debug as information; trace is not
+logged. The sink registers nothing, so Event Viewer prefixes the text with a
+note that the description of the event ID is not found. To drop the note, the
+installer of the application registers the source with a message file whose
+message of that event ID is `%1`.
 
 #### Multisink (`type: multisink`)
 

@@ -7,6 +7,7 @@
 
 #include <soralog/impl/configurator_from_yaml.hpp>
 
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -22,6 +23,9 @@
 #include <soralog/impl/sink_to_nowhere.hpp>
 #ifdef SORALOG_SYSLOG_SINK
 #include <soralog/impl/sink_to_syslog.hpp>
+#endif
+#ifdef SORALOG_EVENTLOG_SINK
+#include <soralog/impl/sink_to_eventlog.hpp>
 #endif
 
 namespace soralog {
@@ -54,6 +58,18 @@ namespace soralog {
     /// Helper template for ensuring exhaustive type handling in `std::visit`
     template <typename>
     inline constexpr bool always_false_v = false;
+
+    /// Path as UTF-8; path::string() converts to the ANSI code page on Windows
+    std::string toUtf8(const std::filesystem::path &path) {
+      auto str = path.u8string();
+      return {str.begin(), str.end()};
+    }
+
+    /// Path from UTF-8, which YAML text is; a plain std::string would be taken
+    /// in the ANSI code page on Windows
+    std::filesystem::path fromUtf8(const std::string &str) {
+      return std::u8string(str.begin(), str.end());
+    }
   }  // namespace
 
   void ConfiguratorFromYAML::prepare(LoggingSystem &system,
@@ -65,14 +81,24 @@ namespace soralog {
           using T = std::decay_t<decltype(arg)>;
 
           if constexpr (std::is_same_v<T, std::filesystem::path>) {
-            // Load YAML from a file
+            // Load YAML from a file. Not YAML::LoadFile(): it takes the path
+            // as a narrow string, which can't hold every path on Windows
             try {
-              node = YAML::LoadFile(arg.string());
+              std::ifstream in(arg);
+              if (not in) {
+                result.message +=
+                    fmt::format("E:{}: Can't open file '{}'\n",
+                                index + 1,
+                                toUtf8(std::filesystem::weakly_canonical(arg)));
+                result.has_error = true;
+              } else {
+                node = YAML::Load(in);
+              }
             } catch (const std::exception &exception) {
               result.message +=
                   fmt::format("E:{}: Can't parse file '{}': {}\n",
                               index + 1,
-                              std::filesystem::weakly_canonical(arg).string(),
+                              toUtf8(std::filesystem::weakly_canonical(arg)),
                               exception.what());
               result.has_error = true;
             }
@@ -291,6 +317,16 @@ namespace soralog {
 #else
       res.message += fmt::format(
           "E:{}: Sink '{}' has type 'syslog', unsupported by this build\n",
+          id,
+          name);
+      res.has_error = true;
+#endif
+    } else if (type == "eventlog") {
+#ifdef SORALOG_EVENTLOG_SINK
+      parseSinkToEventLog(name, sink);
+#else
+      res.message += fmt::format(
+          "E:{}: Sink '{}' has type 'eventlog', unsupported by this build\n",
           id,
           name);
       res.has_error = true;
@@ -730,7 +766,7 @@ namespace soralog {
       return;
     }
 
-    auto path = path_node.as<std::string>();
+    auto path = fromUtf8(path_node.as<std::string>());
 
     // Check if the sink already exists
     if (sys.getSink(name)) {
@@ -969,6 +1005,250 @@ namespace soralog {
                                buffer_size,
                                latency,
                                at_fault);
+  }
+#endif
+
+#ifdef SORALOG_EVENTLOG_SINK
+  void ConfiguratorFromYAML::Applicator::parseSinkToEventLog(
+      const std::string &name, const YAML::Node &sink_node) {
+    bool fail = false;
+    Sink::ThreadInfoType thread_info_type = Sink::ThreadInfoType::NONE;
+    std::optional<size_t> capacity;
+    std::optional<size_t> buffer_size;
+    std::optional<size_t> max_message_length;
+    std::optional<size_t> latency;
+    Sink::AtFaultReactionType at_fault = Sink::AtFaultReactionType::WAIT;
+
+    // Parse 'source' (event source name)
+    auto source_node = sink_node["source"];
+    if (not source_node.IsDefined()) {
+      fail = true;
+      res.message +=
+          fmt::format("E:{}: Not found 'source' of sink '{}'\n", id, name);
+      res.has_error = true;
+    } else if (not source_node.IsScalar()) {
+      fail = true;
+      res.message += fmt::format(
+          "E:{}: Property 'source' of sink '{}' is not scalar\n", id, name);
+      res.has_error = true;
+    }
+
+    // Parse 'event_id' (event ID of the records)
+    std::optional<uint32_t> event_id;
+    auto event_id_node = sink_node["event_id"];
+    if (event_id_node.IsDefined()) {
+      if (not event_id_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'event_id' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto event_id_int = event_id_node.as<int64_t>();
+        if (std::to_string(event_id_int) != event_id_node.as<std::string>()
+            or event_id_int < 0 or event_id_int > 0xFFFF) {
+          res.message +=
+              fmt::format("W:{}: Invalid 'event_id' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          event_id_node.as<std::string>());
+          res.has_warning = true;
+        } else {
+          event_id.emplace(static_cast<uint32_t>(event_id_int));
+        }
+      }
+    }
+
+    // Parse 'thread' information type
+    auto thread_node = sink_node["thread"];
+    if (thread_node.IsDefined()) {
+      if (not thread_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'thread' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto thread_str = thread_node.as<std::string>();
+        if (thread_str == "name") {
+          thread_info_type = Sink::ThreadInfoType::NAME;
+        } else if (thread_str == "id") {
+          thread_info_type = Sink::ThreadInfoType::ID;
+        } else if (thread_str != "none") {
+          res.message +=
+              fmt::format("W:{}: Invalid 'thread' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          thread_str);
+          res.has_warning = true;
+        }
+      }
+    }
+
+    // Parse 'capacity' settings
+    auto capacity_node = sink_node["capacity"];
+    if (capacity_node.IsDefined()) {
+      if (not capacity_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'capacity' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto capacity_int = capacity_node.as<int>();
+        if (capacity_int >= 4) {
+          capacity.emplace(capacity_int);
+        } else {
+          res.message +=
+              fmt::format("W:{}: Invalid 'capacity' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          capacity_node.as<std::string>());
+          res.has_warning = true;
+        }
+      }
+    }
+
+    // Parse 'buffer' size settings
+    auto buffer_node = sink_node["buffer"];
+    if (buffer_node.IsDefined()) {
+      if (not buffer_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'buffer' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto buffer_int = buffer_node.as<int>();
+        if (buffer_int >= sizeof(Event) * 4) {
+          buffer_size.emplace(buffer_int);
+        } else {
+          res.message +=
+              fmt::format("W:{}: Invalid 'buffer' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          buffer_node.as<std::string>());
+          res.has_warning = true;
+        }
+      }
+    }
+
+    // Parse 'max_message_length' settings
+    auto max_message_length_node = sink_node["max_message_length"];
+    if (max_message_length_node.IsDefined()) {
+      if (not max_message_length_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'max_message_length' of sink node is not scalar\n",
+            id);
+        res.has_warning = true;
+      } else {
+        auto max_message_length_int = max_message_length_node.as<int>();
+        if (max_message_length_int >= 64) {
+          max_message_length.emplace(max_message_length_int);
+        } else {
+          res.message += fmt::format(
+              "W:{}: Invalid 'max_message_length' value of sink '{}': {}\n",
+              id,
+              name,
+              max_message_length_node.as<std::string>());
+          res.has_warning = true;
+        }
+      }
+    }
+
+    // Parse 'latency' settings
+    auto latency_node = sink_node["latency"];
+    if (latency_node.IsDefined()) {
+      if (not latency_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'latency' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto latency_int = latency_node.as<int>();
+        if (std::to_string(latency_int) != latency_node.as<std::string>()
+            or latency_int < 0) {
+          res.message +=
+              fmt::format("W:{}: Invalid 'latency' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          latency_node.as<std::string>());
+          res.has_warning = true;
+        } else {
+          latency.emplace(latency_int);
+        }
+      }
+    }
+
+    // Parse 'at_fault' reaction type
+    auto at_fault_node = sink_node["at_fault"];
+    if (at_fault_node.IsDefined()) {
+      if (not at_fault_node.IsScalar()) {
+        res.message += fmt::format(
+            "W:{}: Property 'at_fault' of sink node is not scalar\n", id);
+        res.has_warning = true;
+      } else {
+        auto at_fault_str = at_fault_node.as<std::string>();
+        if (at_fault_str == "terminate") {
+          at_fault = Sink::AtFaultReactionType::TERMINATE;
+        } else if (at_fault_str == "ignore") {
+          at_fault = Sink::AtFaultReactionType::IGNORE;
+        } else if (at_fault_str == "wait") {
+          at_fault = Sink::AtFaultReactionType::WAIT;
+        } else {
+          res.message +=
+              fmt::format("W:{}: Invalid 'at_fault' value of sink '{}': {}\n",
+                          id,
+                          name,
+                          at_fault_str);
+          res.has_warning = true;
+        }
+      }
+    }
+
+    // Parse logging level
+    auto level = parseLevel(fmt::format("sink '{}'", name), sink_node)
+                     .value_or(Level::TRACE);
+
+    // Check for unknown properties
+    static constexpr std::array known_properties = {"name",
+                                                    "type",
+                                                    "source",
+                                                    "event_id",
+                                                    "thread",
+                                                    "capacity",
+                                                    "buffer",
+                                                    "max_message_length",
+                                                    "latency",
+                                                    "at_fault",
+                                                    "level"};
+    for (const auto &it : sink_node) {
+      auto key = it.first.as<std::string>();
+      if (std::ranges::find(known_properties, key) == known_properties.end()) {
+        res.message += fmt::format(
+            "W:{}: Unknown property of sink '{}': {}\n", id, name, key);
+        res.has_warning = true;
+      }
+    }
+
+    if (fail) {
+      return;
+    }
+
+    auto source = source_node.as<std::string>();
+
+    // Check if the sink already exists
+    if (sys.getSink(name)) {
+      res.message += fmt::format(
+          "W:{}: Sink with name '{}' already exists; "
+          "overriding previous version\n",
+          id,
+          name);
+      res.has_warning = true;
+    }
+
+    // Create the Event Log sink
+    sys.makeSink<SinkToEventLog>(name,
+                                 level,
+                                 source,
+                                 thread_info_type,
+                                 capacity,
+                                 max_message_length,
+                                 buffer_size,
+                                 latency,
+                                 at_fault,
+                                 event_id);
   }
 #endif
 

@@ -85,10 +85,26 @@ if (WIN32 AND SYSLOG_SINK)
     fatal_error("SYSLOG_SINK is not supported on Windows")
 endif ()
 
-# Symbols aren't exported yet, so DLLs would be unusable
-if (WIN32 AND BUILD_SHARED_LIBS)
-    fatal_error("Shared libraries are not supported on Windows yet; \
-use BUILD_SHARED_LIBS=OFF")
+# The Event Log sink is the Windows counterpart of the syslog sink
+if (WIN32)
+    set(EVENTLOG_SINK_DEFAULT ON)
+else ()
+    set(EVENTLOG_SINK_DEFAULT OFF)
+endif ()
+option(EVENTLOG_SINK "Build the Windows Event Log sink" ${EVENTLOG_SINK_DEFAULT})
+if (NOT WIN32 AND EVENTLOG_SINK)
+    fatal_error("EVENTLOG_SINK is supported on Windows only")
+endif ()
+
+if (WIN32)
+    # DLLs export all their functions: the sources have no export macros, and
+    # public headers access no data of the libraries
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    # Windows looks for DLLs next to the executable: put DLLs, tests and
+    # examples into one directory, so that they run from the build tree
+    if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+    endif ()
 endif ()
 
 include(cmake/toolchain/compiler.cmake)

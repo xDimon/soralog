@@ -20,11 +20,25 @@ target_link_libraries(circular_buffer_test
     libs4test
     )
 
+addtest(file_writer_test
+    file_writer_test.cpp
+    )
+target_link_libraries(file_writer_test
+    sink_to_file
+    )
+
 addtest(group_test
     group_test.cpp
     )
 target_link_libraries(group_test
     libs4test
+    )
+
+addtest(configurator_from_yaml_test
+    configurator_from_yaml_test.cpp
+    )
+target_link_libraries(configurator_from_yaml_test
+    configurator_yaml
     )
 
 addtest(logger_test
@@ -64,9 +78,27 @@ if (SYSLOG_SINK)
         )
 endif ()
 
+if (EVENTLOG_SINK)
+    addtest(sink_to_eventlog_test
+        sink_to_eventlog_test.cpp
+        )
+    target_link_libraries(sink_to_eventlog_test
+        sink_to_eventlog
+        configurator_yaml
+        )
+endif ()
+
 addtest(macros_test
     macros_test.cpp
     )
 target_link_libraries(macros_test
     fmt::fmt
+    )
+
+addtest(windows_macros_test
+    windows_macros_test.cpp
+    )
+target_link_libraries(windows_macros_test
+    soralog
+    fallback_configurator
     )

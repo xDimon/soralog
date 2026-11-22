@@ -146,10 +146,9 @@ namespace soralog {
         path_(std::move(path)),
         buff_(max_buffer_size_) {
     // Open the log file in append mode
-    out_.open(path_, std::ios::app);
-    if (not out_.is_open()) {
+    if (auto error = out_.open(path_)) {
       // If the file cannot be opened, print an error message to stderr
-      std::cerr << "Can't open log file '" << path_ << "': " << strerror(errno)
+      std::cerr << "Can't open log file '" << path_ << "': " << error.message()
                 << '\n';
     } else if (latency_ != std::chrono::milliseconds::zero()) {
       // If the sink operates with a delay (latency),
@@ -213,12 +212,11 @@ namespace soralog {
       // Pairs with the fence in the waiting branch: either the waiter sees
       // this flush started, or this flush sees the events of the waiter
       std::atomic_thread_fence(std::memory_order_seq_cst);
-      // Take the request to flush the stream before counting the events: the
-      // requester has queued its events before, so they are counted
-      const bool flush_stream =
-          need_to_flush_.exchange(false, std::memory_order_acq_rel);
-      const auto result = flush_events(
-          bounded ? events_.size() : events_.capacity(), flush_stream);
+      // Take the request to flush before counting the events: the requester
+      // has queued its events before, so they are counted
+      need_to_flush_.exchange(false, std::memory_order_acq_rel);
+      const auto result =
+          flush_events(bounded ? events_.size() : events_.capacity());
       flushes_done_.store(number, std::memory_order_release);
       return result;
     };
@@ -267,7 +265,7 @@ namespace soralog {
     }
   }
 
-  bool SinkToFile::flush_events(size_t limit, bool flush_stream) noexcept {
+  bool SinkToFile::flush_events(size_t limit) noexcept {
     // Pointer to the begin of the buffer
     auto *const begin = buff_.data();
     // Pointer to the end of the buffer
@@ -365,44 +363,45 @@ namespace soralog {
                           std::memory_order_release);
 
         while (data_end > data_begin) {  // Retry writing to log file on failure
-          auto pos_before_write = out_.tellp();
-          out_.write(data_begin, data_end - data_begin);
+          const auto result = out_.write({data_begin, data_end});
+          // What is written is not written again
+          std::advance(data_begin, result.written);
 
-          if (out_.fail() or out_.bad()) {  // Handle I/O failures
-            const auto *msg =
-                out_.bad()
-                    ? "Critical I/O error (disk full or hardware failure).\n"
-                    : "Write failed (possibly out of disk space).\n";
-            std::cerr << msg;
+          if (result.error) {  // Handle I/O failures
+            // Out of disk space may pass; any other error may be cured by
+            // reopening the file
+            const bool no_space = result.error == std::errc::no_space_on_device;
+            std::cerr << "Can't write log file '" << path_
+                      << "': " << result.error.message() << '\n';
             std::cerr.flush();
 
             switch (at_fault_) {
-              case AtFaultReactionType::TERMINATE:
-                out_ << "Fatal: " << msg;
+              case AtFaultReactionType::TERMINATE: {
+                constexpr std::string_view fatal =
+                    "Fatal: can't write log file, terminating\n";
+                out_.write(fatal);
                 out_.close();
                 exit(io_error_exit_code);
+              }
 
               case AtFaultReactionType::WAIT:
                 std::this_thread::sleep_for(attempt_delay);
                 attempt_delay =
                     std::min(attempt_delay * 2, std::chrono::seconds(60));
-                if (out_.bad()) {
+                if (not no_space) {
                   while (true) {  // Try reopening the log file
-                    std::ofstream out;
-                    out.open(path_, std::ios::app);
-                    if (out.is_open()) {
-                      std::swap(out_, out);
+                    auto error = out_.open(path_);
+                    if (not error) {
                       break;  // Leave loop of trying to reopen a log-file
                     }
-                    std::cerr << "Can't " << (out_.is_open() ? "re-" : "")
-                              << "open log file '" << path_
-                              << "': " << strerror(errno) << ". Waiting for "
+                    std::cerr << "Can't re-open log file '" << path_
+                              << "': " << error.message() << ". Waiting for "
                               << attempt_delay.count() << " seconds...\n";
                     std::cerr.flush();
+                    std::this_thread::sleep_for(attempt_delay);
+                    attempt_delay =
+                        std::min(attempt_delay * 2, std::chrono::seconds(60));
                   }
-                } else {
-                  out_.clear();
-                  std::advance(data_begin, out_.tellp() - pos_before_write);
                 }
                 continue;
 
@@ -419,11 +418,7 @@ namespace soralog {
         continue;  // Take the next event
       }
 
-      // Queue is drained: push written data to the file if requested
-      if (flush_stream) {
-        out_.flush();
-      }
-
+      // Queue is drained; the data is in the file already, out_ has no buffer
       break;
     }
 
@@ -431,20 +426,14 @@ namespace soralog {
     bool true_v = true;
     if (need_to_rotate_.compare_exchange_weak(
             true_v, false, std::memory_order_acq_rel)) {
-      std::ofstream out;
-      out.open(path_, std::ios::app);
-      if (not out.is_open()) {
-        if (out_.is_open()) {
-          std::cerr << "Can't re-open log file '" << path_
-                    << "': " << strerror(errno) << '\n';
-        } else {
-          std::cerr << "Can't open log file '" << path_
-                    << "': " << strerror(errno) << '\n';
-        }
+      // The file open before stays open if the new one can't be open
+      const bool was_open = out_.is_open();
+      if (auto error = out_.open(path_)) {
+        std::cerr << "Can't " << (was_open ? "re-" : "") << "open log file '"
+                  << path_ << "': " << error.message() << '\n';
         std::cerr.flush();
         return false;
       }
-      std::swap(out_, out);
       return true;
     }
     return false;

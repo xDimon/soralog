@@ -48,10 +48,15 @@ function(addtest test_name)
         COMMAND $<TARGET_FILE:${test_name}> ${xml_output}
     )
     set_target_properties(${test_name} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin
         ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
         LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/test_lib
     )
+    # On Windows tests stay next to the DLLs, see CMAKE_RUNTIME_OUTPUT_DIRECTORY
+    if (NOT WIN32)
+        set_target_properties(${test_name} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin
+        )
+    endif ()
     disable_clang_tidy(${test_name})
 
     if(NOT TARGET all_tests)

@@ -106,8 +106,9 @@
 #define SL_WARN(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::WARN, (FMT), ##__VA_ARGS__)
 
+// Not Level::ERROR: ERROR may be a macro of <windows.h> in user code
 #define SL_ERROR(LOG, FMT, ...) \
-  _SL_LOG((LOG), soralog::Level::ERROR, (FMT), ##__VA_ARGS__)
+  _SL_LOG((LOG), soralog::detail::level_error, (FMT), ##__VA_ARGS__)
 
 #define SL_CRITICAL(LOG, FMT, ...) \
   _SL_LOG((LOG), soralog::Level::CRITICAL, (FMT), ##__VA_ARGS__)

@@ -18,6 +18,13 @@
 #include <soralog/circular_buffer.hpp>
 #include <soralog/event.hpp>
 
+// <windows.h> defines macros ERROR and IGNORE, named like values used here:
+// hide them for this header and restore after, whatever the include order
+#pragma push_macro("ERROR")
+#pragma push_macro("IGNORE")
+#undef ERROR
+#undef IGNORE
+
 #ifdef NDEBUG
 #define IF_RELEASE true
 #else
@@ -262,3 +269,6 @@ namespace soralog {
 }  // namespace soralog
 
 #undef LIKELY_IF
+
+#pragma pop_macro("IGNORE")
+#pragma pop_macro("ERROR")

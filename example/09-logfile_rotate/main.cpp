@@ -29,10 +29,23 @@
 #include <soralog/logging_system.hpp>
 #include <soralog/logger.hpp>
 
+namespace {
+  // Path as UTF-8, the encoding of YAML text
+  std::string toUtf8(const std::filesystem::path &path) {
+    auto str = path.u8string();
+    return {str.begin(), str.end()};
+  }
+}  // namespace
+
 int main() {
+  // The log files go to the temporary directory of the system
+  const auto dir = std::filesystem::temp_directory_path();
+  const auto log_path = dir / "soralog_example.log";
+  const auto old_log_path = dir / "soralog_example.old.log";
+
   // Ensure a clean start: remove any leftover files from previous runs.
-  std::filesystem::remove("/tmp/soralog_example.old.log");
-  std::filesystem::remove("/tmp/soralog_example.log");
+  std::filesystem::remove(old_log_path);
+  std::filesystem::remove(log_path);
 
   // Inline YAML configuration defining a single file sink and a main group.
   auto configurator =
@@ -40,7 +53,7 @@ int main() {
         sinks:                             # List of available logging sinks (outputs)
           - name: file                     # Unique identifier for this sink
             type: file                     # Log output to a file
-            path: /tmp/soralog_example.log # Path to the log file
+            path: ')") + toUtf8(log_path) + R"(' # Path to the log file
             latency: 1000                  # Max delay before flushing logs to the file
 
         groups:                 # Log groups define hierarchical loggers
@@ -48,7 +61,7 @@ int main() {
             sink: file          # Default sink for this group
             level: trace        # Minimum log level for this group
             is_fallback: true   # This is the fallback group (only one allowed)
-      )"));
+      )");
 
   // Initialize logging system
   soralog::LoggingSystem log_system(configurator);
@@ -67,19 +80,19 @@ int main() {
   // Obtain a logger
   auto logger = log_system.getLogger("Greeter", "main");
 
-  // Write to the active log file (/tmp/soralog_example.log).
+  // Write to the active log file.
   logger->info("First message");
 
   // Simulate rotation: move the current log to a backup name.
-  std::filesystem::remove("/tmp/soralog_example.old.log");
-  std::filesystem::rename("/tmp/soralog_example.log", "/tmp/soralog_example.old.log");
+  std::filesystem::remove(old_log_path);
+  std::filesystem::rename(log_path, old_log_path);
 
   // Ask all sinks to rotate (file sinks reopen the configured path).
   log_system.callRotateForAllSinks();
 
   // The worker thread reopens the file after it writes out the queued
-  // events, so this message usually goes to the newly reopened
-  // /tmp/soralog_example.log, but may still go to the old one.
+  // events, so this message usually goes to the newly reopened file at the
+  // original path, but may still go to the old one.
   logger->info("Second message");
 
   return 0;
