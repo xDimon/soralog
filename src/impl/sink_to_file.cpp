@@ -8,6 +8,7 @@
 #include <soralog/impl/sink_to_file.hpp>
 
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <thread>
 
@@ -43,6 +44,23 @@ namespace soralog {
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         *ptr++ = c;
       }
+    }
+
+    /**
+     * @brief Writes a dot and the microseconds as six digits, zero-padded.
+     * @param ptr Reference to the pointer where the digits should be written.
+     * @param usec Microseconds, below 1000000.
+     */
+    void put_microseconds(char *&ptr, uint32_t usec) {
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      *ptr++ = '.';
+      for (int i = 5; i >= 0; --i) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ptr[i] = static_cast<char>('0' + (usec % 10));
+        usec /= 10;
+      }
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      ptr += 6;
     }
 
     /**
@@ -315,19 +333,7 @@ namespace soralog {
         std::memcpy(ptr, datetime.data(), datetime.size());
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         ptr = ptr + datetime.size();
-        // Six digits of microseconds, zero-padded
-        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-        *ptr++ = '.';
-        {
-          auto rest = static_cast<uint32_t>(usec);
-          for (int i = 5; i >= 0; --i) {
-            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-            ptr[i] = static_cast<char>('0' + (rest % 10));
-            rest /= 10;
-          }
-          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-          ptr += 6;
-        }
+        put_microseconds(ptr, static_cast<uint32_t>(usec));
         put_separator(ptr);
 
         // Write thread info
