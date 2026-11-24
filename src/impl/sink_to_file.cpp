@@ -273,12 +273,18 @@ namespace soralog {
     auto *const end = buff_.data() + buff_.size();
     auto *ptr = begin;
 
-    // Stores the previous second to avoid redundant conversions
-    decltype(1s / 1s) psec = 0;
+    // The second of the previous event and its formatted date are kept
+    // between calls: they change once a second, and the worker calls this
+    // function much more often. Safe without a lock: only one thread runs
+    // this function at a time, under flush_in_progress_
+    auto &psec = cached_sec_;
+    auto &datetime = cached_datetime_;
+    // Events appended since the deadline was checked: reading the clock costs
+    // more than formatting an event, so it is read once per this many events
+    constexpr size_t kDeadlineCheckInterval = 64;
+    size_t unchecked = 0;
     // Struct to store timestamp breakdown
     std::tm tm{};
-    // Buffer for formatted timestamp "YY.MM.DD HH:MM:SS"
-    std::array<char, 17> datetime{};
 
     while (true) {
       bool appended = false;
@@ -309,7 +315,19 @@ namespace soralog {
         std::memcpy(ptr, datetime.data(), datetime.size());
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
         ptr = ptr + datetime.size();
-        ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
+        // Six digits of microseconds, zero-padded
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        *ptr++ = '.';
+        {
+          auto rest = static_cast<uint32_t>(usec);
+          for (int i = 5; i >= 0; --i) {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+            ptr[i] = static_cast<char>('0' + (rest % 10));
+            rest /= 10;
+          }
+          // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+          ptr += 6;
+        }
         put_separator(ptr);
 
         // Write thread info
@@ -351,8 +369,9 @@ namespace soralog {
       // when the queue is drained, or when the latency deadline has passed
       if (static_cast<size_t>(end - ptr) < sizeof(Event) + max_message_length_
           or not appended
-          or std::chrono::steady_clock::now()
-                 >= next_flush_.load(std::memory_order_acquire)) {
+          or (++unchecked % kDeadlineCheckInterval == 0
+              and std::chrono::steady_clock::now()
+                      >= next_flush_.load(std::memory_order_acquire))) {
         std::chrono::seconds attempt_delay{1};
         auto *data_begin = begin;
         auto *data_end = ptr;

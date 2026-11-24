@@ -10,7 +10,9 @@
 #include <soralog/impl/file_writer.hpp>
 #include <soralog/sink.hpp>
 
+#include <array>
 #include <condition_variable>
+#include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <mutex>
@@ -148,6 +150,11 @@ namespace soralog {
     /// Number of the last finished flush; changed only under
     /// flush_in_progress_.
     std::atomic_size_t flushes_done_ = 0;
+
+    /// Second of the last formatted date, kept between flushes
+    int64_t cached_sec_ = -1;
+    /// "YY.MM.DD HH:MM:SS" of that second
+    std::array<char, 17> cached_datetime_{};
   };
 
 }  // namespace soralog
