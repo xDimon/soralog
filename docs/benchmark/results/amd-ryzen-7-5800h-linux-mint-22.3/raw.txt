@@ -1,0 +1,364 @@
+== soralog 0.4.1, saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     8995.9      0.08      0.11      0.14     216.9       0.11       0.14      216.9         -         -         -   100.1     112
+      2     9886.2      0.11      0.19      4.35     253.6       0.19       4.35      253.6         -         -         -   101.0     112
+      4     9406.7      0.23      0.49      69.6     264.6       0.49       69.6      264.6         -         -         -   102.3     112
+      8     7448.0      0.70      3.84      30.7     271.0       3.84       30.7      271.0         -         -         -   104.6     112
+
+== spdlog-async 1.17.0, saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2382.0      0.17      5.89      7.68     985.3       5.89       7.68      985.3         -         -         -   100.1     112
+      2     1468.3      0.25      13.3      18.4      4585       13.3       18.4       4585         -         -         -    90.6     112
+      4      718.6      0.86      38.9      69.6      4602       38.9       69.6       4602         -         -         -    82.7     112
+      8      478.8      1.28     147.5     409.6      4786      147.5      409.6       4786         -         -         -    77.1     112
+
+== spdlog-sync 1.17.0, saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     3435.5      0.17      3.46      5.89     196.6       3.46       5.89      196.6         -         -         -     0.2     112
+      2     2165.0      0.21      10.2      15.4      2437       10.2       15.4       2437         -         -         -     0.1     112
+      4     2137.0      0.21      23.6      69.6      4630       23.6       69.6       4630         -         -         -     0.1     112
+      8     1744.4      0.80      43.0      81.9     298.7       43.0       81.9      298.7         -         -         -     0.3     112
+
+== quill 13.1.0, saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2685.3      0.05      0.07      57.3      2267       0.07       57.3       2267         -         -         -   100.2     112
+      2     2634.2      0.05      0.07      0.18      2342       0.07       0.18       2342         -         -         -   100.2     112
+      4     2553.5      0.05      0.07      0.11      2694       0.07       0.11       2694         -         -         -   100.7     112
+      8     2402.5      0.05      0.07      0.14      6483       0.07       0.14       6483         -         -         -   100.4     112
+
+== soralog 0.4.1, message-256: closed loop, burst 1, message size 256, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     4740.9      0.09      0.14      0.17      5983       0.14       0.17       5983         -         -         -   100.2     304
+      4     4217.0      0.29      0.64     311.3     616.2       0.64      311.3      616.2         -         -         -   100.6     304
+
+== spdlog-async 1.17.0, message-256: closed loop, burst 1, message size 256, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     1497.3      0.18      6.91      8.70     818.9       6.91       8.70      818.9         -         -         -   100.0     304
+      4      609.8      1.09      45.1      77.8      4605       45.1       77.8       4605         -         -         -    85.6     304
+
+== spdlog-sync 1.17.0, message-256: closed loop, burst 1, message size 256, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     1905.4      0.25      3.71      6.40     216.6       3.71       6.40      216.6         -         -         -     0.0     304
+      4     1358.1      0.26      38.9      77.8     506.1       38.9       77.8      506.1         -         -         -     0.1     304
+
+== quill 13.1.0, message-256: closed loop, burst 1, message size 256, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     1105.8      0.04      0.08     147.5      9500       0.08      147.5       9500         -         -         -   100.0     304
+      4     1065.7      0.05      0.08     983.0      9053       0.08      983.0       9053         -         -         -   100.2     304
+
+== soralog 0.4.1, message-1000: closed loop, burst 1, message size 1000, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     1411.3      0.12      0.17      0.23      2933       0.17       0.23       2933         -         -         -    87.7    1048
+      4     1344.7      0.32      0.49      5.38      6678       0.49       5.38       6678         -         -         -    85.1    1048
+
+== spdlog-async 1.17.0, message-1000: closed loop, burst 1, message size 1000, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      567.5      0.32      7.68      10.2      5259       7.68       10.2       5259         -         -         -   100.1    1048
+      4      280.2      1.41     278.5     475.1      5201      278.5      475.1       5201         -         -         -    79.7    1048
+
+== spdlog-sync 1.17.0, message-1000: closed loop, burst 1, message size 1000, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      778.7      0.43      5.38      7.68      4908       5.38       7.68       4908         -         -         -     0.1    1048
+      4      601.1      0.46      7.42      11.3    105903       7.42       11.3     105903         -         -         -     0.2    1048
+
+== quill 13.1.0, message-1000: closed loop, burst 1, message size 1000, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      350.8      0.07     114.7     229.4     12199      114.7      229.4      12199         -         -         -   100.0    1048
+      4      337.3      0.07      0.14      1638     14211       0.14       1638      14211         -         -         -    99.9    1048
+
+== soralog 0.4.1, writers-500k: open loop 500000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      500.0      0.08      0.10      0.96      63.6       0.16       3.58      129.2      1901      3932      9470     6.2     112
+      2      500.0      0.10      0.14      0.45      5.46       0.21       3.20      186.2      1769      3539      8884     6.4     112
+      4      500.0      0.10      0.15      0.64      32.1       0.21       3.71       93.6      1769      3539      8885     6.6     112
+      8      500.0      0.11      0.21      0.30      7.28       0.27       2.43       70.9      1769      3539      8881     6.9     112
+
+== spdlog-async 1.17.0, writers-500k: open loop 500000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.04 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      500.0      0.17      2.94      3.97     514.9       3.07       5.89      514.9     122.9     229.4      5694    65.4     112
+      2      500.0      0.22      2.94      3.97     457.1       3.07       5.63      457.2     122.9     229.4      5728    65.9     112
+      4      500.0      0.23      3.07      3.97     536.1       3.07       5.12       1051     122.9     229.4      5625    66.6     112
+      8      500.0      0.27      57.3     180.2      1681     159384     279837     279837     139.3      5243      6696    70.2     112
+
+== spdlog-sync 1.17.0, writers-500k: open loop 500000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.04 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      499.9      0.17      3.84      6.40      5062       4.35       1507       5063     118.8     221.2      5897     0.0     112
+      2      500.0      0.25      7.42      9.73      4655       7.68       1573       4655     118.8     221.2      5739     0.0     112
+      4      500.0      0.26      10.2      15.4      4599       10.8       1573       4611     118.8     221.2      5704     0.0     112
+      8      500.0      0.27      11.3      19.5      4668       12.3      245.8       4729     122.9     229.4      5596     0.0     112
+
+== quill 13.1.0, writers-500k: open loop 500000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      499.9      0.04      0.07      0.08      3328       0.12       2.69       3328     688.1      1311      7256    99.9     112
+      2      499.9      0.04      0.07      0.09     399.6       0.12       2.81      399.7     688.1      1311      6216   100.0     112
+      4      499.9      0.05      0.08      0.09      5.61       0.14       2.81       54.1     688.1      1311      6143    99.9     112
+      8      499.9      0.05      0.09      0.12      5.24       0.16       2.56       64.4     688.1      1311      6022    99.9     112
+
+== soralog 0.4.1, rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.04 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.08      0.11      0.26      5.80       0.19       2.56      404.9      8913     16777     22699     1.3     112
+      4      100.0      0.11      0.15      0.43      5.94       0.21       0.86      106.0      8389     16777     22004     1.3     112
+
+== spdlog-async 1.17.0, rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      1.02      1.66      2.94      40.1       1.73       3.07       40.2     278.5     507.9      5939    37.7     112
+      4      100.0      1.09      1.98      3.97      16.3       2.30       4.09       31.0     278.5     507.9      5953    38.8     112
+
+== spdlog-sync 1.17.0, rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.17      4.61      6.66      5057       4.61       8.19       5057     278.5     507.9      5585     0.0     112
+      4      100.0      0.26      4.86      7.42      5532       5.12       1245       5532     278.5     507.9      5993     0.0     112
+
+== quill 13.1.0, rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.04 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.08      0.12      0.56       0.14       0.17       47.6      3146      6029      6205     9.4     112
+      4      100.0      0.05      0.11      0.12      1.51       0.17       1.09       75.1      3146      6029     11442    11.4     112
+
+== soralog 0.4.1, rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.14      0.15      0.30      2779       0.21       3.84       2779      81.9      1573      5649    92.6     112
+
+== spdlog-async 1.17.0, rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.04 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      889.6      0.27      27.6      49.2      2593     838861     897125     897125     180.2      3015      5839    79.9     112
+
+== spdlog-sync 1.17.0, rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.26      15.4      19.5     510.4       17.4      155.6      510.4      98.3     188.4     660.7     0.0     112
+
+== quill 13.1.0, rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      999.8      0.05      0.07      0.10      2096       0.14       2.81       2096     393.2     720.9      7906    99.9     112
+
+== soralog 0.4.1, burst-4096: open loop 100000 ev/s, burst 4096, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1000 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.3      0.10      0.14      0.37     715.3       1311       1442       1464     409.6      1376     40956     1.3     112
+
+== spdlog-async 1.17.0, burst-4096: open loop 100000 ev/s, burst 4096, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.3      0.15      1.47      6.14      5775       1638       7078       7243     688.1      6291     45491     4.1     112
+
+== spdlog-sync 1.17.0, burst-4096: open loop 100000 ev/s, burst 4096, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1000 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.3      0.22      4.61      8.70      4974       1835       6554       6924      86.0     311.3     40019     0.0     112
+
+== quill 13.1.0, burst-4096: open loop 100000 ev/s, burst 4096, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1000 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      2      100.3      0.06      0.07      0.15     455.6       1114       1442       1551      1311     41943     46459     8.7     112
+
+== soralog 0.4.1, latency-10ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     8937.8      0.08      0.11      0.14      67.3       0.11       0.14       67.3         -         -         -    99.8     112
+      4     9364.5      0.29      0.57      47.1     262.4       0.57       47.1      262.4         -         -         -   102.3     112
+
+== spdlog-async 1.17.0, latency-10ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2345.3      0.17      6.14      7.93      5105       6.14       7.93       5105         -         -         -   100.1     112
+      4      714.6      0.93      36.9      61.4      4565       36.9       61.4       4565         -         -         -    83.7     112
+
+== spdlog-sync 1.17.0, latency-10ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     3202.3      0.18      3.84      6.40     196.4       3.84       6.40      196.4         -         -         -     0.4     112
+      4     2037.2      0.21      25.6      69.6     285.0       25.6       69.6      285.0         -         -         -     0.4     112
+
+== quill 13.1.0, latency-10ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 10 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2670.1      0.05      0.07      57.3      8145       0.07       57.3       8145         -         -         -   100.1     112
+      4     2562.6      0.05      0.06      0.12      3191       0.06       0.12       3191         -         -         -   100.5     112
+
+== soralog 0.4.1, latency-10ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.08      0.11      0.19      1.31       0.17       2.56      197.1      5505     10486     16307     1.3     112
+      4      100.0      0.11      0.15      0.35      2.42       0.22       1.09       90.0      5243     10486     15629     1.4     112
+
+== spdlog-async 1.17.0, latency-10ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.99      1.66      2.94      31.2       2.43       3.07       45.2     278.5     507.9      5819    37.5     112
+      4      100.0      1.02      1.53      3.20     173.2       1.92       3.58      173.2     278.5     507.9      6034    38.7     112
+
+== spdlog-sync 1.17.0, latency-10ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.17      4.86      7.93      5026       4.86      688.1       5026     278.5     507.9      5545     0.2     112
+      4      100.0      0.26      5.38      9.21      5458       5.38       1311       5473     278.5     507.9      5950     0.2     112
+
+== quill 13.1.0, latency-10ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 10 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.07      0.12      1.05       0.15       2.05       41.2      2753      6029     11764     9.2     112
+      4      100.0      0.04      0.11      0.12      2.25       0.17       1.92       22.9      2753      6029     11508    11.4     112
+
+== soralog 0.4.1, latency-10ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 10 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.14      0.15      0.30      3323       0.21       2.94       3323      81.9      1507      6848    95.7     112
+
+== spdlog-async 1.17.0, latency-10ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.25      18.4      36.9      2534     352322     380446     380446     118.8      2884      5303    75.7     112
+
+== spdlog-sync 1.17.0, latency-10ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 10 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.26      15.9      21.5     696.3       18.4      155.6      713.7      98.3     188.4     820.7     0.2     112
+
+== quill 13.1.0, latency-10ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 10 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.04 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      999.9      0.05      0.08      0.09      2538       0.14       2.94       2538     393.2     720.9      8230   100.1     112
+
+== soralog 0.4.1, latency-1ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     8892.0      0.08      0.11      0.15     211.2       0.11       0.15      211.2         -         -         -   100.0     112
+      4     9273.3      0.29      0.61      45.1     242.9       0.61       45.1      242.9         -         -         -   100.4     112
+
+== spdlog-async 1.17.0, latency-1ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2243.3      0.17      6.14      8.19     201.0       6.14       8.19      201.0         -         -         -   100.8     112
+      4      741.9      0.93      36.9      59.4      4585       36.9       59.4       4585         -         -         -    85.3     112
+
+== spdlog-sync 1.17.0, latency-1ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     3223.6      0.17      3.97      6.66     638.9       3.97       6.66      638.9         -         -         -     1.3     112
+      4     1969.1      0.21      26.6      65.5     363.5       26.6       65.5      363.5         -         -         -     1.5     112
+
+== quill 13.1.0, latency-1ms-saturation: closed loop, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1     2583.3      0.05      0.07      57.3      2379       0.07       57.3       2379         -         -         -   100.2     112
+      4     2492.1      0.05      0.07      0.14      2732       0.07       0.14       2732         -         -         -   100.5     112
+
+== soralog 0.4.1, latency-1ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.08      0.14      0.19      1.83       0.19       0.27      151.4     622.6      1180      6658     2.3     112
+      4      100.0      0.11      0.17      0.23      12.8       0.24       2.56      136.9     622.6      1180      6019     2.3     112
+
+== spdlog-async 1.17.0, latency-1ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      1.02      1.53      2.94      45.5       1.98       4.61       48.4     278.5     507.9      5806    38.4     112
+      4      100.0      1.02      1.85      2.81      46.7       1.98       3.97       46.7     278.5     507.9      5738    39.6     112
+
+== spdlog-sync 1.17.0, latency-1ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.04 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.18      5.12      10.8      5431       5.38       1114       5431     262.1     491.5      5961     1.2     112
+      4      100.0      0.26      5.63      11.3      5458       5.63       1311       5458     262.1     491.5      5976     1.2     112
+
+== quill 13.1.0, latency-1ms-rate-100k: open loop 100000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      1      100.0      0.04      0.08      0.12      5.35       0.15       3.84       98.0     622.6      1245      6713    10.3     112
+      4      100.0      0.04      0.11      0.12      5.54       0.17       3.20      112.7     655.4      1245      6726    11.4     112
+
+== soralog 0.4.1, latency-1ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   event queue 2048 events, message limit 1024 B, write buffer default, latency 1 ms; full queue: producer waits
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.14      0.15      0.32      3582       0.21       4.35       3582      77.8     917.5      5604    96.4     112
+
+== spdlog-async 1.17.0, latency-1ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   async_logger, 1 worker, queue 2048 messages, overflow: block; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.26      19.5      38.9      2575     469762     496327     496327     118.8      3146      5841    75.7     112
+
+== spdlog-sync 1.17.0, latency-1ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   synchronous logger, file sink under mutex; stdio write buffer; periodic flush every 1 ms; message limit and write buffer size not applicable
+   driver overhead per push: p50 0.03 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4     1000.0      0.26      16.4      23.6      4506       20.5      786.4       4698      98.3     188.4      4718     1.3     112
+
+== quill 13.1.0, latency-1ms-rate-1m: open loop 1000000 ev/s, burst 1, message size 64, 3 repeats, release build, hardware threads 16
+   queue per producer 131072 B, bounded blocking; 1 backend thread formats and writes; flush not more often than every 1 ms; write buffer default; --capacity and --message-length not applicable
+   driver overhead per push: p50 0.04 us, p99 0.05 us; times in us, resp from the scheduled moment, dlv until readable from the file, bg cpu of the logger's threads in % of a core
+threads  kev/s med  push p50  push p99     p99.9       max   resp p99      p99.9        max   dlv p50       p99       max  bg cpu  B/line
+      4      999.8      0.05      0.07      0.08      1379       0.14       2.81       1379     344.1     720.9      7061    99.9     112
+

@@ -227,7 +227,7 @@ idle machine and add the output directory under `docs/benchmark/results`.
   limited by its worker writing the file, at gigabytes per second, and its
   throughput varies between runs much more than that of a logger limited by
   formatting or its queue. On the Apple M4 Max, single-writer throughput
-  with 1000-byte messages was 6.4–6.7 M events/s over the repeats of the
+  with 1000-byte messages was 6.3–7.9 M events/s over the repeats of the
   comparison suite, but 3.4–6.6 M over those of the settings suite, and an
   earlier run had a median of 4.4 M with an 83% spread. The cause is not
   established yet; the report shows the min–max range next to every median
@@ -240,7 +240,29 @@ idle machine and add the output directory under `docs/benchmark/results`.
 
 ## Results
 
-- [Apple M4 Max, macOS 27.2](results/apple-m4-max-macos-27.2/report.md)
+Both runs were made on 2026-11-24 with the `standard` suite, 3 repeats, on
+soralog 0.4.1 (revision 9e8a7e3). Other loggers: spdlog 1.17.0 and
+quill 13.1.0 with fmt 12.2.1, from vcpkg 190561c.
+
+- [Apple M4 Max, macOS 27.2.1](results/apple-m4-max-macos-27.2/report.md):
+  on AC power, other applications closed, load average 1.3 at the start.
+- [AMD Ryzen 7 5800H, Linux Mint 22.3](results/amd-ryzen-7-5800h-linux-mint-22.3/report.md):
+  on AC power, CPU governor `performance`, nothing else running, load
+  average 0.1 at the start. The runner of that revision took the number of
+  cores from `nproc` and the file system from `stat -f`, which names ext4
+  "ext2/ext3"; `platform.json` was corrected to 8 cores (16 threads) and
+  ext4 as `lscpu` and `findmnt` show them.
+
+**Delivery at the default latency.** With a latency of 1000 ms soralog
+delivers at 100,000 events/s within ~17 ms at p99 on both machines, much
+later than spdlog (~0.5 ms) and quill (~6 ms). That is the queue filling
+up, not the latency setting: the worker wakes at 80% of 2048 events, every
+~16 ms at this rate (see
+[what the numbers depend on](#what-the-numbers-depend-on)). The rows with
+a latency of 1 ms show what the setting does: on the Apple M4 Max lines
+arrive within ~1.6 ms at p99, with the worker taking about 1% of a core,
+against ~24% for spdlog's async worker and ~6% for quill's backend. For
+fresher lines set `latency` rather than shrink the queue.
 
 How soralog depends on its settings and on the load, with recommendations:
 [soralog-settings.md](soralog-settings.md).

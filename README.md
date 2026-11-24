@@ -35,17 +35,17 @@ layout and nobody dropping events
 [full results](docs/benchmark/results/apple-m4-max-macos-27.2/report.md);
 Apple M4 Max):
 
-- **Highest throughput.** From one thread Soralog writes 15 M events/s,
-  about 3× quill and 3.5–4.5× spdlog; from 4 threads it writes 8.3 M, where
-  quill does 4.6 M and spdlog 1.2–1.9 M.
+- **Highest throughput.** From one thread Soralog writes 16 M events/s,
+  about 3× quill and 3.5–4.5× spdlog; from 4 threads it writes 10.6 M, where
+  quill does 4.6 M and spdlog 1.4–1.9 M.
 - **Cheap logging calls.** At a steady 100,000 events/s a call takes 0.04 µs
-  at the median and stays under 0.6 µs at p99.9; spdlog has tails
-  of 6–13 µs.
+  at the median and stays under 0.3 µs at p99.9; spdlog has tails
+  of 2–12 µs.
 - **Little CPU in the background.** At 100,000 events/s the worker takes
-  under 1% of a core, against ~6% for quill's backend and ~25% for spdlog's async
+  under 1% of a core, against ~6% for quill's backend and ~23% for spdlog's async
   worker.
 - **Freshness is a setting.** How fresh the file is depends on `latency`:
-  with 1–10 ms lines reach the file within ~1.5–13 ms, and the calls cost
+  with 1–10 ms lines reach the file within ~1.6–15 ms, and the calls cost
   the same ([how settings affect
   performance](docs/benchmark/soralog-settings.md)).
 - **Bounded memory.** The event queue is allocated once (2.25 MiB by
@@ -81,8 +81,9 @@ its configuration can be changed without a restart.
 Look at the alternatives in three cases.
 
 1. **Many threads log at saturation.** quill keeps a queue per thread: with
-   4 threads its calls stay at ~0.2 µs at p99.9, while Soralog's reach
-   ~3 µs. With 8 threads both do ~4.4 M events/s.
+   4 threads its calls stay at ~0.13 µs at p99.9, while Soralog's reach
+   ~2 µs, and with 8 threads 1.6 µs against 31 µs, at about the same
+   throughput (4.4 M and 4.8 M events/s).
 2. **Lines must reach the file within a millisecond without any tuning.**
    spdlog's small stdio buffer delivers them in ~0.5 ms at 100,000 events/s,
    paid for with microsecond tails in the calls. Soralog needs `latency: 1`
@@ -96,28 +97,28 @@ Look at the alternatives in three cases.
 Typical numbers for a file sink with default settings (event buffer of 2048
 events, message length limit 1024 bytes, write buffer 4 MB, latency 1000 ms),
 64-byte messages, 112-byte lines, logged through `Logger`. Release build,
-Apple M4 Max (12 performance + 4 efficiency cores), macOS 27.2, APFS on the
+Apple M4 Max (12 performance + 4 efficiency cores), macOS 27.2.1, APFS on the
 internal SSD, Homebrew clang 23. Median of 3 runs of 1,000,000 events each.
 
 | Writer threads | Throughput, events/s | `push` p50 | `push` p99 | `push` p99.9 |
 |---:|---:|---:|---:|---:|
-| 1 | 15.0 M | < 0.05 µs | 0.09 µs | 0.22 µs |
-| 2 | 11.1 M (9.7–11.3 M) | 0.17 µs | 0.43 µs | 0.64 µs |
-| 4 | 8.3 M (6.3–8.7 M) | 0.43 µs | 1.7 µs | 2.8 µs |
-| 8 | 4.4 M | 0.86 µs | 15 µs | 33 µs |
+| 1 | 16.1 M | < 0.05 µs | 0.09 µs | 0.13 µs |
+| 2 | 11.9 M | 0.13 µs | 0.26 µs | 0.30 µs |
+| 4 | 10.6 M (10.5–11.3 M) | 0.30 µs | 1.2 µs | 1.9 µs |
+| 8 | 4.8 M | 0.74 µs | 14 µs | 31 µs |
 
 Throughput here is the saturation point. Writers log as fast as they can,
 the sink worker is busy writing the file all the time, and past that point
 writers wait for room in the buffer.
 
 At a steady 100,000 events/s the worker takes under 1% of a core, and
-`push` stays at p99.9 below 0.6 µs with 1 thread or 3.4 µs with 4. Events
+`push` stays at p99.9 below 0.3 µs with 1 thread or 1.3 µs with 4. Events
 reach the file within 20 ms: at this load the worker is woken by the
 buffer filling up, before the latency timer fires.
 
-Numbers depend on the machine, the file system and the settings; the clock of
-this machine ticks every 41.7 ns, so the shortest times are rounded to it. To
-measure on your hardware build with `-DBUILD_BENCHMARKS=ON` and run
+Numbers depend on the machine, the file system and the settings; on Apple
+silicon the clock ticks every 41.7 ns, so the shortest times are rounded to
+it. To measure on your hardware build with `-DBUILD_BENCHMARKS=ON` and run
 `soralog_benchmark --scenario load --sink-path <file>`; see its `--help` for
 the load and sink parameters. The method, the comparison with other loggers,
 its results and how the settings affect performance are in

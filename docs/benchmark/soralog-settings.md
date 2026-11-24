@@ -25,7 +25,7 @@ meaning of the columns are in the [benchmark docs](README.md).
   limit 1024 B, write buffer 4 MB, latency 1000 ms, 64-byte messages
   (112-byte lines), logging through `Logger`.
 - Every run verified the file: all events present, once, in order.
-- The machine was otherwise idle, but IDEs were open; throughput of 4 and
+- The test machine was otherwise idle, but IDEs were open; throughput of 4 and
   more writers varies between repeats by up to ~30%, see the min–max column
   of the report before trusting a difference smaller than that.
 
@@ -74,7 +74,7 @@ All writers share one queue; at saturation they contend for it and the
 total throughput falls as writers are added. The same total rate split
 among more writers costs little: the contention hurts only when the queue is
 the bottleneck. 12 writers plus the worker exceed the 12 performance cores
-of this machine, which adds to the drop.
+of the Apple M4 Max, which adds to the drop.
 
 ### Latency
 

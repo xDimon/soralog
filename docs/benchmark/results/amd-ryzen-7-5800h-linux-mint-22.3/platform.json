@@ -1,0 +1,16 @@
+{
+  "os": "Linux Mint 22.3 (kernel 6.14.0-37-generic)",
+  "arch": "x86_64",
+  "cpu": "AMD Ryzen 7 5800H with Radeon Graphics",
+  "cores": "8 (16 threads)",
+  "memory_gb": 15,
+  "file_system": {
+    "type": "ext4",
+    "solid_state": "Yes"
+  },
+  "compiler": "c++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "build_type": "Release",
+  "soralog_revision": "9e8a7e3",
+  "suite": "standard",
+  "repeat": 3
+}

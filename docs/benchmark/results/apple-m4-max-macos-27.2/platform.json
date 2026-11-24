@@ -10,7 +10,7 @@
   },
   "compiler": "Homebrew clang version 23.1.5",
   "build_type": "Release",
-  "soralog_revision": "ae285be",
+  "soralog_revision": "9e8a7e3",
   "suite": "standard",
   "repeat": 3
 }
