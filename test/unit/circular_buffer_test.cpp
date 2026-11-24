@@ -10,10 +10,13 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <iostream>
 #include <mutex>
 #include <random>
+#include <string>
 #include <thread>
+#include <vector>
 
 #if __cplusplus >= 202002L
 #include <latch>
@@ -329,4 +332,105 @@ TEST_F(CircularBufferTest, Mutual) {
 #endif
   prod.join();
   cons.join();
+}
+
+/**
+ * @brief Test put_wait() on a full buffer (single-threaded).
+ *
+ * @given A full CircularBuffer.
+ * @when put_wait() is called, and its callback gets one element.
+ * @then The callback is called until a slot is free, the new element is
+ *       stored after the old ones, and the order is kept.
+ */
+TEST_F(CircularBufferTest, PutWaitFull) {
+  size_t capacity = 4;
+
+  CircularBuffer<Data> testee(capacity);
+
+  size_t calls = 0;
+  auto never = [&](size_t) { ++calls; };
+  for (size_t i = 0; i < capacity; ++i) {
+    auto ref = testee.put_wait(never, static_cast<char>('a' + i));
+    EXPECT_EQ(ref->c(), 'a' + i);
+  }
+  EXPECT_EQ(calls, 0);
+  EXPECT_EQ(testee.size(), capacity);
+
+  // The buffer is full: the callback must free a slot
+  std::string got;
+  auto drain_one = [&](size_t attempt) {
+    ++calls;
+    if (attempt == 2) {  // let it spin a little first
+      auto ref = testee.get();
+      ASSERT_TRUE(ref);
+      got += ref->c();
+    }
+  };
+  {
+    auto ref = testee.put_wait(drain_one, 'e');
+    EXPECT_EQ(ref->c(), 'e');
+  }
+  EXPECT_EQ(calls, 3);
+  EXPECT_EQ(got, "a");
+
+  while (auto ref = testee.get()) {
+    got += ref->c();
+  }
+  EXPECT_EQ(got, "abcde");
+}
+
+/**
+ * @brief Test put_wait() with several producers and a consumer.
+ *
+ * @given A small CircularBuffer, several producers and one consumer.
+ * @when Each producer puts its numbered items with put_wait(), waiting for
+ *       the consumer when the buffer is full.
+ * @then The consumer gets every item once, the items of each producer in
+ *       the order they were put (data races are caught by sanitizers).
+ */
+TEST_F(CircularBufferTest, PutWaitMt) {
+  struct Item {
+    Item(uint32_t producer, uint32_t seq) : producer(producer), seq(seq) {}
+    uint32_t producer;
+    uint32_t seq;
+  };
+
+  constexpr size_t capacity = 8;
+  constexpr uint32_t producers = 4;
+  constexpr uint32_t items = 20000;
+
+  CircularBuffer<Item> testee(capacity);
+
+  std::vector<std::thread> threads;
+  threads.reserve(producers);
+  for (uint32_t p = 0; p < producers; ++p) {
+    threads.emplace_back([&, p] {
+      for (uint32_t i = 0; i < items; ++i) {
+        auto ref =
+            testee.put_wait([](size_t) { std::this_thread::yield(); }, p, i);
+      }
+    });
+  }
+
+  std::vector<uint32_t> next(producers, 0);
+  size_t total = 0;
+  bool ordered = true;
+  while (total < size_t{producers} * items) {
+    if (auto ref = testee.get()) {
+      ordered = ordered and ref->seq == next[ref->producer];
+      next[ref->producer] = ref->seq + 1;
+      ++total;
+    } else {
+      std::this_thread::yield();
+    }
+  }
+  for (auto &thread : threads) {
+    thread.join();
+  }
+
+  EXPECT_TRUE(ordered);
+  for (uint32_t p = 0; p < producers; ++p) {
+    EXPECT_EQ(next[p], items);
+  }
+  EXPECT_FALSE(testee.get());
 }

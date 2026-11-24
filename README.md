@@ -273,6 +273,8 @@ groups:
 
 Events are written out by a worker thread about every `latency` milliseconds, and earlier when the event buffer is 80% full. With small values the real period is longer than the setting: about 1.25× at 10 ms and 1.5× at 1 ms. With `latency: 0` every log call writes its event out before returning.
 
+With many threads logging at once, the `capacity` matters for throughput too. On macOS with at least 16 hardware threads, a buffer of at least 8 events per hardware thread (128 with 16 threads) lets the logging threads claim slots without contending for them: measured on Apple M4 Max with the default 2048, 1.7–4.7 times the events per second with 4–16 threads logging as fast as they can; the gain is smaller with a smaller buffer. Below 8 events per hardware thread, and on other systems, the threads keep the contended way, which is safer when the threads outnumber the cores.
+
 #### Console Sink (`type: console`)
 
 | Parameter | Type   | Required | Default  | Description                         |

@@ -259,3 +259,27 @@ TEST_F(SinkToFileTest, IdleWorkerDoesNotSpin) {
 
   EXPECT_LT(spent, wall / 5);
 }
+
+/**
+ * @brief Test the choice between fetch_add and the CAS loop for the queue.
+ *
+ * @given Queue capacities, numbers of hardware threads and systems.
+ * @when Sink::useFetchAdd() chooses how producers claim a slot.
+ * @then fetch_add is chosen only on a measured system, with at least 16
+ *       hardware threads and at least 8 queue slots per thread.
+ */
+TEST(SinkQueueTest, ChoiceOfClaiming) {
+  // A system where fetch_add was not measured keeps the CAS loop
+  EXPECT_FALSE(Sink::useFetchAdd(1 << 20, 64, false));
+  // Few cores: the CAS loop whatever the capacity
+  EXPECT_FALSE(Sink::useFetchAdd(1 << 20, 4, true));
+  EXPECT_FALSE(Sink::useFetchAdd(1 << 20, 15, true));
+  // Many cores: fetch_add from 8 slots per thread on
+  EXPECT_FALSE(Sink::useFetchAdd(127, 16, true));
+  EXPECT_TRUE(Sink::useFetchAdd(128, 16, true));
+  EXPECT_TRUE(Sink::useFetchAdd(2048, 16, true));
+  EXPECT_FALSE(Sink::useFetchAdd(255, 32, true));
+  EXPECT_TRUE(Sink::useFetchAdd(256, 32, true));
+  // The default capacity of the console sink (64) never takes fetch_add
+  EXPECT_FALSE(Sink::useFetchAdd(64, 16, true));
+}

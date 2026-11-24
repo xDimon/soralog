@@ -276,6 +276,35 @@ namespace soralog {
     }
 
     /**
+     * @brief Adds a new element, waiting for a free slot if the buffer is full.
+     *
+     * The position is claimed by one atomic increment, without retries, so
+     * producers do not contend in a CAS loop. A claimed position can't be
+     * given up: while its slot still holds an element of the previous lap,
+     * on_full(attempt) is called and the slot checked again; it must make the
+     * consumer progress (wake it, or consume itself).
+     *
+     * @tparam OnFull Callable taking the number of the failed check.
+     * @tparam Args Argument types for constructing the element.
+     * @param on_full Called while the claimed slot is still occupied.
+     * @param args Arguments forwarded to the element's constructor.
+     * @return A reference to the created node; never empty.
+     */
+    template <typename OnFull, typename... Args>
+    [[nodiscard]] NodeRef put_wait(OnFull &&on_full,
+                                   Args &&...args) noexcept(IF_RELEASE) {
+      const auto pos = enqueue_pos_.fetch_add(1, std::memory_order_relaxed);
+      auto &slot = node(pos);
+      for (size_t attempt = 0;
+           slot.seq.load(std::memory_order_acquire) != 2 * pos;
+           ++attempt) {
+        on_full(attempt);
+      }
+      slot.init(std::forward<Args>(args)...);
+      return NodeRef(slot, 2 * pos + 1);
+    }
+
+    /**
      * @brief Retrieves and removes the oldest element from the buffer.
      *
      * The slot is released when the returned reference is destroyed.
