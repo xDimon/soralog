@@ -132,8 +132,11 @@ namespace soralog {
      * writers against x0.91-0.99 with 1 writer; with 4 slots per thread it
      * lost down to x0.67 at 24 writers; on 3-4 cores
      * (Linux x86_64 and aarch64, macOS arm64 and x86_64) it never won
-     * reliably and lost down to x0.3 with more writers than cores. Other
-     * systems and Linux with many cores were not measured, so they keep CAS.
+     * reliably and lost down to x0.3 with more writers than cores; on AMD
+     * Ryzen 7 5800H under Linux (8 cores, 16 threads) it lost x0.81-0.93 at
+     * 4-8 writers and down to x0.35 at 32, and at 16 writers it was
+     * x0.80-1.33 within the spread of rounds, so Linux keeps CAS. Other
+     * systems were not measured and keep CAS too.
      *
      * @param capacity Capacity of the event queue.
      * @param hardware_threads Number of hardware threads.
