@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstdint>
 #include <cstring>
 #include <system_error>
 #include <thread>
@@ -41,6 +42,23 @@ namespace soralog {
       for (auto c : separator) {
         *ptr++ = c;  // NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       }
+    }
+
+    /**
+     * @brief Writes a dot and the microseconds as six digits, zero-padded.
+     * @param ptr Reference to the pointer where the digits should be written.
+     * @param usec Microseconds, below 1000000.
+     */
+    void put_microseconds(char *&ptr, uint32_t usec) {
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      *ptr++ = '.';
+      for (int i = 5; i >= 0; --i) {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+        ptr[i] = static_cast<char>('0' + (usec % 10));
+        usec /= 10;
+      }
+      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+      ptr += 6;
     }
 
     void put_level(char *&ptr, Level level) {
@@ -236,9 +254,13 @@ namespace soralog {
     auto *const end = buff_.data() + buff_.size();
     auto *ptr = begin;
 
-    decltype(1s / 1s) psec = 0;
+    // The second of the previous event and its formatted date are kept
+    // between calls: they change once a second, and the worker calls this
+    // function much more often. Safe without a lock: only one thread runs
+    // this function at a time, under flush_in_progress_
+    auto &psec = cached_sec_;
+    auto &datetime = cached_datetime_;
     std::tm tm{};
-    std::array<char, 17> datetime{};  // "00.00.00 00:00:00"
 
     while (true) {
       auto node = take_event(limit);
@@ -275,7 +297,7 @@ namespace soralog {
       std::memcpy(ptr, datetime.data(), datetime.size());
       // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
       ptr = ptr + datetime.size();
-      ptr = fmt::format_to_n(ptr, end - ptr, ".{:0>6}", usec).out;
+      put_microseconds(ptr, static_cast<uint32_t>(usec));
       put_separator(ptr);
 
       // Thread information
